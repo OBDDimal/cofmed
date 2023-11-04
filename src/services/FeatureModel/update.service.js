@@ -5,7 +5,9 @@ import { FeatureNode } from '@/classes/FeatureNode';
 import { PseudoNode } from '@/classes/PseudoNode';
 import * as count from '@/services/FeatureModel/count.service';
 import { ghostNodeTouchMove } from '@/services/FeatureModel/dragAndDrop.service';
+import { init } from '@/services/FeatureModel/dragAndDrop.service';
 import { RECT_HEIGHT } from '@/classes/constants';
+import FeatureModelTree from '@/components/FeatureModel/FeatureModelTree.vue';
 
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
@@ -22,9 +24,6 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         .enter()
         .append('g')
         .classed('node', true)
-        .call(d3Data.drag.listener)
-        // Highlight and reset highlighting of ghost-nodes during drag and drop of feature-nodes.
-        .on('touchmove', (event) => ghostNodeTouchMove(event, d3Data), true)
         // Open contextmenu with right-click on d3Node.
         .on('contextmenu', (event, d3Node) => {
             // only use contextmenu on non-mobile devices
@@ -46,6 +45,12 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
             dblClickEvent(event, d3Data, d3Node);
             collapse.collapseShortcut(d3Data, event, d3Node); // Collapse d3Node with Ctrl + left-click on d3Node.
         });
+
+    if(d3Data.nonSemanticEditing){ //works as intended for true and false, reasons yet unclear
+        featureNodeEnter.call(d3Data.drag.listener)
+        // Highlight and reset highlighting of ghost-nodes during drag and drop of feature-nodes.
+        .on('touchmove', (event) => ghostNodeTouchMove(event, d3Data), true)
+    }
 
     const rectAndTextEnter = featureNodeEnter
         .append('g')
@@ -230,7 +235,7 @@ function updateChildrenCount(d3Data, featureNodeUpdate) {
             (d) => (d.data.isLeaf() || !d.data.isCollapsed ? [] : [d]),
             (d) => d.id
         );
-    
+
     const childrenCountEnter = childrenCount
         .enter()
         .append('g')
@@ -264,7 +269,7 @@ function updateChildrenCount(d3Data, featureNodeUpdate) {
             const y =   0;
             return `translate(${x}, ${y})rotate(${angle})`;
         }
-        
+
     });
     childrenCountUpdate
         .selectAll('text.direct-children')

@@ -298,6 +298,21 @@
                             <template v-slot:prepend="{ active }">
                                 <v-list-item-action start>
                                     <v-checkbox-btn
+                                        v-model="nonSemanticEditing"
+                                        :input-value="active"
+                                        color="primary"
+                                    ></v-checkbox-btn>
+                                </v-list-item-action>
+
+                                <v-list-item-title>
+                                    Non-semantic editing
+                                </v-list-item-title>
+                            </template>
+                        </v-list-item>
+                        <v-list-item>
+                            <template v-slot:prepend="{ active }">
+                                <v-list-item-action start>
+                                    <v-checkbox-btn
                                         v-model="quickEdit"
                                         :input-value="active"
                                         color="primary"
@@ -350,6 +365,7 @@ export default {
         itemsColoring: ['Standard', 'Direct Children', 'Total Children'],
         isShortName: false,
         semanticEditing: false,
+        nonSemanticEditing: true,
         quickEdit: false,
         drawer: true,
         discardChangesConfirmDialog: false,
@@ -375,6 +391,9 @@ export default {
         },
         semanticEditing: function (newValue) {
             this.$emit('semanticEditing', newValue);
+        },
+        nonSemanticEditing: function (newValue) {
+            this.$emit('nonSemanticEditing', newValue);
         },
         quickEdit: function (newValue) {
             this.$emit('quickEdit', newValue);

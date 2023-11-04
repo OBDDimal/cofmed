@@ -79,12 +79,13 @@
             @coloring="(coloringIndex) => coloring(coloringIndex)"
             @export="$emit('exportToXML')"
             @fitToView="fitToView"
+            @semanticEditing="(value) => updateSemanticEdit(value)"
+            @nonSemanticEditing="(value) => updateNonSemanticEdit(value)"
             @quickEdit="(value) => updateQuickEdit(value)"
             @redo="redo"
             @reset="$emit('reset')"
             @resetView="(levels, maxChildren) => resetView(levels, maxChildren)"
             @save="$emit('save')"
-            @semanticEditing="(value) => (d3Data.semanticEditing = value)"
             @shortName="changeShortName"
             @spaceBetweenParentChild="changeSpaceBetweenParentChild"
             @spaceBetweenSiblings="changeSpaceBetweenSiblings"
@@ -242,6 +243,7 @@ export default {
             d3AddNodeIndex: 0,
             coloringIndex: -1,
             semanticEditing: false,
+            nonSemanticEditing: true,
             quickEdit: false,
             direction: 'v', // h = horizontally, v = vertically
             maxHorizontallyLevelWidth: [],
@@ -475,6 +477,16 @@ export default {
 
         updateQuickEdit(newValue) {
             this.d3Data.quickEdit = newValue;
+            this.updateSvg();
+        },
+
+        updateSemanticEdit(newValue) {
+            this.d3Data.semanticEditing = newValue;
+            this.updateSvg();
+        },
+
+        updateNonSemanticEdit(newValue) {
+            this.d3Data.nonSemanticEditing = newValue;
             this.updateSvg();
         },
     },
