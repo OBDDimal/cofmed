@@ -76,19 +76,47 @@ function calcNodeSize(d3Data, d3Node) {
     return [width, height];
 }
 
+
 function initLegend(){
     /**
      * Initialize Legend drawn in SVG by appending a svg to the main-svg
      */
-    d3.select('.main-svg')
+    let svg=  d3.select('.main-svg')
     .append('svg')
-    .append('rect')
-    .attr("width", 300)
-    .attr("height", 80)
-    .attr("x", 100)
-    .attr("y",350)
-    .attr("fill", "white")
-    .attr("stroke", "black")
-    .attr("stroke-width", "2px")
-    .classed("legend-container", true)
+    .append('g')
+    .attr("transform", "translate(200,200)");
+    let legendItems=["or", "and"];
+    let noItems= legendItems.length;
+
+    let rect= svg.append('rect')
+        .attr("width", 300)
+        .attr("height", noItems*40)
+        
+        .attr("fill", "white")
+        .attr("stroke", "black")
+        .attr("stroke-width", "2px")
+        .classed("legend-container", true);
+
+    let items= svg
+        .append('g')
+        .classed('legend-items', true)
+        .append('text')
+        .attr("transform", "translate(10,20)")
+        .text("Legend: ");
+
+    updateLegend(legendItems);
+
+}
+function updateLegend(legendItems){
+    let join= d3
+        .select('.legend-items')
+        .selectAll('legend-item')
+        .data(legendItems)
+        .join(enterLegendItems);
+}
+function enterLegendItems(selection){
+    let text= selection
+        .append('text')
+        .attr("transform", (d,i)=> "translate(10," + (40+ i*20) + ")")
+        .text(d=> "- " +d);
 }
