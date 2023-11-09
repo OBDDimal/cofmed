@@ -16,7 +16,6 @@ export function initialize(d3Data, data) {
         .spacing((d3NodeA, d3NodeB) => d3NodeA.path(d3NodeB).length);
 
     initData(d3Data, data);
-
     d3Data.zoom = d3
         .zoom()
         .scaleExtent([0.125, 5])
@@ -26,6 +25,7 @@ export function initialize(d3Data, data) {
     const svg = d3
         .select('#svg-container')
         .append('svg')
+        .classed("main-svg", true)
         .attr('preserveAspectRatio', 'xMidYMid meet')
         .call(d3Data.zoom) // Zooming and penning.
         .on('dblclick.zoom', null);
@@ -55,6 +55,7 @@ export function initialize(d3Data, data) {
     // Listen to window resize.
     window.onresize = () => windowResize.update(d3Data);
     windowResize.update(d3Data);
+    initLegend();
 }
 
 function calcNodeSize(d3Data, d3Node) {
@@ -73,4 +74,21 @@ function calcNodeSize(d3Data, d3Node) {
     }
 
     return [width, height];
+}
+
+function initLegend(){
+    /**
+     * Initialize Legend drawn in SVG by appending a svg to the main-svg
+     */
+    d3.select('.main-svg')
+    .append('svg')
+    .append('rect')
+    .attr("width", 300)
+    .attr("height", 80)
+    .attr("x", 100)
+    .attr("y",350)
+    .attr("fill", "white")
+    .attr("stroke", "black")
+    .attr("stroke-width", "2px")
+    .classed("legend-container", true)
 }
