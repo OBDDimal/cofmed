@@ -6,6 +6,8 @@ import { PseudoNode } from '@/classes/PseudoNode';
 import * as count from '@/services/FeatureModel/count.service';
 import { ghostNodeTouchMove } from '@/services/FeatureModel/dragAndDrop.service';
 import { RECT_HEIGHT } from '@/classes/constants';
+import * as d3 from 'd3';
+import * as legendItems from '@/classes/Legend/LegendItemFactory';
 
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
@@ -519,7 +521,7 @@ export function updateSvg(d3Data) {
     updateFeatureNodes(d3Data, visibleD3Nodes);
     updatePseudoNodes(d3Data, visibleD3Nodes);
     updateLinks(d3Data, visibleD3Nodes);
-
+    updateLegend(d3Data);
     /*console.log('Rendertime', performance.now() - start);*/
 }
 
@@ -559,4 +561,109 @@ function dblClickEvent(event, d3Data, d3Node) {
             touchtime = new Date().getTime();
         }
     }
+}
+
+export function updateLegend(d3Data){
+    let legendItems= getDOMItems(d3Data);
+    d3
+        .selectAll('.legend-item')
+        .remove();
+
+    let join= d3
+        .select('.legend-items')
+        .selectAll('legend-item')
+        .data(legendItems)
+        .join(enterLegendItems);
+
+}
+
+function getDOMItems(d3Data){
+    /**
+     * Go through d3 elements to determine the set of present Items to add to the legend
+     */
+    // let or_present= d3Data.container.segmentsContainer.classed('.or-group');
+    let presentItems= [];
+    presentItems.push(...addGroupItems());
+    presentItems.push(...addElementItems(d3Data));
+    presentItems.push(...addColorItems());
+    return presentItems;
+}
+
+/**
+ * 
+ * @returns Array of distinct found groups
+ */
+function addGroupItems(){
+    let presentGroups= [];
+    let or_groups = d3.select('.main-svg').selectAll('.or-group');
+    if(or_groups.size() > 0){
+        presentGroups.push(legendItems.getOrGroup());
+    }
+    let alt_groups = d3.select('.main-svg').selectAll('.alt-group');
+    if(alt_groups.size() > 0){
+        presentGroups.push(legendItems.getAltGroup());
+    }
+    return presentGroups;
+}
+/**
+ * Add Element Items e.g. Abstract, concrete, Mandatory, Optional
+ *  @returns Array of distinct found elements
+ */
+function addElementItems(d3Data){
+    let presentItems=[];
+    let mandatoryPresent=false, optionalPresent=false; //mutually exclusive
+    let abstractPresent=false, concretePresent=false;
+    try {   
+        d3Data.featureModelTree.allNodes.forEach((fNode)=>{
+                if(fNode.isAbstract){
+                   abstractPresent=true;
+                }else{
+                    concretePresent= true;
+                }
+                if(fNode.isMandatory){
+                    mandatoryPresent=true;
+                }else{
+                    optionalPresent=true;
+                }
+        });
+        if(mandatoryPresent){
+            presentItems.push(legendItems.getMandatoryFeature());
+        }
+        if(optionalPresent){
+            presentItems.push(legendItems.getOptionalFeature());
+        }
+        if(abstractPresent){
+            presentItems.push(legendItems.getAbstractFeature());
+        }
+        if(concretePresent){
+            presentItems.push(legendItems.getConcreteFeature());
+        }
+
+
+    } catch (error) {
+        console.error(error);
+    }finally{
+        return  presentItems;
+    }
+    
+}
+/**
+ * TODO Add color items 
+ *  @returns Array of distinct found colors
+ */
+function addColorItems(presentItems){
+   return [];
+}
+
+
+/**
+ * 
+ * @param selection where to hook the legendItems
+ */
+function enterLegendItems(selection){
+    let text= selection
+        .append('text')
+        .attr("transform", (d,i)=> "translate(10," + (40+ i*20) + ")")
+        .text(legendItem=> "- " +legendItem.image +"---- "+ legendItem.description )
+        .classed('legend-item', true);
 }

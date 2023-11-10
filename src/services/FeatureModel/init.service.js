@@ -2,6 +2,7 @@ import { flextree } from 'd3-flextree';
 import * as CONSTANTS from '@/classes/constants';
 import * as d3 from 'd3';
 import * as windowResize from '@/services/FeatureModel/windowResize.service.js';
+import * as updateService from '@/services/FeatureModel/update.service';
 
 export function initData(d3Data, data) {
     // Create root-feature-node with d3 and the data of the feature-model.
@@ -55,7 +56,7 @@ export function initialize(d3Data, data) {
     // Listen to window resize.
     window.onresize = () => windowResize.update(d3Data);
     windowResize.update(d3Data);
-    initLegend();
+    initLegend(d3Data);
 }
 
 function calcNodeSize(d3Data, d3Node) {
@@ -77,7 +78,7 @@ function calcNodeSize(d3Data, d3Node) {
 }
 
 
-function initLegend(){
+function initLegend(d3Data){
     /**
      * Initialize Legend drawn in SVG by appending a svg to the main-svg
      */
@@ -85,12 +86,10 @@ function initLegend(){
     .append('svg')
     .append('g')
     .attr("transform", "translate(200,200)");
-    let legendItems=["or", "and"];
-    let noItems= legendItems.length;
 
     let rect= svg.append('rect')
         .attr("width", 300)
-        .attr("height", noItems*40)
+        .attr("height", 100)
         
         .attr("fill", "white")
         .attr("stroke", "black")
@@ -104,19 +103,6 @@ function initLegend(){
         .attr("transform", "translate(10,20)")
         .text("Legend: ");
 
-    updateLegend(legendItems);
+    updateService.updateLegend(d3Data);
 
-}
-function updateLegend(legendItems){
-    let join= d3
-        .select('.legend-items')
-        .selectAll('legend-item')
-        .data(legendItems)
-        .join(enterLegendItems);
-}
-function enterLegendItems(selection){
-    let text= selection
-        .append('text')
-        .attr("transform", (d,i)=> "translate(10," + (40+ i*20) + ")")
-        .text(d=> "- " +d);
 }
