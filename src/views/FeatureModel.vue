@@ -321,6 +321,7 @@ export default {
             if(this.xml === undefined){
                 return;
             }
+            console.log("update");
             let nFeatures=this.data.rootNode.descendants().length;
             this.facts.metrics.find((fact)=>{
                     return fact.name==="Features"
@@ -445,6 +446,7 @@ export default {
             const xml = beautify(EXAMPLE_FEATURE_MODEL_XML);
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
+            this.updateFacts();
         },
 
         updateFeatureModel() {
