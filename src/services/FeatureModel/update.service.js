@@ -569,11 +569,14 @@ export function updateLegend(d3Data){
         .selectAll('.legend-item')
         .remove();
 
+    let container= d3.select(".legend-container");
+    container.attr("height", legendItems.length *30); // dynamically adjust container height 
+
     let join= d3
         .select('.legend-items')
         .selectAll('legend-item')
         .data(legendItems)
-        .join(enterLegendItems);
+        .join(enterLegendItems); //update legend items within container
 
 }
 
