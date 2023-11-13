@@ -9,40 +9,47 @@ import { LegendItem } from "./LegendItem"
  * @returns Or Group LegendItem
  */
 export function getOrGroup(){
-    return new LegendItem("Or Group", "IMG");
+    return new LegendItem("Or Group", "src/assets/legend/or.png");
 }
 /**
  * 
  * @returns Alternative Group LegendItem
  */
 export function getAltGroup(){
-    return new LegendItem("Alternative Group", "IMG2");
+    return new LegendItem("Alternative Group", "src/assets/legend/alt.png");
+}
+/**
+ * 
+ * @returns And Group LegendItem
+ */
+export function getAndGroup(){
+    return new LegendItem("And Group", "src/assets/legend/and.png");
 }
 /**
  * 
  * @returns Abstract Feature LegendItem
  */
 export function getAbstractFeature(){
-    return new LegendItem("Abstract Feature", "IMG3");
+    return new LegendItem("Abstract Feature", "src/assets/legend/abstract.png");
 }
 /**
  * 
  * @returns Concrete Feature LegendItem
  */
 export function getConcreteFeature(){
-    return new LegendItem("Concrete Feature", "IMG4");
+    return new LegendItem("Concrete Feature", "src/assets/legend/concrete.png");
 }
 /**
  * 
  * @returns Mandatory Feature LegendItem
  */
 export function getMandatoryFeature(){
-    return new LegendItem("Mandatory Feature", "IMG5");
+    return new LegendItem("Mandatory Feature", "src/assets/legend/mandatory.png");
 }
 /**
  * 
  * @returns Optional Feature LegendItem
  */
 export function getOptionalFeature(){
-    return new LegendItem("Optional Feature", "IMG6");
+    return new LegendItem("Optional Feature", "src/assets/legend/optional.png");
 }

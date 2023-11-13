@@ -664,9 +664,24 @@ function addColorItems(presentItems){
  * @param selection where to hook the legendItems
  */
 function enterLegendItems(selection){
-    let text= selection
+
+    let legendItem= selection
+            .append('g')
+            .attr("transform", (d,i)=> "translate(10," + (40+ i*20) + ")")
+            .classed('legend-item', true);
+
+    let img= legendItem
+            .append('svg:image')
+                .attr('class', 'iconUserTotal')
+                .attr('width', 10)
+                .attr('height', 10)
+                .attr('y', -10)
+                .attr('href', item=> item.image);
+    let text= legendItem
         .append('text')
-        .attr("transform", (d,i)=> "translate(10," + (40+ i*20) + ")")
-        .text(legendItem=> "- " +legendItem.image +"---- "+ legendItem.description )
+        .text(item=> item.description )
+        .attr("transform", "translate(20,0)")
         .classed('legend-item', true);
+    
+        
 }

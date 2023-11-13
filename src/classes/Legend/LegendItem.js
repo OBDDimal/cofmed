@@ -2,7 +2,7 @@ export class LegendItem{
     /**
      * 
      * @param {*} description: of the Legend Item which is shown inside the legend
-     * @param {*} image: of the LegenItem
+     * @param {*} image: path to image of the LegenItem
      */
     constructor( description, image ){
         this.description = description;
