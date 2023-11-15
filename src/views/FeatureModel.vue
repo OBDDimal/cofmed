@@ -1,4 +1,5 @@
 <template>
+    <navbar></navbar>
     <div v-if='xml === undefined'>
         <v-container :fluid='true'>
             <v-card :class="{ 'grey lighten-2': dragover }"
@@ -176,6 +177,7 @@ import { SliceCommand } from '@/classes/Commands/FeatureModel/SliceCommand';
 import FeatureModelInformation from '@/components/FeatureModel/FeatureModelInformation';
 import { useAppStore } from '@/store/app';
 import axios from 'axios';
+import Navbar from '@/components/Navbar.vue';
 
 const appStore = useAppStore();
 
@@ -183,6 +185,7 @@ export default {
     name: 'FeatureModel',
 
     components: {
+        Navbar,
         TutorialMode,
         FeatureModelInformation,
         CollaborationContinueEditingDialog,

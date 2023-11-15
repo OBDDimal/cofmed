@@ -1,6 +1,5 @@
 <template>
     <v-app>
-        <navbar></navbar>
         <v-main style="position: relative">
             <router-view :key="$route.fullPath" />
             <v-snackbar
