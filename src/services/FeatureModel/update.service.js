@@ -5,9 +5,7 @@ import { FeatureNode } from '@/classes/FeatureNode';
 import { PseudoNode } from '@/classes/PseudoNode';
 import * as count from '@/services/FeatureModel/count.service';
 import { ghostNodeTouchMove } from '@/services/FeatureModel/dragAndDrop.service';
-import { init } from '@/services/FeatureModel/dragAndDrop.service';
 import { RECT_HEIGHT } from '@/classes/constants';
-import FeatureModelTree from '@/components/FeatureModel/FeatureModelTree.vue';
 
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
@@ -50,6 +48,9 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         featureNodeEnter.call(d3Data.drag.listener)
         // Highlight and reset highlighting of ghost-nodes during drag and drop of feature-nodes.
         .on('touchmove', (event) => ghostNodeTouchMove(event, d3Data), true)
+    } else {
+        featureNodeEnter.remove(d3Data.drag.listener);
+        //d3Data.drag.listener.remove;
     }
 
     const rectAndTextEnter = featureNodeEnter
