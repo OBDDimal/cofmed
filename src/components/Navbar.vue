@@ -51,6 +51,9 @@
                     <v-list-item v-if='properties.fileIsLoaded' prepend-icon="mdi-download" title='Download Configuration'
                                  @click='$emit("download")'>
                     </v-list-item>
+                    <v-list-item
+                        prepend-icon="mdi-download" title='Export options'>
+                    </v-list-item>
                 </v-list>
             </v-menu>
             <v-menu
@@ -106,6 +109,13 @@
                     :disabled="true"
             >
                 Redo
+            </v-btn>
+            <v-btn
+                    class="mx-1"
+                    prepend-icon="mdi-pencil"
+                    :disabled="true"
+            >
+                Collaboration
             </v-btn>
             <v-menu
                     open-on-hover
