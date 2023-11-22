@@ -52,7 +52,7 @@
                                  @click='$emit("download")'>
                     </v-list-item>
                     <v-list-item
-                        prepend-icon="mdi-download" title='Export options'>
+                        prepend-icon="mdi-export-variant" title='Export options'>
                     </v-list-item>
                 </v-list>
             </v-menu>
@@ -69,25 +69,116 @@
                     </v-btn>
                 </template>
 
-                <v-list density='compact'>
-                    <v-list-item prepend-icon="mdi-file-document-plus" title='Edit options'>
-                    </v-list-item>
-                    <v-list-item v-if='true' prepend-icon="mdi-file-cog"
-                                 title='Discard changes'>
-                    </v-list-item>
-                    <v-list-item v-if='true' prepend-icon="mdi-content-save"
-                                 title='Undo' >
-                    </v-list-item>
-                    <v-list-item v-if='true' prepend-icon="mdi-download" title='Redo'
-                                 >
-                    </v-list-item>
-                    <v-list-item v-if='true' prepend-icon="mdi-download" title='Colouring'
-                                 >
-                    </v-list-item>
-                    <v-list-item v-if='true' prepend-icon="mdi-download" title='View'
-                                 >
-                    </v-list-item>
-                </v-list>
+                <v-menu location='end'>
+                    <template v-slot:activator="{ props }">
+                        <v-list-item v-bind="props" prepend-icon="mdi-palette">
+                            <v-list-item-title>Coloring</v-list-item-title>
+                        </v-list-item>
+                    </template>
+                    <v-list>
+                        <v-list-item>
+                            <v-btn
+                            class="mx-1"
+                            prepend-icon="mdi-pencil"
+                            v-bind="props"
+                            >
+                            Edit
+                            </v-btn>
+                        </v-list-item>
+                        <v-list-item
+                            v-for="(item, i) in itemsColoring"
+                            :key="i"
+                            @click="selectedColoring(i)"
+                        >
+                                <v-list-item-title
+                                >{{item}}</v-list-item-title>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+
+                <v-menu offset-y :close-on-content-click="false" location='end'>
+                    <template v-slot:activator="{ props }">
+                        <v-list-item v-bind="props" prepend-icon="mdi-eye">
+                            <v-list-item-title> View </v-list-item-title>
+                        </v-list-item>
+                    </template>
+                    <v-list>
+                        <v-list-subheader>View</v-list-subheader>
+
+                        <v-list-item
+                            class="clickable"
+                            @click="$emit('fitToView')"
+                        >
+                            <v-list-item-title> Fit to view </v-list-item-title>
+                        </v-list-item>
+                        <v-list-item
+                            class="clickable"
+                            @click="$emit('toggleDirection')"
+                        >
+                            <v-list-item-title>
+                                {{
+                                    direction === 'v'
+                                        ? 'Change direction to horizontally'
+                                        : 'Change direction to vertically'
+                                }}
+                            </v-list-item-title>
+                        </v-list-item>
+                        <v-list-item
+                            class="clickable"
+                            @click="$emit('resetView', levels, maxChildren)"
+                        >
+                            <v-list-item-title> Reset view </v-list-item-title>
+                        </v-list-item>
+                        <v-list-item
+                            class="clickable"
+                            @click="$store.commit('openConstraints', true)"
+                        >
+                            <v-list-item-title>
+                                Show Constraints
+                            </v-list-item-title>
+                        </v-list-item>
+                        <v-list-item>
+                            <template v-slot:prepend="{ active }">
+                                <v-list-item-action start>
+                                    <v-checkbox-btn
+                                        v-model="isShortName"
+                                        :input-value="active"
+                                        color="primary"
+                                    ></v-checkbox-btn>
+                                </v-list-item-action>
+
+                                <v-list-item-title>
+                                    Short Name
+                                </v-list-item-title>
+                            </template>
+                        </v-list-item>
+                        <v-list-subheader>
+                            Space parent -> child</v-list-subheader
+                        >
+                        <v-list-item>
+                            <v-slider
+                                v-model="spaceBetweenParentChild"
+                                hide-details
+                                max="300"
+                                min="40"
+                                style="width: 200px"
+                            ></v-slider>
+                        </v-list-item>
+                        <v-list-subheader
+                            >Space between siblings</v-list-subheader
+                        >
+                        <v-list-item>
+                            <v-slider
+                                v-model="spaceBetweenSiblings"
+                                hide-details
+                                max="300"
+                                min="5"
+                                style="width: 200px"
+                            ></v-slider>
+                        </v-list-item>
+                    </v-list>
+                </v-menu>
+
             </v-menu>
             <v-btn
                     class="mx-1"
@@ -126,7 +217,97 @@
                             class="mx-1"
                             v-bind="props"
                     >
-                        Service
+                        Settings
+                    </v-btn>
+                </template>
+
+                <v-btn
+                    @click="$emit('show-tutorial')"
+                    id="tutorial-mode"
+                    prepend-icon="mdi-school"
+                >
+                    Tutorial
+                </v-btn>
+
+                <v-menu location="end">
+                <template v-slot:activator="{ props }">
+                    <v-btn
+                            prepend-icon="mdi-vector-arrange-below"
+                            class="mx-1"
+                            v-bind="props"
+                    >
+                        Levels and Children
+                    </v-btn>
+                </template>
+                <v-list>
+                    <v-list-subheader>Adjust Levels</v-list-subheader>
+
+                    <v-list-item>
+                        <v-text-field
+                            v-model="levels"
+                            class="mt-0 pt-0"
+                            min="0"
+                            type="number"
+                            @change="
+                                $emit('resetView', levels, maxChildren)
+                            "
+                        ></v-text-field>
+                    </v-list-item>
+                    <v-list-subheader>Adjust Max Children</v-list-subheader>
+
+                    <v-list-item>
+                        <v-text-field
+                            v-model="maxChildren"
+                            class="mt-0 pt-0"
+                            min="0"
+                            type="number"
+                            @change="
+                                $emit('resetView', levels, maxChildren)
+                            "
+                        ></v-text-field>
+                    </v-list-item>
+
+                    <v-list-item>
+                        <template v-slot:prepend="{ active }">
+                            <v-list-item-action start>
+                                <v-checkbox-btn
+                                    v-model="semanticEditing"
+                                    :input-value="active"
+                                    color="primary"
+                                ></v-checkbox-btn>
+                            </v-list-item-action>
+
+                            <v-list-item-title>
+                                Semantic editing
+                            </v-list-item-title>
+                        </template>
+                    </v-list-item>
+                    <v-list-item>
+                        <template v-slot:prepend="{ active }">
+                            <v-list-item-action start>
+                                <v-checkbox-btn
+                                    v-model="quickEdit"
+                                    :input-value="active"
+                                    color="primary"
+                                ></v-checkbox-btn>
+                            </v-list-item-action>
+
+                            <v-list-item-title>
+                                Quick edit
+                            </v-list-item-title>
+                        </template>
+                    </v-list-item>
+                </v-list>
+            </v-menu>
+
+                <v-menu location="end">
+                <template v-slot:activator="{ props }">
+                    <v-btn
+                        prepend-icon="mdi-cog"
+                        class="mx-1"
+                        v-bind="props"
+                    >
+                        Services
                     </v-btn>
                 </template>
                 <v-list density='compact'>
@@ -150,6 +331,9 @@
                     </v-list-item>
                 </v-list>
             </v-menu>
+
+            </v-menu>
+
         </div>
         <v-spacer></v-spacer>
         <div class="hidden-md-and-up">
