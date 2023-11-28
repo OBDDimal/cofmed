@@ -1,4 +1,11 @@
 <template>
+    <input
+        id='filePicker'
+        accept='.xml'
+        class='d-none'
+        type='file'
+        @change='onFileInputChanged'
+    >
     <div v-if='xml === undefined'>
         <v-container :fluid='true'>
             <v-card :class="{ 'grey lighten-2': dragover }"
@@ -19,18 +26,13 @@
                         <p class='text-h4'>
                             Drop your FeatureModel file here, or click to select it.
                         </p>
-                        <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text' @click.stop='loadInitialModel'>
+                        <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text'
+                               @click.stop='loadInitialModel'>
                             Or click here to load a default model.
                         </v-btn>
                     </v-row>
                 </v-card-text>
-                <input
-                    ref='filePicker'
-                    accept='.xml'
-                    class='d-none'
-                    type='file'
-                    @change='onFileInputChanged'
-                >
+
             </v-card>
         </v-container>
     </div>
@@ -58,6 +60,8 @@
             '
             @show-claim-dialog='showClaimDialog'
             @new-empty-model='newEmptyModel'
+            @openConf='openConfigurator'
+            @openFile='openFilePicker'
             @open-constraints='openConstraints = true'
             @show-tutorial='showTutorial = true'
             @error-closed='errorClosed'
@@ -154,6 +158,10 @@
         </collaboration-continue-editing-dialog>
 
 
+        <tutorial-mode
+            :show='showTutorial'
+            @close='showTutorial = false'
+        ></tutorial-mode>
     </div>
 </template>
 
@@ -317,10 +325,16 @@ export default {
         },
 
         openFilePicker() {
-            this.$refs.filePicker.click();
+            document.getElementById('filePicker').click();
+        },
+
+        openConfigurator() {
+            localStorage.featureModelData = jsonToXML(this.data);
+            window.location = 'https://variability.dev/conf/edit';
         },
 
         async openFile(files) {
+            this.xml = undefined;
             const data = await files[0].text();
             const xml = beautify(data);
             xmlTranspiler.xmlToJson(xml, this.data);

@@ -31,7 +31,7 @@
                     <v-list-item prepend-icon='mdi-file-document-plus' title='Open Feature Model'
                                  @click='$emit("openFile")'>
                     </v-list-item>
-                    <v-list-item prepend-icon='mdi-file-document-plus' title='Open Feature Model'
+                    <v-list-item prepend-icon='mdi-file' title='Open New Model'
                                  @click='$emit("newEmptyModel")'>
                     </v-list-item>
                     <v-list-item v-if='isFileLoaded' prepend-icon='mdi-file-cog'
@@ -47,33 +47,15 @@
                     </v-list-item>
                 </v-list>
             </v-menu>
-
-            <v-btn
-                class='mx-1'
-                prepend-icon='mdi-reload'
-                :disabled='true'
-            >
-                Reset
-            </v-btn>
-            <v-btn
-                class='mx-1'
-                prepend-icon='mdi-undo'
-                :disabled='true'
-            >
-                Undo
-            </v-btn>
-            <v-btn
-                class='mx-1'
-                prepend-icon='mdi-redo'
-                :disabled='true'
-            >
-                Redo
-            </v-btn>
-            <v-menu :close-on-content-click='false' class='mx-1'>
+            <v-menu offset-y :close-on-content-click='false' class='mx-1'>
                 <template v-slot:activator='{ props }'>
-                    <v-list-item v-bind='props' prepend-icon='mdi-eye'>
-                        <v-list-item-title> View</v-list-item-title>
-                    </v-list-item>
+                    <v-btn
+                        class='mx-1'
+                        prepend-icon='mdi-eye'
+                        v-bind='props'
+                    >
+                        File
+                    </v-btn>
                 </template>
                 <v-list>
                     <v-list-subheader>View</v-list-subheader>
@@ -104,7 +86,7 @@
                     </v-list-item>
                     <v-list-item
                         class='clickable'
-                        @click="$emit('open-contraints', true)"
+                        @click="$emit('open-constraints')"
                     >
                         <v-list-item-title>
                             Show Constraints
@@ -151,14 +133,108 @@
                             style='width: 200px'
                         ></v-slider>
                     </v-list-item>
+
+                    <v-list-subheader>Adjust Levels</v-list-subheader>
+
+                    <v-list-item>
+                        <v-text-field
+                            v-model='levels'
+                            class='mt-0 pt-0'
+                            min='0'
+                            type='number'
+                            @change="
+                                    $emit('resetView', levels, maxChildren)
+                                "
+                        ></v-text-field>
+                    </v-list-item>
+                    <v-list-subheader>Adjust Max Children</v-list-subheader>
+
+                    <v-list-item>
+                        <v-text-field
+                            v-model='maxChildren'
+                            class='mt-0 pt-0'
+                            min='0'
+                            type='number'
+                            @change="
+                                    $emit('resetView', levels, maxChildren)
+                                "
+                        ></v-text-field>
+                    </v-list-item>
+
+                    <v-list-item>
+                        <template v-slot:prepend='{ active }'>
+                            <v-list-item-action start>
+                                <v-checkbox-btn
+                                    v-model='semanticEditing'
+                                    :input-value='active'
+                                    color='primary'
+                                ></v-checkbox-btn>
+                            </v-list-item-action>
+
+                            <v-list-item-title>
+                                Semantic editing
+                            </v-list-item-title>
+                        </template>
+                    </v-list-item>
+                    <v-list-item>
+                        <template v-slot:prepend='{ active }'>
+                            <v-list-item-action start>
+                                <v-checkbox-btn
+                                    v-model='quickEdit'
+                                    :input-value='active'
+                                    color='primary'
+                                ></v-checkbox-btn>
+                            </v-list-item-action>
+
+                            <v-list-item-title>
+                                Quick edit
+                            </v-list-item-title>
+                        </template>
+                    </v-list-item>
                 </v-list>
             </v-menu>
+
+            <v-btn
+                v-if='false'
+                class='mx-1'
+                :disabled='!isUndoAvailable || !editRights'
+                prepend-icon='mdi-backup-restore'
+                @click='discardChangesConfirmDialog = true'
+            >
+                Discard Changes
+            </v-btn>
             <v-btn
                 class='mx-1'
-                prepend-icon='mdi-pencil'
-                :disabled='true'
+                :disabled='!isUndoAvailable || !editRights'
+                @click="$emit('undo')"
+                prepend-icon='mdi-undo'
+            >
+                Undo
+            </v-btn>
+            <v-btn
+                class='mx-1'
+                :disabled='!isRedoAvailable || !editRights'
+                @click="$emit('redo')"
+                prepend-icon='mdi-redo'
+            >
+                Redo
+            </v-btn>
+
+            <v-btn
+                class='mx-1'
+                prepend-icon='mdi-account-multiple'
+                @click="$emit('show-collaboration-dialog')"
+                :disabled='collaborationStatus'
             >
                 Collaboration
+            </v-btn>
+
+            <v-btn
+                class='mx-1'
+                prepend-icon='mdi-school'
+                @click="$emit('show-tutorial')"
+            >
+                Tutorial
             </v-btn>
 
             <v-btn
@@ -209,6 +285,33 @@
             </v-btn>
         </div>
     </v-app-bar>
+
+
+    <v-dialog
+        v-model='discardChangesConfirmDialog'
+        persistent
+        width='400'
+    >
+        <v-card>
+            <v-card-title>Discard changes?</v-card-title>
+            <v-card-text
+            >Do you really want to discard all changes? This
+                action can't be undone!
+            </v-card-text>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                    color='primary'
+                    text
+                    @click='discardChangesConfirmDialog = false'
+                >Cancel
+                </v-btn>
+                <v-btn color='primary' text @click="$emit('reset')"
+                >Discard
+                </v-btn>
+            </v-card-actions>
+        </v-card>
+    </v-dialog>
 </template>
 
 <script setup>

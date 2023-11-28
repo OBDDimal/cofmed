@@ -64,11 +64,26 @@
         <navbar
             :is-service-available='isServiceAvailable'
             :is-file-loaded='rootNode !== undefined'
+            :collaborationStatus="collaborationStatus"
+            :direction="d3Data.direction"
+            :editRights="editRights"
+            :is-redo-available="
+                commandManager && commandManager.isRedoAvailable()
+            "
+            :is-save-available="
+                (commandManager && commandManager.isUndoAvailable()) ||
+                commandManager.collaborationManager.constraintCommandManager.isUndoAvailable()
+            "
+            :is-undo-available="
+                commandManager && commandManager.isUndoAvailable()
+            "
             @download="$emit('exportToXML')"
             @fitToView="fitToView"
             @quickEdit="(value) => updateQuickEdit(value)"
             @redo="redo"
             @reset="$emit('reset')"
+            @openConf="$emit('openConf')"
+            @openFile="$emit('openFile')"
             @resetView="(levels, maxChildren) => resetView(levels, maxChildren)"
             @save="$emit('save')"
             @semanticEditing="(value) => (d3Data.semanticEditing = value)"
@@ -76,7 +91,7 @@
             @spaceBetweenParentChild="changeSpaceBetweenParentChild"
             @spaceBetweenSiblings="changeSpaceBetweenSiblings"
             @toggleDirection="toggleDirection"
-            @open-contraints="$emit('open-contraints')"
+            @open-constraints="$emit('open-constraints')"
             @undo="undo"
             @show-collaboration-dialog="$emit('show-collaboration-dialog')"
             @show-tutorial="$emit('show-tutorial')"
