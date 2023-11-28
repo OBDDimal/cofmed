@@ -16,12 +16,14 @@
         <div class='hidden-sm-and-down ml-5'>
             <v-menu
                 open-on-hover
+
             >
                 <template v-slot:activator='{ props }'>
                     <v-btn
                         class='mx-1'
                         prepend-icon='mdi-menu'
                         v-bind='props'
+                        id='feature-model-navbar-save'
                     >
                         File
                     </v-btn>
@@ -47,14 +49,16 @@
                     </v-list-item>
                 </v-list>
             </v-menu>
-            <v-menu offset-y :close-on-content-click='false' class='mx-1'>
+            <v-menu offset-y :close-on-content-click='false' class='mx-1'
+            >
                 <template v-slot:activator='{ props }'>
                     <v-btn
                         class='mx-1'
                         prepend-icon='mdi-eye'
                         v-bind='props'
+                        id='feature-model-navbar-view'
                     >
-                        File
+                        View
                     </v-btn>
                 </template>
                 <v-list>
@@ -208,6 +212,7 @@
                 :disabled='!isUndoAvailable || !editRights'
                 @click="$emit('undo')"
                 prepend-icon='mdi-undo'
+                id='feature-model-navbar-undo'
             >
                 Undo
             </v-btn>
@@ -225,6 +230,7 @@
                 prepend-icon='mdi-account-multiple'
                 @click="$emit('show-collaboration-dialog')"
                 :disabled='collaborationStatus'
+                id='feature-model-navbar-collaboration'
             >
                 Collaboration
             </v-btn>
@@ -233,6 +239,7 @@
                 class='mx-1'
                 prepend-icon='mdi-school'
                 @click="$emit('show-tutorial')"
+                id='tutorial-mode-button'
             >
                 Tutorial
             </v-btn>
@@ -240,9 +247,8 @@
             <v-btn
                 :prepend-icon="isServiceAvailable ? 'mdi-wifi' : 'mdi-wifi-off'"
                 class='mx-1'
-                v-bind='props'
             >
-                Settings
+                Service Status
             </v-btn>
 
 
