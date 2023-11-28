@@ -72,14 +72,14 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
             'mandatory-and-group-circle',
             (d3Node) =>
                 d3Node.parent &&
-                d3Node.parent.data.isAnd() &&
+                (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) &&
                 d3Node.data.isMandatory
         )
         .classed(
             'optional-and-group-circle',
             (d3Node) =>
                 d3Node.parent &&
-                d3Node.parent.data.isAnd() &&
+                (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) &&
                 !d3Node.data.isMandatory
         );
 
@@ -87,7 +87,8 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
     rectAndTextUpdate
         .select('rect')
         .classed('is-searched-feature', (d3Node) => d3Node.data.isSearched)
-        .attr('fill', (d3Node) => d3Node.data.color())
+        .classed('feature', true)
+        .classed('false-optional', (d3Node) => d3Node.data.special === 'false-optional')
         .attr('x', (d3Node) =>
             d3Data.direction === 'v' ? -d3Node.width / 2 : 0
         )
@@ -95,13 +96,13 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         .attr('width', (d3Node) => d3Node.width);
     rectAndTextUpdate
         .select('text')
-        .attr('font-style', (d3Node) =>
-            d3Node.data.isAbstract ? 'italic' : 'normal'
-        )
         .attr(
             'dy',
             d3Data.direction === 'v' ? CONSTANTS.RECT_HEIGHT / 2 + 5.5 : 5.5
         )
+        .classed('abstract', (d3Node) => d3Node.data.isAbstract)
+        .classed('dead', (d3Node) => d3Node.data.special)
+        .classed('core', (d3Node) => d3Node.data.special === 'core')
         .attr('x', d3Data.direction === 'v' ? 0 : (d3Node) => d3Node.width / 2)
         .classed('whiteText', (d3Node) => {
             let color = d3Node.data.color();
@@ -230,7 +231,7 @@ function updateChildrenCount(d3Data, featureNodeUpdate) {
             (d) => (d.data.isLeaf() || !d.data.isCollapsed ? [] : [d]),
             (d) => d.id
         );
-    
+
     const childrenCountEnter = childrenCount
         .enter()
         .append('g')
@@ -264,7 +265,7 @@ function updateChildrenCount(d3Data, featureNodeUpdate) {
             const y =   0;
             return `translate(${x}, ${y})rotate(${angle})`;
         }
-        
+
     });
     childrenCountUpdate
         .selectAll('text.direct-children')

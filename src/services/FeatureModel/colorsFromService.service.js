@@ -1,6 +1,5 @@
 import { jsonToXML } from '@/services/xmlTranspiler.service';
 import axios, { CancelToken } from 'axios';
-import { NODE_CORE_COLOR, NODE_DEAD_COLOR, NODE_FALSEOP_COLOR } from '@/classes/constants';
 import { useAppStore } from '@/store/app';
 
 export async function getColorsFromService(featureModel, d3Data) {
@@ -21,14 +20,16 @@ export async function getColorsFromService(featureModel, d3Data) {
         let coreFeatures = response.data.coreFeatures;
 
         if (coreFeatures.length > 0) {
-            d3Data.root.descendants().filter(node => coreFeatures.includes(node.data.name)).forEach(node => node.data.setColor(NODE_CORE_COLOR));
+            d3Data.root.descendants().filter(node => coreFeatures.includes(node.data.name)).forEach(node => node.data.special = 'core');
         }
         if (falseOptionalFeatures.length > 0) {
-            d3Data.root.descendants().filter(node => falseOptionalFeatures.includes(node.data.name)).forEach(node => node.data.setColor(NODE_FALSEOP_COLOR));
+            d3Data.root.descendants().filter(node => falseOptionalFeatures.includes(node.data.name)).forEach(node => node.data.special = 'false-optional');
         }
         if (deadFeatures.length > 0) {
-            d3Data.root.descendants().filter(node => deadFeatures.includes(node.data.name)).forEach(node => node.data.setColor(NODE_DEAD_COLOR));
+            d3Data.root.descendants().filter(node => deadFeatures.includes(node.data.name)).forEach(node => node.data.special = 'dead');
         }
+        d3Data.root.descendants().filter(node => !(deadFeatures.includes(node.data.name) && falseOptionalFeatures.includes(node.data.name) && coreFeatures.includes(node.data.name))).forEach(node => node.data.special = '');
+
         return true;
     } catch (e) {
         const appStore = useAppStore()

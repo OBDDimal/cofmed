@@ -40,7 +40,7 @@ function getChildrenOfFeature(struct, parent, data) {
 
     for (const child of struct.childNodes) {
         // To remove #text nodes, as they don't have a tagName
-        if (child.tagName) {
+        if (child.tagName && child.tagName !=='description') {
             let toAppend = new FeatureNode(
                 parent,
                 child.getAttribute('name'),

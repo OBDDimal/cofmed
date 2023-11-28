@@ -18,6 +18,7 @@ export class FeatureNode {
         this.isHidden = false;
         this.d3Node = null;
         this.markedAsEdited = false;
+        this.special = '';
     }
     setDisplayName(newName ){
         ///Sets the Displayname of the Featurenode
