@@ -62,9 +62,24 @@
         </div>
 
         <navbar
-            :file-is-loaded='rootNode !== undefined'
-
-
+            :is-service-available='isServiceAvailable'
+            :is-file-loaded='rootNode !== undefined'
+            @download="$emit('exportToXML')"
+            @fitToView="fitToView"
+            @quickEdit="(value) => updateQuickEdit(value)"
+            @redo="redo"
+            @reset="$emit('reset')"
+            @resetView="(levels, maxChildren) => resetView(levels, maxChildren)"
+            @save="$emit('save')"
+            @semanticEditing="(value) => (d3Data.semanticEditing = value)"
+            @shortName="changeShortName"
+            @spaceBetweenParentChild="changeSpaceBetweenParentChild"
+            @spaceBetweenSiblings="changeSpaceBetweenSiblings"
+            @toggleDirection="toggleDirection"
+            @undo="undo"
+            @show-collaboration-dialog="$emit('show-collaboration-dialog')"
+            @show-tutorial="$emit('show-tutorial')"
+            @new-empty-model="$emit('new-empty-model')"
         ></navbar>
 
 
