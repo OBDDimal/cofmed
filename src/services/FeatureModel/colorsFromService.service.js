@@ -20,15 +20,17 @@ export async function getColorsFromService(featureModel, d3Data) {
         let coreFeatures = response.data.coreFeatures;
 
         if (coreFeatures.length > 0) {
-            d3Data.root.descendants().filter(node => coreFeatures.includes(node.data.name)).forEach(node => node.data.special = 'core');
+            d3Data.root.descendants().filter(node => coreFeatures.includes(node.data.name)).forEach(node => node.data.core = true);
+            d3Data.root.descendants().filter(node => !coreFeatures.includes(node.data.name)).forEach(node => node.data.core = false);
         }
         if (falseOptionalFeatures.length > 0) {
-            d3Data.root.descendants().filter(node => falseOptionalFeatures.includes(node.data.name)).forEach(node => node.data.special = 'false-optional');
+            d3Data.root.descendants().filter(node => falseOptionalFeatures.includes(node.data.name)).forEach(node => node.data.falseOptional = true);
+            d3Data.root.descendants().filter(node => !falseOptionalFeatures.includes(node.data.name)).forEach(node => node.data.falseOptional = false);
         }
         if (deadFeatures.length > 0) {
-            d3Data.root.descendants().filter(node => deadFeatures.includes(node.data.name)).forEach(node => node.data.special = 'dead');
+            d3Data.root.descendants().filter(node => deadFeatures.includes(node.data.name)).forEach(node => node.data.dead = true);
+            d3Data.root.descendants().filter(node => !deadFeatures.includes(node.data.name)).forEach(node => node.data.dead = false);
         }
-        d3Data.root.descendants().filter(node => !(deadFeatures.includes(node.data.name) && falseOptionalFeatures.includes(node.data.name) && coreFeatures.includes(node.data.name))).forEach(node => node.data.special = '');
 
         return true;
     } catch (e) {

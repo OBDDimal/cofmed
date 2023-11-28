@@ -97,41 +97,6 @@
             @new-empty-model="$emit('new-empty-model')"
         ></navbar>
 
-
-        <feature-model-tree-toolbar
-            :collaborationStatus='collaborationStatus'
-            :direction='d3Data.direction'
-            :editRights='editRights'
-            :is-redo-available='
-                commandManager && commandManager.isRedoAvailable()
-            '
-            :is-save-available='
-                (commandManager && commandManager.isUndoAvailable()) ||
-                commandManager.collaborationManager.constraintCommandManager.isUndoAvailable()
-            '
-            :is-undo-available='
-                commandManager && commandManager.isUndoAvailable()
-            '
-            :is-service-available='isServiceAvailable'
-            @coloring='(coloringIndex) => coloring(coloringIndex)'
-            @export="$emit('exportToXML')"
-            @fitToView='fitToView'
-            @quickEdit='(value) => updateQuickEdit(value)'
-            @redo='redo'
-            @reset="$emit('reset')"
-            @resetView='(levels, maxChildren) => resetView(levels, maxChildren)'
-            @save="$emit('save')"
-            @semanticEditing='(value) => (d3Data.semanticEditing = value)'
-            @shortName='changeShortName'
-            @spaceBetweenParentChild='changeSpaceBetweenParentChild'
-            @spaceBetweenSiblings='changeSpaceBetweenSiblings'
-            @toggleDirection='toggleDirection'
-            @undo='undo'
-            @show-collaboration-dialog="$emit('show-collaboration-dialog')"
-            @show-tutorial="$emit('show-tutorial')"
-            @new-empty-model="$emit('new-empty-model')"
-        ></feature-model-tree-toolbar>
-
         <div id='svg-container'></div>
 
         <feature-model-tree-context-menu
@@ -707,8 +672,10 @@ polygon {
 }
 
 .false-optional {
-    fill: #ffeeda;
+    stroke: #FF4500;
+    stroke-width: 1.5px;
 }
+
 
 .selected-expl {
     border: 4px solid #31a354;

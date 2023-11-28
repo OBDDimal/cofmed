@@ -81,14 +81,14 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
                 d3Node.parent &&
                 (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) &&
                 !d3Node.data.isMandatory
-        );
+        )
+        .classed('false-optional', (d3Node) => d3Node.data.falseOptional);
 
     const rectAndTextUpdate = featureNodeUpdate.select('.rect-and-text');
     rectAndTextUpdate
         .select('rect')
         .classed('is-searched-feature', (d3Node) => d3Node.data.isSearched)
         .classed('feature', true)
-        .classed('false-optional', (d3Node) => d3Node.data.special === 'false-optional')
         .attr('x', (d3Node) =>
             d3Data.direction === 'v' ? -d3Node.width / 2 : 0
         )
@@ -101,8 +101,8 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
             d3Data.direction === 'v' ? CONSTANTS.RECT_HEIGHT / 2 + 5.5 : 5.5
         )
         .classed('abstract', (d3Node) => d3Node.data.isAbstract)
-        .classed('dead', (d3Node) => d3Node.data.special)
-        .classed('core', (d3Node) => d3Node.data.special === 'core')
+        .classed('core', (d3Node) => d3Node.data.core)
+        .classed('dead', (d3Node) => d3Node.data.dead)
         .attr('x', d3Data.direction === 'v' ? 0 : (d3Node) => d3Node.width / 2)
         .classed('whiteText', (d3Node) => {
             let color = d3Node.data.color();
@@ -255,14 +255,14 @@ function updateChildrenCount(d3Data, featureNodeUpdate) {
 
     const childrenCountUpdate = childrenCountEnter.merge(childrenCount);
     childrenCountUpdate.attr('transform', (d3Node) => {
-        if(d3Data.direction === 'v'){
-            const x = 0 ;
+        if (d3Data.direction === 'v') {
+            const x = 0;
             const y = CONSTANTS.RECT_HEIGHT + CONSTANTS.TRIANGLE_BORDER_OFFSET;
             return `translate(${x}, ${y})`;
-        }else{
-            const angle= CONSTANTS.TRIANGLE_HORIZONTAL_ROTATION;
-            const x = d3Node.width+CONSTANTS.TRIANGLE_BORDER_OFFSET;
-            const y =   0;
+        } else {
+            const angle = CONSTANTS.TRIANGLE_HORIZONTAL_ROTATION;
+            const x = d3Node.width + CONSTANTS.TRIANGLE_BORDER_OFFSET;
+            const y = 0;
             return `translate(${x}, ${y})rotate(${angle})`;
         }
 
@@ -323,7 +323,7 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
         .filter((d3Node) => d3Node.data instanceof FeatureNode)
         .map((d3Node) => ({
             d3Node: d3Node,
-            highlightedConstraints: d3Node.data.getHighlightedConstraints(),
+            highlightedConstraints: d3Node.data.getHighlightedConstraints()
         }))
         .filter((d) => d.highlightedConstraints.length);
 
@@ -347,7 +347,7 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
             (d) =>
                 d.highlightedConstraints.map((c) => ({
                     constraint: c,
-                    d3Node: d.d3Node,
+                    d3Node: d.d3Node
                 })),
             (d) => d.constraint.toString() + d.d3Node.id
         );
@@ -385,15 +385,15 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
             'transform',
             (json, i) => `
     translate(${
-        json.d3Node.x -
-        i * CONSTANTS.STROKE_WIDTH_CONSTANT -
-        CONSTANTS.STROKE_WIDTH_CONSTANT / 2
-    },
+                json.d3Node.x -
+                i * CONSTANTS.STROKE_WIDTH_CONSTANT -
+                CONSTANTS.STROKE_WIDTH_CONSTANT / 2
+            },
         ${
-            json.d3Node.y -
-            i * CONSTANTS.STROKE_WIDTH_CONSTANT -
-            CONSTANTS.STROKE_WIDTH_CONSTANT / 2
-        })`
+                json.d3Node.y -
+                i * CONSTANTS.STROKE_WIDTH_CONSTANT -
+                CONSTANTS.STROKE_WIDTH_CONSTANT / 2
+            })`
         );
 
     // Remove constraints highlighted nodes
@@ -414,6 +414,7 @@ function updateLinks(d3Data, visibleD3Nodes) {
     const linkUpdate = linkEnter.merge(link);
     linkUpdate
         .classed('is-searched-link', (d3Node) => d3Node.data.isSearched)
+        .classed('false-optional', (d3Node) => d3Node.data.falseOptional)
         .attr('d', (d3Node) => {
             if (d3Data.direction === 'v') {
                 return createPaths.createLinkVertically(d3Node.parent, d3Node);
@@ -531,8 +532,8 @@ export function calcRectWidth(d3Data, d3Node) {
             (d3Data.isShortenedName
                 ? d3Node.data.displayName.length
                 : d3Node.data.name.length) *
-                (CONSTANTS.FEATURE_FONT_SIZE *
-                    CONSTANTS.MONOSPACE_HEIGHT_WIDTH_FACTOR) +
+            (CONSTANTS.FEATURE_FONT_SIZE *
+                CONSTANTS.MONOSPACE_HEIGHT_WIDTH_FACTOR) +
             CONSTANTS.RECT_MARGIN.left +
             CONSTANTS.RECT_MARGIN.right
         );

@@ -224,7 +224,6 @@ export default {
                 this.constraintText.slice(0, pos) +
                 textToInsert +
                 this.constraintText.slice(pos);
-            console.log("New constraintstext: "+ this.constraintText);
             this.selectedFeatureNode=undefined;
         },
     },

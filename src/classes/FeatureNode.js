@@ -18,7 +18,9 @@ export class FeatureNode {
         this.isHidden = false;
         this.d3Node = null;
         this.markedAsEdited = false;
-        this.special = '';
+        this.core = false;
+        this.dead = false;
+        this.falseOptional = false;
     }
     setDisplayName(newName ){
         ///Sets the Displayname of the Featurenode
@@ -29,6 +31,7 @@ export class FeatureNode {
         }
 
     }
+
     color() {
         if (this.markedAsEdited) {
             return CONSTANTS.NODE_EDITED_COLOR;

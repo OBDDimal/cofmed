@@ -68,20 +68,6 @@
             @error-new='message => errorNew(message)'
         >
         </feature-model-tree>
-        <v-btn
-            id='feature-model-information'
-            :x-large='$vuetify.display.mdAndUp'
-            class='mr-15'
-            elevation='2'
-            icon
-            location='right bottom'
-            position='absolute'
-            style='background-color: rgb(var(--v-theme-primary))'
-            theme='dark'
-            @click='openInformation = !openInformation'
-        >
-            <v-icon>mdi-information</v-icon>
-        </v-btn>
 
         <v-btn
             id='feature-model-constraints'
