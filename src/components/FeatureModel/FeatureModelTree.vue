@@ -76,6 +76,7 @@
             @spaceBetweenParentChild="changeSpaceBetweenParentChild"
             @spaceBetweenSiblings="changeSpaceBetweenSiblings"
             @toggleDirection="toggleDirection"
+            @open-contraints="$emit('open-contraints')"
             @undo="undo"
             @show-collaboration-dialog="$emit('show-collaboration-dialog')"
             @show-tutorial="$emit('show-tutorial')"

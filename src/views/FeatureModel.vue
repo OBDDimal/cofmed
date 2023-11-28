@@ -58,6 +58,7 @@
             '
             @show-claim-dialog='showClaimDialog'
             @new-empty-model='newEmptyModel'
+            @open-constraints='openConstraints = true'
             @show-tutorial='showTutorial = true'
             @error-closed='errorClosed'
             @error-new='message => errorNew(message)'
