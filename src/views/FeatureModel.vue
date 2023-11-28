@@ -1,5 +1,4 @@
 <template>
-    <navbar></navbar>
     <div v-if='xml === undefined'>
         <v-container :fluid='true'>
             <v-card :class="{ 'grey lighten-2': dragover }"

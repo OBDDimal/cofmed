@@ -61,6 +61,13 @@
             </v-toolbar>
         </div>
 
+        <navbar
+            :file-is-loaded='rootNode !== undefined'
+
+
+        ></navbar>
+
+
         <feature-model-tree-toolbar
             :collaborationStatus="collaborationStatus"
             :direction="d3Data.direction"
@@ -181,12 +188,14 @@ import { EditCommand } from '@/classes/Commands/FeatureModel/EditCommand';
 import { RemoveCommand } from '@/classes/Commands/FeatureModel/RemoveCommand';
 import * as update_service from '@/services/FeatureModel/update.service';
 import { useDisplay } from 'vuetify';
+import Navbar from '@/components/Navbar.vue';
 
 
 export default {
     name: 'FeatureModelTree',
 
     components: {
+        Navbar,
       FeatureModelTreeErrorDialog,
       FeatureModelTreeLoadingDialog,
         FeatureModelTreeToolbar,
