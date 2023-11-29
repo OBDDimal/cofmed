@@ -95,6 +95,7 @@
             @show-collaboration-dialog="$emit('show-collaboration-dialog')"
             @show-tutorial="$emit('show-tutorial')"
             @new-empty-model="$emit('new-empty-model')"
+            @download-svg='$emit("download-svg")'
         ></navbar>
 
         <div id='svg-container'></div>
@@ -301,10 +302,6 @@ export default {
                     this.search.selectedNode
                 );
             }
-        },
-
-        onChangeSearchText(searchText) {
-
         },
 
         updateSvg() {

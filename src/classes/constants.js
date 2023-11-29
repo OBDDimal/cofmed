@@ -379,3 +379,19 @@ export const EXAMPLE_FEATURE_MODEL_XML = `
 \t\t<featureOrder userDefined="false"/>
 \t</featureModel>
 `;
+
+
+export const EXAMPLE_FEATURE_MODEL_XML2 = `
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<featureModel>
+    <properties/>
+        <struct>
+            <and name="Root" mandatory="true">
+                <feature mandatory="true" name="Feature A"/>
+                <feature mandatory="false" name="Feature B"/>
+            </and>
+        </struct>
+    <constraints/>
+    <comments/>
+</featureModel>
+`;

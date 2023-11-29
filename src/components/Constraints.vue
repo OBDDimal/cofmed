@@ -1,7 +1,6 @@
 <template>
     <v-bottom-sheet
         v-model="isOpenDialog"
-        hide-overlay
         @click:outside="$emit('close')"
     >
         <constraint-add-edit-dialog

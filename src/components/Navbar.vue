@@ -33,7 +33,7 @@
                     <v-list-item prepend-icon='mdi-file-document-plus' title='Open Feature Model'
                                  @click='$emit("openFile")'>
                     </v-list-item>
-                    <v-list-item prepend-icon='mdi-file' title='Open New Model'
+                    <v-list-item prepend-icon='mdi-file' :title='isFileLoaded ? "Open New Model" : "Open Small Model"'
                                  @click='$emit("newEmptyModel")'>
                     </v-list-item>
                     <v-list-item v-if='isFileLoaded' prepend-icon='mdi-file-cog'
@@ -47,6 +47,9 @@
                                  title='Download Model'
                                  @click='$emit("download")'>
                     </v-list-item>
+                    <v-list-item v-if='isFileLoaded' prepend-icon='mdi-download'
+                                 title='Download Model as SVG' @click='$emit("download-svg")'>
+                    </v-list-item>
                 </v-list>
             </v-menu>
             <v-menu offset-y :close-on-content-click='false' class='mx-1'
@@ -57,6 +60,7 @@
                         prepend-icon='mdi-eye'
                         v-bind='props'
                         id='feature-model-navbar-view'
+                        :disabled='!isFileLoaded'
                     >
                         View
                     </v-btn>
@@ -240,6 +244,7 @@
                 prepend-icon='mdi-school'
                 @click="$emit('show-tutorial')"
                 id='tutorial-mode-button'
+                :disabled='!isFileLoaded'
             >
                 Tutorial
             </v-btn>
@@ -247,6 +252,8 @@
             <v-btn
                 :prepend-icon="isServiceAvailable ? 'mdi-wifi' : 'mdi-wifi-off'"
                 class='mx-1'
+                :disabled='!isFileLoaded'
+                style="pointer-events: none"
             >
                 Service Status
             </v-btn>
