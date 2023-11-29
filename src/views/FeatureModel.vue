@@ -85,8 +85,7 @@
             icon
             location='right bottom'
             position='absolute'
-            style='background-color:  rgb(var(--v-theme-primary))'
-            theme='dark'
+            color='primary'
             @click='openConstraints = true'
         >
             <v-icon>mdi-format-list-checks</v-icon>
