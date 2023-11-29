@@ -186,6 +186,9 @@ import * as update_service from '@/services/FeatureModel/update.service';
 import { useDisplay } from 'vuetify';
 import Navbar from '@/components/Navbar.vue';
 import * as d3 from 'd3';
+import svgClasses from '@/assets/svgClasses.css'
+import axios from 'axios';
+import { sv } from 'vuetify/locale';
 
 
 export default {
@@ -471,7 +474,7 @@ export default {
             this.updateSvg();
         },
 
-        downloadSVG() {
+        async downloadSVG() {
             try {
                 let isFileSaverSupported = !!new Blob();
             } catch (e) {
@@ -483,9 +486,7 @@ export default {
                 .attr('xmlns', 'http://www.w3.org/2000/svg')
                 .node().parentNode.innerHTML;
 
-            //const styleString = document.getElementsByTagName('style')[0].outerHTML;
-
-            const styleString = this.$style.toString();
+            const styleString = "<style>" + svgClasses + "</style>";
             let split = html.split('>');
             split[1] = styleString + split[1];
             html = split.join('>');

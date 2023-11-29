@@ -271,9 +271,6 @@
                 @click='toggleTheme'
             >
             </v-btn>
-            <v-btn v-fullscreen icon>
-                <v-icon> mdi-fullscreen</v-icon>
-            </v-btn>
             <v-btn
                 class='drawer-button'
                 icon='mdi-menu'
@@ -289,11 +286,6 @@
                 "
                 class='mx-3 theme-button'
                 @click='toggleTheme'
-            >
-            </v-btn>
-            <v-btn
-                :class="breakpoints.smAndDown ? 'mr-3' : ''"
-                icon='mdi-fullscreen'
             >
             </v-btn>
         </div>

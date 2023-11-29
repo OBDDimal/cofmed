@@ -10,12 +10,7 @@ import { RECT_HEIGHT } from '@/classes/constants';
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
         .selectAll('g.node')
-        .data(
-            visibleD3Nodes.filter(
-                (d3Node) => d3Node.data instanceof FeatureNode
-            ),
-            (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter)
-        );
+        .data(visibleD3Nodes.filter((d3Node) => d3Node.data instanceof FeatureNode), (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter));
 
     // Enter new nodes
     const featureNodeEnter = featureNode
@@ -47,6 +42,7 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
             collapse.collapseShortcut(d3Data, event, d3Node); // Collapse d3Node with Ctrl + left-click on d3Node.
         });
 
+
     const rectAndTextEnter = featureNodeEnter
         .append('g')
         .classed('rect-and-text', true);
@@ -62,26 +58,11 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
 
     // Update nodes
     const featureNodeUpdate = featureNodeEnter.merge(featureNode);
-    featureNodeUpdate.attr(
-        'transform',
-        (d3Node) => `translate(${d3Node.x}, ${d3Node.y})`
-    );
+    featureNodeUpdate.attr('transform', (d3Node) => `translate(${d3Node.x}, ${d3Node.y})`);
     featureNodeUpdate
         .select('.and-group-circle')
-        .classed(
-            'mandatory-and-group-circle',
-            (d3Node) =>
-                d3Node.parent &&
-                (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) &&
-                d3Node.data.isMandatory
-        )
-        .classed(
-            'optional-and-group-circle',
-            (d3Node) =>
-                d3Node.parent &&
-                (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) &&
-                !d3Node.data.isMandatory
-        )
+        .classed('mandatory-and-group-circle', (d3Node) => d3Node.parent && (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) && d3Node.data.isMandatory)
+        .classed('optional-and-group-circle', (d3Node) => d3Node.parent && (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) && !d3Node.data.isMandatory)
         .classed('false-optional', (d3Node) => d3Node.data.falseOptional);
 
     const rectAndTextUpdate = featureNodeUpdate.select('.rect-and-text');
@@ -89,17 +70,12 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         .select('rect')
         .classed('is-searched-feature', (d3Node) => d3Node.data.isSearched)
         .classed('feature', true)
-        .attr('x', (d3Node) =>
-            d3Data.direction === 'v' ? -d3Node.width / 2 : 0
-        )
+        .attr('x', (d3Node) => d3Data.direction === 'v' ? -d3Node.width / 2 : 0)
         .attr('y', d3Data.direction === 'v' ? 0 : -CONSTANTS.RECT_HEIGHT / 2)
         .attr('width', (d3Node) => d3Node.width);
     rectAndTextUpdate
         .select('text')
-        .attr(
-            'dy',
-            d3Data.direction === 'v' ? CONSTANTS.RECT_HEIGHT / 2 + 5.5 : 5.5
-        )
+        .attr('dy', d3Data.direction === 'v' ? CONSTANTS.RECT_HEIGHT / 2 + 5.5 : 5.5)
         .classed('abstract', (d3Node) => d3Node.data.isAbstract)
         .classed('core', (d3Node) => d3Node.data.core)
         .classed('dead', (d3Node) => d3Node.data.dead)
@@ -109,9 +85,7 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
             const rgb = color.replace(/[^\d,]/g, '').split(',');
             return rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 <= 186;
         })
-        .text((d3Node) =>
-            d3Data.isShortenedName ? d3Node.data.displayName : d3Node.data.name
-        );
+        .text((d3Node) => d3Data.isShortenedName ? d3Node.data.displayName : d3Node.data.name);
 
     // Remove old/invisible nodes.
     featureNode.exit().remove();
@@ -127,17 +101,13 @@ function updateQuickEditActions(d3Data, featureNodeUpdate) {
     const quickEditActions = featureNodeUpdate
         .select('g.quick-edit-actions-container')
         .selectAll('g.quick-edit-actions')
-        .data(
-            (d) => (d3Data.quickEdit && d3Data.featureModelTree.editRights ? [d] : []),
-            (d) => d.data.id
-        );
+        .data((d) => (d3Data.quickEdit && d3Data.featureModelTree.editRights ? [d] : []), (d) => d.data.id);
 
     const quickEditActionsEnter = quickEditActions
         .enter()
         .append('g')
         .classed('quick-edit-actions', true);
-    const quickEditActionsUpdate =
-        quickEditActionsEnter.merge(quickEditActions);
+    const quickEditActionsUpdate = quickEditActionsEnter.merge(quickEditActions);
 
     // Bottom circle
     const bottomEnter = quickEditActionsEnter
@@ -151,11 +121,7 @@ function updateQuickEditActions(d3Data, featureNodeUpdate) {
     drawQuickEditGroup(bottomEnter);
     quickEditActionsUpdate
         .select('g.quick-edit-action-child')
-        .attr('transform', (d3Node) =>
-            d3Data.direction === 'v'
-                ? `translate(0, ${RECT_HEIGHT})`
-                : `translate(${d3Node.width}, 0)`
-        );
+        .attr('transform', (d3Node) => d3Data.direction === 'v' ? `translate(0, ${RECT_HEIGHT})` : `translate(${d3Node.width}, 0)`);
 
     // Left side circle
     const leftEnter = quickEditActionsEnter
@@ -164,19 +130,13 @@ function updateQuickEditActions(d3Data, featureNodeUpdate) {
         .classed('quick-edit-action-left', true)
         .on('click', (e, d3Node) => {
             e.stopPropagation();
-            d3Data.d3AddNodeIndex = d3Node.data.parent.children.indexOf(
-                d3Node.data
-            );
+            d3Data.d3AddNodeIndex = d3Node.data.parent.children.indexOf(d3Node.data);
             d3Data.featureModelTree.openAddAsSiblingDialog(d3Node);
         });
     drawQuickEditGroup(leftEnter);
     quickEditActionsUpdate
         .select('g.quick-edit-action-left')
-        .attr('transform', (d3Node) =>
-            d3Data.direction === 'v'
-                ? `translate(${-d3Node.width / 2}, ${RECT_HEIGHT / 2})`
-                : `translate(${d3Node.width / 2}, -${RECT_HEIGHT / 2})`
-        );
+        .attr('transform', (d3Node) => d3Data.direction === 'v' ? `translate(${-d3Node.width / 2}, ${RECT_HEIGHT / 2})` : `translate(${d3Node.width / 2}, -${RECT_HEIGHT / 2})`);
 
     // Right side circle
     const rightEnter = quickEditActionsEnter
@@ -185,40 +145,27 @@ function updateQuickEditActions(d3Data, featureNodeUpdate) {
         .classed('quick-edit-action-right', true)
         .on('click', (e, d3Node) => {
             e.stopPropagation();
-            d3Data.d3AddNodeIndex =
-                d3Node.data.parent.children.indexOf(d3Node.data) + 1;
+            d3Data.d3AddNodeIndex = d3Node.data.parent.children.indexOf(d3Node.data) + 1;
             d3Data.featureModelTree.openAddAsSiblingDialog(d3Node);
         });
     drawQuickEditGroup(rightEnter);
-    quickEditActionsUpdate.select('g.quick-edit-action-right').attr(
-        'transform',
-        (d3Node) => `
-    translate(${d3Node.width / 2}, ${RECT_HEIGHT / 2})`
-    );
+    quickEditActionsUpdate.select('g.quick-edit-action-right').attr('transform', (d3Node) => `
+    translate(${d3Node.width / 2}, ${RECT_HEIGHT / 2})`);
 
     quickEditActions.exit().remove();
 }
 
 function drawQuickEditGroup(d3Element) {
     // Enlarge on mobile
-    const radius =
-        'ontouchstart' in window
-            ? CONSTANTS.QUICK_EDIT_RADIUS * 1.75
-            : CONSTANTS.QUICK_EDIT_RADIUS;
+    const radius = 'ontouchstart' in window ? CONSTANTS.QUICK_EDIT_RADIUS * 1.75 : CONSTANTS.QUICK_EDIT_RADIUS;
     d3Element.append('circle').attr('fill', '#4caf50').attr('r', radius);
     d3Element
         .append('path')
-        .attr(
-            'd',
-            `M -0.5 ${-(2 * radius) / 3} h 1 v ${(4 * radius) / 3} h -1 z`
-        )
+        .attr('d', `M -0.5 ${-(2 * radius) / 3} h 1 v ${(4 * radius) / 3} h -1 z`)
         .attr('fill', 'white');
     d3Element
         .append('path')
-        .attr(
-            'd',
-            `M ${-(2 * radius) / 3} -0.5 v 1 h ${(4 * radius) / 3} v -1 z`
-        )
+        .attr('d', `M ${-(2 * radius) / 3} -0.5 v 1 h ${(4 * radius) / 3} v -1 z`)
         .attr('fill', 'white');
 }
 
@@ -227,10 +174,7 @@ function updateChildrenCount(d3Data, featureNodeUpdate) {
     const childrenCount = featureNodeUpdate
         .select('g.children-count-container')
         .selectAll('g.children-count')
-        .data(
-            (d) => (d.data.isLeaf() || !d.data.isCollapsed ? [] : [d]),
-            (d) => d.id
-        );
+        .data((d) => (d.data.isLeaf() || !d.data.isCollapsed ? [] : [d]), (d) => d.id);
 
     const childrenCountEnter = childrenCount
         .enter()
@@ -280,12 +224,7 @@ function updateChildrenCount(d3Data, featureNodeUpdate) {
 function updatePseudoNodes(d3Data, visibleD3Nodes) {
     const pseudoNode = d3Data.container.featureNodesContainer
         .selectAll('g.pseudo-node')
-        .data(
-            visibleD3Nodes.filter(
-                (d3Node) => d3Node.data instanceof PseudoNode
-            ),
-            (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter)
-        );
+        .data(visibleD3Nodes.filter((d3Node) => d3Node.data instanceof PseudoNode), (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter));
     const pseudoNodeEnter = pseudoNode
         .enter()
         .append('g')
@@ -322,18 +261,13 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
     const highlightedNodes = visibleD3Nodes
         .filter((d3Node) => d3Node.data instanceof FeatureNode)
         .map((d3Node) => ({
-            d3Node: d3Node,
-            highlightedConstraints: d3Node.data.getHighlightedConstraints()
+            d3Node: d3Node, highlightedConstraints: d3Node.data.getHighlightedConstraints()
         }))
         .filter((d) => d.highlightedConstraints.length);
 
-    const highlightedConstraintNodes =
-        d3Data.container.highlightedConstraintsContainer
-            .selectAll('g.highlighted-constraints')
-            .data(
-                highlightedNodes,
-                (d) => d.d3Node.id || (d.d3Node.id = ++d3Data.nodeIdCounter)
-            );
+    const highlightedConstraintNodes = d3Data.container.highlightedConstraintsContainer
+        .selectAll('g.highlighted-constraints')
+        .data(highlightedNodes, (d) => d.d3Node.id || (d.d3Node.id = ++d3Data.nodeIdCounter));
 
     const highlightedConstraintNodesEnter = highlightedConstraintNodes
         .enter()
@@ -343,14 +277,9 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
     const highlightedConstraintNodeRects = highlightedConstraintNodesEnter
         .merge(highlightedConstraintNodes)
         .selectAll('rect')
-        .data(
-            (d) =>
-                d.highlightedConstraints.map((c) => ({
-                    constraint: c,
-                    d3Node: d.d3Node
-                })),
-            (d) => d.constraint.toString() + d.d3Node.id
-        );
+        .data((d) => d.highlightedConstraints.map((c) => ({
+            constraint: c, d3Node: d.d3Node
+        })), (d) => d.constraint.toString() + d.d3Node.id);
 
     // Enter highlighted constraint rects
     const highlightedConstraintNodeRectsEnter = highlightedConstraintNodeRects
@@ -363,38 +292,13 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
     // Update highlighted constraint rects
     highlightedConstraintNodeRectsEnter
         .merge(highlightedConstraintNodeRects)
-        .attr('x', (constraint) =>
-            d3Data.direction === 'v' ? -constraint.d3Node.width / 2 : 0
-        )
+        .attr('x', (constraint) => d3Data.direction === 'v' ? -constraint.d3Node.width / 2 : 0)
         .attr('y', d3Data.direction === 'v' ? 0 : -CONSTANTS.RECT_HEIGHT / 2)
-        .attr(
-            'height',
-            (_, i) =>
-                CONSTANTS.RECT_HEIGHT +
-                i * 2 * CONSTANTS.STROKE_WIDTH_CONSTANT +
-                CONSTANTS.STROKE_WIDTH_CONSTANT
-        )
-        .attr(
-            'width',
-            (constraint, i) =>
-                constraint.d3Node.width +
-                i * 2 * CONSTANTS.STROKE_WIDTH_CONSTANT +
-                CONSTANTS.STROKE_WIDTH_CONSTANT
-        )
-        .attr(
-            'transform',
-            (json, i) => `
-    translate(${
-                json.d3Node.x -
-                i * CONSTANTS.STROKE_WIDTH_CONSTANT -
-                CONSTANTS.STROKE_WIDTH_CONSTANT / 2
-            },
-        ${
-                json.d3Node.y -
-                i * CONSTANTS.STROKE_WIDTH_CONSTANT -
-                CONSTANTS.STROKE_WIDTH_CONSTANT / 2
-            })`
-        );
+        .attr('height', (_, i) => CONSTANTS.RECT_HEIGHT + i * 2 * CONSTANTS.STROKE_WIDTH_CONSTANT + CONSTANTS.STROKE_WIDTH_CONSTANT)
+        .attr('width', (constraint, i) => constraint.d3Node.width + i * 2 * CONSTANTS.STROKE_WIDTH_CONSTANT + CONSTANTS.STROKE_WIDTH_CONSTANT)
+        .attr('transform', (json, i) => `
+    translate(${json.d3Node.x - i * CONSTANTS.STROKE_WIDTH_CONSTANT - CONSTANTS.STROKE_WIDTH_CONSTANT / 2},
+        ${json.d3Node.y - i * CONSTANTS.STROKE_WIDTH_CONSTANT - CONSTANTS.STROKE_WIDTH_CONSTANT / 2})`);
 
     // Remove constraints highlighted nodes
     highlightedConstraintNodes.exit().remove();
@@ -404,7 +308,7 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
 function updateLinks(d3Data, visibleD3Nodes) {
     const links = visibleD3Nodes
         .slice(1)
-        .filter((d3Node) => d3Node.data instanceof FeatureNode);
+        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof PseudoNode);
     const link = d3Data.container.linksContainer
         .selectAll('path.link')
         .data(links, (d3Node) => d3Node.id);
@@ -416,13 +320,19 @@ function updateLinks(d3Data, visibleD3Nodes) {
         .classed('is-searched-link', (d3Node) => d3Node.data.isSearched)
         .classed('false-optional', (d3Node) => d3Node.data.falseOptional)
         .attr('d', (d3Node) => {
+
             if (d3Data.direction === 'v') {
-                return createPaths.createLinkVertically(d3Node.parent, d3Node);
+                if (d3Node.data instanceof PseudoNode) {
+                    return createPaths.createLinkVertically(d3Node.data.parent.d3Node, d3Node);
+                } else {
+                    return createPaths.createLinkVertically(d3Node.parent, d3Node);
+                }
             } else {
-                return createPaths.createLinkHorizontally(
-                    d3Node.parent,
-                    d3Node
-                );
+                if (d3Node.data instanceof PseudoNode) {
+                    return createPaths.createLinkHorizontally(d3Node.data.parent.d3Node, d3Node);
+                } else {
+                    return createPaths.createLinkHorizontally(d3Node.parent, d3Node);
+                }
             }
         });
 
@@ -437,14 +347,7 @@ function updateColoring(d3Data) {
 function updateSegments(d3Data, visibleD3Nodes) {
     const segment = d3Data.container.segmentsContainer
         .selectAll('path.segment')
-        .data(
-            visibleD3Nodes.filter(
-                (d3Node) =>
-                    d3Node.data instanceof FeatureNode &&
-                    (d3Node.data.isAlt() || d3Node.data.isOr())
-            ),
-            (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter)
-        );
+        .data(visibleD3Nodes.filter((d3Node) => d3Node.data instanceof FeatureNode && (d3Node.data.isAlt() || d3Node.data.isOr())), (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter));
 
     const segmentEnter = segment
         .enter()
@@ -458,15 +361,9 @@ function updateSegments(d3Data, visibleD3Nodes) {
         .classed('or-group', (d3Node) => d3Node.data.isOr())
         .attr('d', (d3Node) => {
             if (d3Data.direction === 'h') {
-                return createPaths.createGroupSegmentHorizontally(
-                    d3Node,
-                    CONSTANTS.GROUP_SEGMENT_RADIUS
-                );
+                return createPaths.createGroupSegmentHorizontally(d3Node, CONSTANTS.GROUP_SEGMENT_RADIUS);
             } else {
-                return createPaths.createGroupSegmentVertically(
-                    d3Node,
-                    CONSTANTS.GROUP_SEGMENT_RADIUS
-                );
+                return createPaths.createGroupSegmentVertically(d3Node, CONSTANTS.GROUP_SEGMENT_RADIUS);
             }
         })
         .attr('transform', (d3Node) => {
@@ -528,15 +425,7 @@ export function updateSvg(d3Data) {
 // Calculates rect-width dependent on font-size dynamically.
 export function calcRectWidth(d3Data, d3Node) {
     if (d3Node.data instanceof FeatureNode) {
-        return (
-            (d3Data.isShortenedName
-                ? d3Node.data.displayName.length
-                : d3Node.data.name.length) *
-            (CONSTANTS.FEATURE_FONT_SIZE *
-                CONSTANTS.MONOSPACE_HEIGHT_WIDTH_FACTOR) +
-            CONSTANTS.RECT_MARGIN.left +
-            CONSTANTS.RECT_MARGIN.right
-        );
+        return ((d3Data.isShortenedName ? d3Node.data.displayName.length : d3Node.data.name.length) * (CONSTANTS.FEATURE_FONT_SIZE * CONSTANTS.MONOSPACE_HEIGHT_WIDTH_FACTOR) + CONSTANTS.RECT_MARGIN.left + CONSTANTS.RECT_MARGIN.right);
     } else {
         return CONSTANTS.PSEUDO_NODE_SIZE * 2;
     }

@@ -1,7 +1,8 @@
 <template>
-    <v-bottom-sheet
+    <v-navigation-drawer
         v-model="isOpenDialog"
-        @click:outside="$emit('close')"
+        location='bottom'
+        style='height: 30rem'
     >
         <constraint-add-edit-dialog
             :all-nodes="rootNode ? rootNode.descendants() : undefined"
@@ -95,7 +96,7 @@
                 </v-btn>
             </template>
         </v-data-table>
-    </v-bottom-sheet>
+    </v-navigation-drawer>
 </template>
 
 <script>
