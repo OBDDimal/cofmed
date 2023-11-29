@@ -74,7 +74,6 @@
             @show-tutorial='showTutorial = true'
             @error-closed='errorClosed'
             @error-new='message => errorNew(message)'
-            @download-svg='downloadSVG2'
         >
         </feature-model-tree>
 
@@ -458,70 +457,7 @@ export default {
             xmlTranspiler.downloadXML(this.data);
         },
 
-        downloadSVG() {
-            try {
-                let isFileSaverSupported = !!new Blob();
-            } catch (e) {
-                alert('blob not supported');
-            }
 
-            let html = d3.select('svg')
-                .attr('version', 1.1)
-                .attr('xmlns', 'http://www.w3.org/2000/svg')
-                .node().parentNode.innerHTML;
-
-            const styleString = document.getElementsByTagName('style')[0].outerHTML;
-
-            let split = html.split('>');
-            split[1] = styleString + split[1];
-            html = split.join('>');
-
-            let blob = new Blob([html], { type: 'image/svg+xml' });
-            if (window.navigator && window.navigator.msSaveOrOpenBlob) // IE10+
-                window.navigator.msSaveOrOpenBlob(blob, 'model.svg');
-            else {
-                let a = document.createElement('a');
-                document.body.appendChild(a);
-                a.style = 'display: none';
-                let url = URL.createObjectURL(blob);
-                a.href = url;
-                a.download = 'model.svg';
-                a.click();
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(url);
-            }
-        },
-
-        downloadSVG2() {
-            let svg = d3.select("svg").node().parentNode;
-
-            //get svg source.
-            let serializer = new XMLSerializer();
-            let source = serializer.serializeToString(svg);
-
-            //add name spaces.
-            if (!source.match(/^<svg[^>]+xmlns="http:\/\/www\.w3\.org\/2000\/svg"/)) {
-                source = source.replace(/^<svg/, '<svg xmlns="http://www.w3.org/2000/svg"');
-            }
-            if (!source.match(/^<svg[^>]+"http:\/\/www\.w3\.org\/1999\/xlink"/)) {
-                source = source.replace(/^<svg/, '<svg xmlns:xlink="http://www.w3.org/1999/xlink"');
-            }
-
-            //add xml declaration
-            source = '<?xml version="1.0" standalone="no"?>\r\n' + source;
-
-            //convert svg source to URI data scheme.
-            let url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(source);
-
-            let a = document.createElement('a');
-            document.body.appendChild(a);
-            a.style = 'display: none';
-            a.href = url;
-            a.download = 'model.svg';
-            a.click();
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        },
 
         commandEvent() {
             // Can't override text for Chrome & Edge

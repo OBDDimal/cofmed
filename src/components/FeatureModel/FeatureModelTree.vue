@@ -95,7 +95,7 @@
             @show-collaboration-dialog="$emit('show-collaboration-dialog')"
             @show-tutorial="$emit('show-tutorial')"
             @new-empty-model="$emit('new-empty-model')"
-            @download-svg='$emit("download-svg")'
+            @download-svg='downloadSVG'
         ></navbar>
 
         <div id='svg-container'></div>
@@ -185,6 +185,7 @@ import { RemoveCommand } from '@/classes/Commands/FeatureModel/RemoveCommand';
 import * as update_service from '@/services/FeatureModel/update.service';
 import { useDisplay } from 'vuetify';
 import Navbar from '@/components/Navbar.vue';
+import * as d3 from 'd3';
 
 
 export default {
@@ -468,7 +469,49 @@ export default {
         updateQuickEdit(newValue) {
             this.d3Data.quickEdit = newValue;
             this.updateSvg();
-        }
+        },
+
+        downloadSVG() {
+            try {
+                let isFileSaverSupported = !!new Blob();
+            } catch (e) {
+                alert('blob not supported');
+            }
+
+            let html = d3.select('svg')
+                .attr('version', 1.1)
+                .attr('xmlns', 'http://www.w3.org/2000/svg')
+                .node().parentNode.innerHTML;
+
+            //const styleString = document.getElementsByTagName('style')[0].outerHTML;
+
+            const styleString = this.$style.toString();
+            let split = html.split('>');
+            split[1] = styleString + split[1];
+            html = split.join('>');
+
+            html = '<?xml version="1.0" standalone="no"?>\r\n' + html;
+
+            html = html.replace("/\0/g", '');
+
+            //convert svg source to URI data scheme.
+            let url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(html);
+
+            /*let blob = new Blob([html], { type: 'image/svg+xml' });
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) // IE10+
+                window.navigator.msSaveOrOpenBlob(blob, 'model.svg');
+            else {*/
+                let a = document.createElement('a');
+                document.body.appendChild(a);
+                a.style = 'display: none';
+                //let url = URL.createObjectURL(blob);
+                a.href = url;
+                a.download = 'model.svg';
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+            //}
+        },
     },
 
     computed: {
@@ -506,7 +549,7 @@ export default {
 };
 </script>
 
-<style lang='scss'>
+<style lang='scss' module>
 .ghost-circle {
     fill: red;
     fill-opacity: 0.2;
