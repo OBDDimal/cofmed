@@ -173,6 +173,22 @@
                         <template v-slot:prepend='{ active }'>
                             <v-list-item-action start>
                                 <v-checkbox-btn
+                                    v-model='nonSemanticEditing'
+                                    :input-value='active'
+                                    color='primary'
+                                ></v-checkbox-btn>
+                            </v-list-item-action>
+
+                            <v-list-item-title>
+                                Non semantic editing
+                            </v-list-item-title>
+                        </template>
+                    </v-list-item>
+
+                    <v-list-item>
+                        <template v-slot:prepend='{ active }'>
+                            <v-list-item-action start>
+                                <v-checkbox-btn
                                     v-model='semanticEditing'
                                     :input-value='active'
                                     color='primary'
@@ -199,6 +215,8 @@
                             </v-list-item-title>
                         </template>
                     </v-list-item>
+
+
                 </v-list>
             </v-menu>
 
@@ -362,6 +380,7 @@ export default {
         spaceBetweenSiblings: 20,
         itemsColoring: ['Standard', 'Direct Children', 'Total Children'],
         isShortName: false,
+        nonSemanticEditing: false,
         semanticEditing: false,
         quickEdit: false,
         drawer: false,
@@ -385,6 +404,9 @@ export default {
         },
         maxChilds: function(newValue) {
             this.$emit('maxChilds', newValue);
+        },
+        nonSemanticEditing: function(newValue) {
+            this.$emit('nonSemanticEditing', newValue);
         },
         semanticEditing: function(newValue) {
             this.$emit('semanticEditing', newValue);

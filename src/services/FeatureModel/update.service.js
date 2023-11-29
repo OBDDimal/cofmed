@@ -6,6 +6,7 @@ import { PseudoNode } from '@/classes/PseudoNode';
 import * as count from '@/services/FeatureModel/count.service';
 import { ghostNodeTouchMove } from '@/services/FeatureModel/dragAndDrop.service';
 import { RECT_HEIGHT } from '@/classes/constants';
+import * as d3 from 'd3';
 
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
@@ -17,9 +18,6 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         .enter()
         .append('g')
         .classed('node', true)
-        .call(d3Data.drag.listener)
-        // Highlight and reset highlighting of ghost-nodes during drag and drop of feature-nodes.
-        .on('touchmove', (event) => ghostNodeTouchMove(event, d3Data), true)
         // Open contextmenu with right-click on d3Node.
         .on('contextmenu', (event, d3Node) => {
             // only use contextmenu on non-mobile devices
@@ -64,6 +62,18 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         .classed('mandatory-and-group-circle', (d3Node) => d3Node.parent && (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) && d3Node.data.isMandatory)
         .classed('optional-and-group-circle', (d3Node) => d3Node.parent && (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) && !d3Node.data.isMandatory)
         .classed('false-optional', (d3Node) => d3Node.data.falseOptional);
+
+    if (d3Data.nonSemanticEditing) {
+        featureNodeUpdate
+            .call(d3Data.drag.listener)
+            // Highlight and reset highlighting of ghost-nodes during drag and drop of feature-nodes.
+            .on('touchmove', (event) => ghostNodeTouchMove(event, d3Data), true);
+    } else {
+        featureNodeUpdate
+            .on('mousedown.drag', null)
+            .on('touchmove', null);
+    }
+
 
     const rectAndTextUpdate = featureNodeUpdate.select('.rect-and-text');
     rectAndTextUpdate
