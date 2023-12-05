@@ -32,7 +32,6 @@
 </template>
 
 <script setup>
-import Navbar from '@/components/Navbar.vue';
 import { useAppStore } from '@/store/app';
 import { storeToRefs } from 'pinia';
 import { useDisplay } from 'vuetify';
