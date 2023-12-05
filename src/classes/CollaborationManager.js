@@ -21,7 +21,7 @@ export default class CollaborationManager {
         this.options = {
             host: import.meta.env.VITE_APP_DOMAIN_WEBSOCKET,
             port: import.meta.env.VITE_APP_DOMAIN_WEBSOCKET_PORT,
-            path: "/myapp",
+            path: "/",
             pingInterval: 5000,
             debug: 0,
         };
