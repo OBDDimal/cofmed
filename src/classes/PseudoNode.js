@@ -16,4 +16,8 @@ export class PseudoNode {
         const rightD3Siblings = parentD3Children.slice(index + 1);
         this.parent.d3Node.children = [...leftD3Siblings, ...this.hiddenD3Nodes, ...rightD3Siblings];
     }
+
+    level() {
+        return this.parent.level() + 1;
+    }
 }
