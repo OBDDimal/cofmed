@@ -25,9 +25,9 @@
         @save='save'
         @semanticEditing='(value) => updateSemanticEdit(value)'
         @nonSemanticEditing='(value) => updateNonSemanticEdit(value)'
-        @shortName='changeShortName'
-        @spaceBetweenParentChild='changeSpaceBetweenParentChild'
-        @spaceBetweenSiblings='changeSpaceBetweenSiblings'
+        @shortName='(value) => changeShortName(value)'
+        @spaceBetweenParentChild='(value) =>changeSpaceBetweenParentChild(value)'
+        @spaceBetweenSiblings='(value) =>changeSpaceBetweenSiblings(value)'
         @toggleDirection='toggleDirection'
         @open-constraints="openConstraints = true"
         @undo='undo'
@@ -544,35 +544,44 @@ export default {
         },
 
         toggleDirection() {
-
+            this.$refs.featureModelTree.d3Data.direction = this.$refs.featureModelTree.d3Data.direction === 'v' ? 'h' : 'v';
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+            view.zoomFit(this.$refs.featureModelTree.d3Data);
         },
 
-        updateQuickEdit() {
-
+        updateQuickEdit(newValue) {
+            this.$refs.featureModelTree.d3Data.quickEdit = newValue;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
         },
 
         resetView(levels, maxChildren){
-
+            this.$refs.featureModelTree.d3Data.direction ='v';
+            view.reset(this.$refs.featureModelTree.d3Data, levels, maxChildren);
         },
 
         updateSemanticEdit(value){
-
+            this.$refs.featureModelTree.d3Data.semanticEditing = value;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
         },
 
         updateNonSemanticEdit(value){
-
+            this.$refs.featureModelTree.d3Data.nonSemanticEditing = value;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
         },
 
-        changeShortName(){
-
+        changeShortName(value){
+            this.$refs.featureModelTree.d3Data.isShortenedName = value;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
         },
 
-        changeSpaceBetweenParentChild(){
-
+        changeSpaceBetweenParentChild(spacing){
+            this.$refs.featureModelTree.d3Data.spaceBetweenParentChild = spacing;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
         },
 
-        changeSpaceBetweenSiblings(){
-
+        changeSpaceBetweenSiblings(spacing){
+            this.$refs.featureModelTree.d3Data.spaceBetweenSiblings = spacing;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
         },
     }
 };
