@@ -570,7 +570,8 @@ export function updateLegend(d3Data){
         .remove();
 
     let container= d3.select(".legend-container");
-    container.attr("height", legendItems.length *30); // dynamically adjust container height 
+    let containerHeight= CONSTANTS.LEGEND_CONTAINER_OFFSET+ legendItems.length *CONSTANTS.LEGEND_ITEM_HEIGHT;
+    container.attr("height",containerHeight ); // dynamically adjust container height 
 
     let join= d3
         .select('.legend-items')
@@ -667,20 +668,20 @@ function enterLegendItems(selection){
 
     let legendItem= selection
             .append('g')
-            .attr("transform", (d,i)=> "translate(10," + (40+ i*20) + ")")
+            .attr("transform", (d,i)=> "translate(10," + (CONSTANTS.LEGEND_CONTAINER_OFFSET+ i*CONSTANTS.LEGEND_ITEM_HEIGHT) + ")")
             .classed('legend-item', true);
 
     let img= legendItem
             .append('svg:image')
                 .attr('class', 'iconUserTotal')
-                .attr('width', 10)
-                .attr('height', 10)
-                .attr('y', -10)
+                .attr('width', CONSTANTS.LEGEND_IMG_WIDTH)
+                .attr('height', CONSTANTS.LEGEND_IMG_HEIGHT)
+                .attr('y', -CONSTANTS.LEGEND_IMG_HEIGHT)
                 .attr('href', item=> item.image);
     let text= legendItem
         .append('text')
         .text(item=> item.description )
-        .attr("transform", "translate(20,0)")
+        .attr("transform", "translate(55,0)")
         .classed('legend-item', true);
     
         

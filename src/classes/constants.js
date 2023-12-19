@@ -81,3 +81,11 @@ export const EXAMPLE_FEATURE_MODEL_XML = `
     <comments/>
 </featureModel>
 `;
+
+
+
+export const LEGEND_CONTAINER_OFFSET=50;
+export const LEGEND_ITEM_HEIGHT=30;
+export const LEGEND_ITEM_TEXT_OFFSET=55;
+export const LEGEND_IMG_WIDTH=46;
+export const LEGEND_IMG_HEIGHT=18;
