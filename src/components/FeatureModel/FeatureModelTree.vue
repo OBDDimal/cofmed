@@ -96,7 +96,17 @@
         ></feature-model-tree-toolbar>
 
         <div id="svg-container"></div>
-
+        <v-btn
+            v-show="showHideLegendBtn"
+            elevation='2'
+            icon
+            position="absolute"
+            style='left: 500px; top: 230px; background-color: rgb(var(--v-theme-primary))'
+            theme='dark'
+            @click="$emit('hide-legend')"
+            >
+                <v-icon>mdi-close</v-icon>
+        </v-btn>
         <feature-model-tree-context-menu
             :d3Node="d3Data.contextMenu.selectedD3Node"
             :d3NodeEvent="d3Data.contextMenu.event"
@@ -253,6 +263,7 @@ export default {
         showEditDialog: false,
         showRemoveDialog: false,
         editNode: undefined,
+        showHideLegendBtn:true,
         search: {
             showSearch: false,
             searchText: undefined,
@@ -322,10 +333,12 @@ export default {
                 // Legend shown until now=> hide  
                 update.hideLegend();
                 this.d3Data.showLegend=false;
+                this.showHideLegendBtn=false;
             }else{
                 // Legend not shown until now => re initialize
                 init.initLegend(this.d3Data);
                 this.d3Data.showLegend=true;
+                this.showHideLegendBtn=true;
             }
             update_service.updateSvg(this.d3Data);
             
