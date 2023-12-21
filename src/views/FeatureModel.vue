@@ -48,6 +48,7 @@
             :is-service-available='isServiceAvailable'
             :loadingData='loadingData'
             :rootNode='data.rootNode'
+            :showLegend='showLegend'
             @exportToXML='exportToXML'
             @reset='reset'
             @save='save'
@@ -61,6 +62,7 @@
             @show-tutorial='showTutorial = true'
             @error-closed='errorClosed'
             @error-new='message => errorNew(message)'
+            @hide-legend='showLegend=false'
         >
         </feature-model-tree>
         <v-btn
@@ -157,8 +159,18 @@
             @continue-editing='continueEditing'
         >
         </collaboration-continue-editing-dialog>
-
-
+        <v-btn
+            id='feature-model-legend'
+            elevation='2'
+            icon
+            location='bottom'
+            position='absolute'
+            style='background-color: rgb(var(--v-theme-primary))'
+            theme='dark'
+            @click='showLegend=!showLegend'
+        >
+            <v-icon>mdi-map-legend</v-icon>
+        </v-btn>
     </div>
 </template>
 
@@ -236,6 +248,7 @@ export default {
             openConstraints: false,
             openInformation: false,
             showTutorial: false,
+            showLegend: true,
             facts: FactLabelFactory.getEmptyFactLabel(),
         };
     },
@@ -321,7 +334,6 @@ export default {
             if(this.xml === undefined){
                 return;
             }
-            console.log("update");
             let nFeatures=this.data.rootNode.descendants().length;
             this.facts.metrics.find((fact)=>{
                     return fact.name==="Features"
