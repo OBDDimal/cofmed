@@ -215,6 +215,7 @@ export default {
             flexLayout: undefined,
             zoom: undefined,
             nodeIdCounter: 0,
+            showLegend: true,
             isShortenedName: false,
             drag: {
                 listener: undefined,
@@ -314,6 +315,19 @@ export default {
 
         updateSvg() {
             update.updateSvg(this.d3Data);
+        },
+        toggleLegend(){
+            if(this.d3Data.showLegend){
+                // Legend shown until now=> hide  
+                update.hideLegend();
+                this.d3Data.showLegend=false;
+            }else{
+                // Legend not shown until now => re initialize
+                init.initLegend(this.d3Data);
+                this.d3Data.showLegend=true;
+            }
+            update_service.updateSvg(this.d3Data);
+            
         },
 
         fitToView() {

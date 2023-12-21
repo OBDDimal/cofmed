@@ -564,6 +564,10 @@ function dblClickEvent(event, d3Data, d3Node) {
 }
 
 export function updateLegend(d3Data){
+    if(!d3Data.showLegend){
+        // Legend not shown so just return
+        return;
+    }
     let legendItems= getDOMItems(d3Data);
     d3
         .selectAll('.legend-item')
@@ -580,7 +584,15 @@ export function updateLegend(d3Data){
         .join(enterLegendItems); //update legend items within container
 
 }
-
+export function hideLegend(){
+    d3
+        .selectAll('.legend-items')
+        .remove();
+    d3
+        .selectAll('.legend-container')
+        .remove();
+    return;
+}
 function getDOMItems(d3Data){
     /**
      * Go through d3 elements to determine the set of present Items to add to the legend

@@ -78,7 +78,7 @@ function calcNodeSize(d3Data, d3Node) {
 }
 
 
-function initLegend(d3Data){
+export function initLegend(d3Data){
     /**
      * Initialize Legend drawn in SVG by appending a svg to the main-svg
      */
