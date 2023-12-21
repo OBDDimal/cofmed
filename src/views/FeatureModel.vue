@@ -77,7 +77,13 @@
         >
             <v-icon>mdi-information</v-icon>
         </v-btn>
-
+        <feature-model-fact-label-bar
+        :isOpen="openInformation"
+        :metadata="facts.metadata"
+        :metrics="facts.metrics"
+        :analysis="facts.analysis"
+        @close="openInformation = false">
+        </feature-model-fact-label-bar>
         <v-btn
             id='feature-model-constraints'
             :x-large='$vuetify.display.mdAndUp'
@@ -160,6 +166,7 @@
 import FeatureModelTree from '../components/FeatureModel/FeatureModelTree.vue';
 import Constraints from '../components/Constraints.vue';
 import * as update from '@/services/FeatureModel/update.service';
+import * as FactLabelFactory from "@/classes/Factlabel/FactLabelFactory"
 import api from '@/services/api.service';
 import beautify from 'xml-beautifier';
 import CollaborationManager from '@/classes/CollaborationManager';
@@ -173,6 +180,7 @@ import { EXAMPLE_FEATURE_MODEL_XML } from '@/classes/constants';
 import TutorialMode from '@/components/TutorialMode';
 import { NewEmptyModelCommand } from '@/classes/Commands/FeatureModel/NewEmptyModelCommand';
 import { SliceCommand } from '@/classes/Commands/FeatureModel/SliceCommand';
+import FeatureModelFactLabelBar from '@/components/FeatureModel/FeatureModelFactLabelBar.vue';
 import FeatureModelInformation from '@/components/FeatureModel/FeatureModelInformation';
 import { useAppStore } from '@/store/app';
 import axios from 'axios';
@@ -189,7 +197,8 @@ export default {
         CollaborationToolbar,
         FeatureModelTree,
         Constraints,
-        CollaborationNameDialog
+        CollaborationNameDialog,
+        FeatureModelFactLabelBar,
     },
 
     props: {
@@ -226,7 +235,8 @@ export default {
             collaborationStatus: false,
             openConstraints: false,
             openInformation: false,
-            showTutorial: false
+            showTutorial: false,
+            facts: FactLabelFactory.getEmptyFactLabel(),
         };
     },
 
@@ -271,6 +281,7 @@ export default {
 
         // Start tutorial mode if it has not been completed before
         this.showTutorial = !localStorage.featureModelTutorialCompleted;
+        this.updateFacts();
     },
 
     beforeRouteLeave(to, from, next) {
@@ -305,6 +316,16 @@ export default {
                 5000,
                 true
             );
+        },
+        updateFacts(){
+            if(this.xml === undefined){
+                return;
+            }
+            console.log("update");
+            let nFeatures=this.data.rootNode.descendants().length;
+            this.facts.metrics.find((fact)=>{
+                    return fact.name==="Features"
+                }).value=  nFeatures;
         },
 
         reset() {
@@ -425,6 +446,7 @@ export default {
             const xml = beautify(EXAMPLE_FEATURE_MODEL_XML);
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
+            this.updateFacts();
         },
 
         updateFeatureModel() {
@@ -440,6 +462,7 @@ export default {
         },
 
         commandEvent() {
+            this.updateFacts();
             // Can't override text for Chrome & Edge
             window.onbeforeunload = function() {
                 return 'Do you really want to leave the page? Collaboration sessions will be closed and data will be lost!';
