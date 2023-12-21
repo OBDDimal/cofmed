@@ -318,7 +318,7 @@ export default {
             update.updateSvg(this.d3Data);
         },
         toggleLegend(){
-            if(this.showLegend){
+            if(!this.showLegend){
                 // Legend shown until now=> hide  
                 update.hideLegend();
                 this.d3Data.showLegend=false;

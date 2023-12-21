@@ -250,7 +250,7 @@ export default {
             openConstraints: false,
             openInformation: false,
             showTutorial: false,
-            showLegend: false,
+            showLegend: true,
             facts: FactLabelFactory.getEmptyFactLabel(),
         };
     },
