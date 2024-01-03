@@ -351,8 +351,8 @@ const breakpoints = useDisplay();
 
 function toggleTheme() {
     theme.global.name.value = theme.global.current.value.dark
-        ? 'variabilityLightTheme'
-        : 'variabilityDarkTheme';
+        ? 'light'
+        : 'dark';
 }
 
 </script>
