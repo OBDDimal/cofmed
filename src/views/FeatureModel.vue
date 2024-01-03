@@ -1,4 +1,43 @@
 <template>
+    <f-m-navbar
+        :is-service-available='isServiceAvailable'
+        :is-file-loaded='data.rootNode !== undefined'
+        :collaborationStatus='collaborationStatus'
+        :editRights='editRights'
+        :is-redo-available='
+                featureModelCommandManager && featureModelCommandManager.isRedoAvailable()
+            '
+        :is-save-available='
+                (featureModelCommandManager && featureModelCommandManager.isUndoAvailable()) ||
+                constraintCommandManager.isUndoAvailable()
+            '
+        :is-undo-available='
+                featureModelCommandManager && featureModelCommandManager.isUndoAvailable()
+            '
+        @download='exportToXML'
+        @fitToView='fitToView'
+        @quickEdit='(value) => updateQuickEdit(value)'
+        @redo='redo'
+        @reset='reset'
+        @openConf='openConfigurator'
+        @openFile='openFilePicker'
+        @resetView='(levels, maxChildren) => resetView(levels, maxChildren)'
+        @save='save'
+        @semanticEditing='(value) => updateSemanticEdit(value)'
+        @nonSemanticEditing='(value) => updateNonSemanticEdit(value)'
+        @shortName='(value) => changeShortName(value)'
+        @spaceBetweenParentChild='(value) =>changeSpaceBetweenParentChild(value)'
+        @spaceBetweenSiblings='(value) =>changeSpaceBetweenSiblings(value)'
+        @toggleDirection='toggleDirection'
+        @open-constraints="openConstraints = true"
+        @undo='undo'
+        @show-collaboration-dialog="showStartCollaborationSessionDialog = true"
+        @show-tutorial='showTutorial = true'
+        @new-empty-model='newEmptyModel'
+        @download-svg='downloadSVG'
+
+
+    ></f-m-navbar>
     <div v-if='xml === undefined'>
         <v-container :fluid='true'>
             <v-card :class="{ 'grey lighten-2': dragover }"
@@ -19,7 +58,8 @@
                         <p class='text-h4'>
                             Drop your FeatureModel file here, or click to select it.
                         </p>
-                        <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text' @click.stop='loadInitialModel'>
+                        <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text'
+                               @click.stop='loadInitialModel'>
                             Or click here to load a default model.
                         </v-btn>
                     </v-row>
@@ -184,6 +224,8 @@ import FeatureModelFactLabelBar from '@/components/FeatureModel/FeatureModelFact
 import FeatureModelInformation from '@/components/FeatureModel/FeatureModelInformation';
 import { useAppStore } from '@/store/app';
 import axios from 'axios';
+import FMNavbar from '@/components/FMNavbar.vue';
+import * as view from '@/services/FeatureModel/view.service';
 
 const appStore = useAppStore();
 
@@ -191,6 +233,7 @@ export default {
     name: 'FeatureModel',
 
     components: {
+        FMNavbar,
         TutorialMode,
         FeatureModelInformation,
         CollaborationContinueEditingDialog,
@@ -336,6 +379,11 @@ export default {
 
         openFilePicker() {
             this.$refs.filePicker.click();
+        },
+
+        openConfigurator() {
+            // TODO: Try to redirect to the right window
+            localStorage.featureModelData = jsonToXML(this.data);
         },
 
         async openFile(files) {
@@ -498,7 +546,66 @@ export default {
         errorNew(message) {
             this.error = true;
             this.errorMessage = message;
-        }
+        },
+
+        fitToView() {
+            view.zoomFit(this.$refs.featureModelTree.d3Data);
+        },
+
+        undo() {
+            this.featureModelCommandManager.undo();
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        },
+
+        redo() {
+            this.featureModelCommandManager.redo();
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        },
+
+        downloadSVG() {
+            // TODO: Implement download
+        },
+
+        toggleDirection() {
+            this.$refs.featureModelTree.d3Data.direction = this.$refs.featureModelTree.d3Data.direction === 'v' ? 'h' : 'v';
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+            view.zoomFit(this.$refs.featureModelTree.d3Data);
+        },
+
+        updateQuickEdit(newValue) {
+            this.$refs.featureModelTree.d3Data.quickEdit = newValue;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        },
+
+        resetView(levels, maxChildren){
+            this.$refs.featureModelTree.d3Data.direction ='v';
+            view.reset(this.$refs.featureModelTree.d3Data, levels, maxChildren);
+        },
+
+        updateSemanticEdit(value){
+            this.$refs.featureModelTree.d3Data.semanticEditing = value;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        },
+
+        updateNonSemanticEdit(value){
+            this.$refs.featureModelTree.d3Data.nonSemanticEditing = value;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        },
+
+        changeShortName(value){
+            this.$refs.featureModelTree.d3Data.isShortenedName = value;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        },
+
+        changeSpaceBetweenParentChild(spacing){
+            this.$refs.featureModelTree.d3Data.spaceBetweenParentChild = spacing;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        },
+
+        changeSpaceBetweenSiblings(spacing){
+            this.$refs.featureModelTree.d3Data.spaceBetweenSiblings = spacing;
+            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        },
     }
 };
 </script>
