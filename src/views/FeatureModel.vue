@@ -88,6 +88,7 @@
             :is-service-available='isServiceAvailable'
             :loadingData='loadingData'
             :rootNode='data.rootNode'
+            :showLegend='showLegend'
             @exportToXML='exportToXML'
             @reset='reset'
             @save='save'
@@ -101,22 +102,52 @@
             @show-tutorial='showTutorial = true'
             @error-closed='errorClosed'
             @error-new='message => errorNew(message)'
+            @hide-legend='showLegend=false'
         >
         </feature-model-tree>
-        <v-btn
-            id='feature-model-information'
-            :x-large='$vuetify.display.mdAndUp'
-            class='mr-15'
-            elevation='2'
-            icon
-            location='right bottom'
-            position='absolute'
-            style='background-color: rgb(var(--v-theme-primary))'
-            theme='dark'
-            @click='openInformation = !openInformation'
-        >
-            <v-icon>mdi-information</v-icon>
-        </v-btn>
+        <v-row
+            justify="end"
+            class='mr-2 '
+            >
+            <v-btn
+                id='feature-model-legend'
+                elevation='2'
+                class='mr-2'
+                icon
+                style='background-color: rgb(var(--v-theme-primary))'
+                theme='dark'
+                @click='showLegend=!showLegend'
+            >
+                <v-icon>mdi-map-legend</v-icon>
+            </v-btn>
+            <v-btn
+                id='feature-model-information'
+                :x-large='$vuetify.display.mdAndUp'
+                elevation='2'
+                class='mr-2'
+                icon
+                style='background-color: rgb(var(--v-theme-primary))'
+                theme='dark'
+                @click='openInformation = !openInformation'
+            >
+                <v-icon>mdi-information</v-icon>
+            </v-btn>
+            <v-btn
+                id='feature-model-constraints'
+                :x-large='$vuetify.display.mdAndUp'
+                data-cy='feature-model-constraints-button'
+                elevation='2'
+                class='mr-2'
+                icon
+                style='background-color:  rgb(var(--v-theme-primary))'
+                theme='dark'
+                @click='openConstraints = true'
+            >
+                <v-icon>mdi-format-list-checks</v-icon>
+            </v-btn>
+        </v-row>
+       
+
         <feature-model-fact-label-bar
         :isOpen="openInformation"
         :metadata="facts.metadata"
@@ -124,21 +155,6 @@
         :analysis="facts.analysis"
         @close="openInformation = false">
         </feature-model-fact-label-bar>
-        <v-btn
-            id='feature-model-constraints'
-            :x-large='$vuetify.display.mdAndUp'
-            data-cy='feature-model-constraints-button'
-            elevation='2'
-            icon
-            location='right bottom'
-            position='absolute'
-            style='background-color:  rgb(var(--v-theme-primary))'
-            theme='dark'
-            @click='openConstraints = true'
-        >
-            <v-icon>mdi-format-list-checks</v-icon>
-        </v-btn>
-
         <constraints
             v-if='data.constraints'
             ref='constraints'
@@ -197,8 +213,6 @@
             @continue-editing='continueEditing'
         >
         </collaboration-continue-editing-dialog>
-
-
     </div>
 </template>
 
@@ -279,6 +293,7 @@ export default {
             openConstraints: false,
             openInformation: false,
             showTutorial: false,
+            showLegend: true,
             facts: FactLabelFactory.getEmptyFactLabel(),
         };
     },
@@ -364,7 +379,6 @@ export default {
             if(this.xml === undefined){
                 return;
             }
-            console.log("update");
             let nFeatures=this.data.rootNode.descendants().length;
             this.facts.metrics.find((fact)=>{
                     return fact.name==="Features"
