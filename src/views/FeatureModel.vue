@@ -1,9 +1,8 @@
 <template>
     <f-m-navbar
-        :is-service-available='isServiceAvailable'
-        :is-file-loaded='data.rootNode !== undefined'
         :collaborationStatus='collaborationStatus'
         :editRights='editRights'
+        :is-file-loaded='data.rootNode !== undefined'
         :is-redo-available='
                 featureModelCommandManager && featureModelCommandManager.isRedoAvailable()
             '
@@ -11,33 +10,41 @@
                 (featureModelCommandManager && featureModelCommandManager.isUndoAvailable()) ||
                 constraintCommandManager.isUndoAvailable()
             '
+        :is-service-available='isServiceAvailable'
         :is-undo-available='
                 featureModelCommandManager && featureModelCommandManager.isUndoAvailable()
             '
         @download='exportToXML'
         @fitToView='fitToView'
+        @nonSemanticEditing='(value) => updateNonSemanticEdit(value)'
+        @openConf='openConfigurator'
+        @openFile='openFilePicker'
         @quickEdit='(value) => updateQuickEdit(value)'
         @redo='redo'
         @reset='reset'
-        @openConf='openConfigurator'
-        @openFile='openFilePicker'
         @resetView='(levels, maxChildren) => resetView(levels, maxChildren)'
         @save='save'
         @semanticEditing='(value) => updateSemanticEdit(value)'
-        @nonSemanticEditing='(value) => updateNonSemanticEdit(value)'
         @shortName='(value) => changeShortName(value)'
         @spaceBetweenParentChild='(value) =>changeSpaceBetweenParentChild(value)'
         @spaceBetweenSiblings='(value) =>changeSpaceBetweenSiblings(value)'
         @toggleDirection='toggleDirection'
-        @open-constraints="openConstraints = true"
         @undo='undo'
-        @show-collaboration-dialog="showStartCollaborationSessionDialog = true"
+        @open-constraints='openConstraints = true'
+        @show-collaboration-dialog='showStartCollaborationSessionDialog = true'
         @show-tutorial='showTutorial = true'
         @new-empty-model='newEmptyModel'
         @download-svg='downloadSVG'
 
 
     ></f-m-navbar>
+    <input
+        id='filePicker'
+        accept='.xml'
+        class='d-none'
+        type='file'
+        @change='onFileInputChanged'
+    >
     <div v-if='xml === undefined'>
         <v-container :fluid='true'>
             <v-card :class="{ 'grey lighten-2': dragover }"
@@ -64,13 +71,6 @@
                         </v-btn>
                     </v-row>
                 </v-card-text>
-                <input
-                    ref='filePicker'
-                    accept='.xml'
-                    class='d-none'
-                    type='file'
-                    @change='onFileInputChanged'
-                >
             </v-card>
         </v-container>
     </div>
@@ -82,6 +82,7 @@
             :collaborationStatus='collaborationStatus'
             :command-manager='featureModelCommandManager'
             :constraints='data.constraints'
+            :d3-data='d3Data'
             :editRights='editRights'
             :error='error'
             :error-message='errorMessage'
@@ -106,16 +107,15 @@
         >
         </feature-model-tree>
         <v-row
-            justify="end"
             class='mr-2 '
-            >
+            justify='end'
+        >
             <v-btn
                 id='feature-model-legend'
-                elevation='2'
                 class='mr-2'
+                color='primary'
+                elevation='2'
                 icon
-                style='background-color: rgb(var(--v-theme-primary))'
-                theme='dark'
                 @click='showLegend=!showLegend'
             >
                 <v-icon>mdi-map-legend</v-icon>
@@ -123,11 +123,10 @@
             <v-btn
                 id='feature-model-information'
                 :x-large='$vuetify.display.mdAndUp'
-                elevation='2'
                 class='mr-2'
+                color='primary'
+                elevation='2'
                 icon
-                style='background-color: rgb(var(--v-theme-primary))'
-                theme='dark'
                 @click='openInformation = !openInformation'
             >
                 <v-icon>mdi-information</v-icon>
@@ -135,25 +134,24 @@
             <v-btn
                 id='feature-model-constraints'
                 :x-large='$vuetify.display.mdAndUp'
+                class='mr-2'
+                color='primary'
                 data-cy='feature-model-constraints-button'
                 elevation='2'
-                class='mr-2'
                 icon
-                style='background-color:  rgb(var(--v-theme-primary))'
-                theme='dark'
                 @click='openConstraints = true'
             >
                 <v-icon>mdi-format-list-checks</v-icon>
             </v-btn>
         </v-row>
-       
+
 
         <feature-model-fact-label-bar
-        :isOpen="openInformation"
-        :metadata="facts.metadata"
-        :metrics="facts.metrics"
-        :analysis="facts.analysis"
-        @close="openInformation = false">
+            :analysis='facts.analysis'
+            :isOpen='openInformation'
+            :metadata='facts.metadata'
+            :metrics='facts.metrics'
+            @close='openInformation = false'>
         </feature-model-fact-label-bar>
         <constraints
             v-if='data.constraints'
@@ -213,6 +211,11 @@
             @continue-editing='continueEditing'
         >
         </collaboration-continue-editing-dialog>
+
+        <tutorial-mode
+            :show='showTutorial'
+            @close='showTutorial = false'
+        ></tutorial-mode>
     </div>
 </template>
 
@@ -220,7 +223,7 @@
 import FeatureModelTree from '../components/FeatureModel/FeatureModelTree.vue';
 import Constraints from '../components/Constraints.vue';
 import * as update from '@/services/FeatureModel/update.service';
-import * as FactLabelFactory from "@/classes/Factlabel/FactLabelFactory"
+import * as FactLabelFactory from '@/classes/Factlabel/FactLabelFactory';
 import api from '@/services/api.service';
 import beautify from 'xml-beautifier';
 import CollaborationManager from '@/classes/CollaborationManager';
@@ -255,7 +258,7 @@ export default {
         FeatureModelTree,
         Constraints,
         CollaborationNameDialog,
-        FeatureModelFactLabelBar,
+        FeatureModelFactLabelBar
     },
 
     props: {
@@ -295,6 +298,45 @@ export default {
             showTutorial: false,
             showLegend: true,
             facts: FactLabelFactory.getEmptyFactLabel(),
+            d3Data: {
+                root: undefined,
+                flexLayout: undefined,
+                zoom: undefined,
+                nodeIdCounter: 0,
+                showLegend: true,
+                isShortenedName: false,
+                drag: {
+                    listener: undefined,
+                    hasStarted: false,
+                    ghostNodes: [],
+                    selectedD3Node: undefined,
+                    selectedGhostNode: undefined,
+                    selectedD3NodePosition: undefined,
+                    mode: 'mouse' // touch or mouse
+                },
+                contextMenu: {
+                    selectedD3Node: undefined,
+                    event: undefined
+                },
+                container: {
+                    highlightedConstraintsContainer: undefined,
+                    linksContainer: undefined,
+                    segmentsContainer: undefined,
+                    featureNodesContainer: undefined,
+                    dragContainer: undefined
+                },
+                spaceBetweenParentChild: 75,
+                spaceBetweenSiblings: 20,
+                d3ParentOfAddNode: undefined,
+                d3AddNodeIndex: 0,
+                coloringIndex: -1,
+                semanticEditing: false,
+                nonSemanticEditing: false,
+                quickEdit: false,
+                direction: 'v', // h = horizontally, v = vertically
+                maxHorizontallyLevelWidth: [],
+                featureModelTree: undefined
+            }
         };
     },
 
@@ -375,14 +417,14 @@ export default {
                 true
             );
         },
-        updateFacts(){
-            if(this.xml === undefined){
+        updateFacts() {
+            if (this.xml === undefined) {
                 return;
             }
-            let nFeatures=this.data.rootNode.descendants().length;
-            this.facts.metrics.find((fact)=>{
-                    return fact.name==="Features"
-                }).value=  nFeatures;
+            let nFeatures = this.data.rootNode.descendants().length;
+            this.facts.metrics.find((fact) => {
+                return fact.name === 'Features';
+            }).value = nFeatures;
         },
 
         reset() {
@@ -392,7 +434,7 @@ export default {
         },
 
         openFilePicker() {
-            this.$refs.filePicker.click();
+            document.getElementById('filePicker').click();
         },
 
         openConfigurator() {
@@ -401,6 +443,7 @@ export default {
         },
 
         async openFile(files) {
+            this.xml = undefined;
             const data = await files[0].text();
             const xml = beautify(data);
             xmlTranspiler.xmlToJson(xml, this.data);
@@ -486,7 +529,7 @@ export default {
         newEmptyModel() {
             const command = new NewEmptyModelCommand(
                 this,
-                this.$refs.featureModelTree.d3Data
+                this.d3Data
             );
             this.featureModelCommandManager.execute(command);
             this.updateFeatureModel();
@@ -512,7 +555,7 @@ export default {
         },
 
         updateFeatureModel() {
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
+            update.updateSvg(this.d3Data);
         },
 
         updateConstraints() {
@@ -563,17 +606,17 @@ export default {
         },
 
         fitToView() {
-            view.zoomFit(this.$refs.featureModelTree.d3Data);
+            view.zoomFit(this.d3Data);
         },
 
         undo() {
             this.featureModelCommandManager.undo();
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
+            update.updateSvg(this.d3Data);
         },
 
         redo() {
             this.featureModelCommandManager.redo();
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
+            update.updateSvg(this.d3Data);
         },
 
         downloadSVG() {
@@ -581,45 +624,92 @@ export default {
         },
 
         toggleDirection() {
-            this.$refs.featureModelTree.d3Data.direction = this.$refs.featureModelTree.d3Data.direction === 'v' ? 'h' : 'v';
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
-            view.zoomFit(this.$refs.featureModelTree.d3Data);
+            this.d3Data.direction = this.d3Data.direction === 'v' ? 'h' : 'v';
+            update.updateSvg(this.d3Data);
+            view.zoomFit(this.d3Data);
         },
 
         updateQuickEdit(newValue) {
-            this.$refs.featureModelTree.d3Data.quickEdit = newValue;
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
+            this.d3Data.quickEdit = newValue;
+            update.updateSvg(this.d3Data);
         },
 
-        resetView(levels, maxChildren){
-            this.$refs.featureModelTree.d3Data.direction ='v';
-            view.reset(this.$refs.featureModelTree.d3Data, levels, maxChildren);
+        resetView(levels, maxChildren) {
+            this.d3Data.direction = 'v';
+            view.reset(this.d3Data, levels, maxChildren);
         },
 
-        updateSemanticEdit(value){
-            this.$refs.featureModelTree.d3Data.semanticEditing = value;
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        updateSemanticEdit(value) {
+            this.d3Data.semanticEditing = value;
+            update.updateSvg(this.d3Data);
         },
 
-        updateNonSemanticEdit(value){
-            this.$refs.featureModelTree.d3Data.nonSemanticEditing = value;
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        updateNonSemanticEdit(value) {
+            this.d3Data.nonSemanticEditing = value;
+            update.updateSvg(this.d3Data);
         },
 
-        changeShortName(value){
-            this.$refs.featureModelTree.d3Data.isShortenedName = value;
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        changeShortName(value) {
+            this.d3Data.isShortenedName = value;
+            update.updateSvg(this.d3Data);
         },
 
-        changeSpaceBetweenParentChild(spacing){
-            this.$refs.featureModelTree.d3Data.spaceBetweenParentChild = spacing;
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
+        changeSpaceBetweenParentChild(spacing) {
+            this.d3Data.spaceBetweenParentChild = spacing;
+            update.updateSvg(this.d3Data);
         },
 
-        changeSpaceBetweenSiblings(spacing){
-            this.$refs.featureModelTree.d3Data.spaceBetweenSiblings = spacing;
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
-        },
+        changeSpaceBetweenSiblings(spacing) {
+            this.d3Data.spaceBetweenSiblings = spacing;
+            update.updateSvg(this.d3Data);
+        }
     }
 };
 </script>
+<style lang='scss'>
+.feature {
+    font-family: sans-serif;
+    display: inline-block;
+    fill: #ebebff;
+    border: 2px solid #999999;
+    padding: 0.5rem;
+}
+
+.abstract {
+    font-style: italic;
+}
+
+.dead {
+    text-decoration: line-through;
+}
+
+.core {
+    text-decoration: underline;
+}
+
+.false-optional {
+    stroke: #FF4500;
+    stroke-width: 1.5px;
+}
+
+
+.selected-expl {
+    border: 4px solid #31a354;
+}
+
+.selected-impl {
+    border: 4px solid #a1d99b;
+}
+
+.deselected-expl {
+    border: 4px dashed #d01c8b;
+}
+
+.deselected-impl {
+    border: 4px dashed #f1b6da;
+}
+
+.choice {
+    border: 4px dotted #0058B3;
+}
+</style>

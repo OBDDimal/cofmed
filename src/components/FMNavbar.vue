@@ -54,7 +54,7 @@
                     </v-list-item>
                 </v-list>
             </v-menu>
-            <v-menu offset-y :close-on-content-click='false' class='mx-1'
+            <v-menu offset-y location='end' :close-on-content-click='false' class='mx-1'
             >
                 <template v-slot:activator='{ props }'>
                     <v-btn
@@ -351,8 +351,8 @@ const breakpoints = useDisplay();
 
 function toggleTheme() {
     theme.global.name.value = theme.global.current.value.dark
-        ? 'light'
-        : 'dark';
+        ? 'variabilityLightTheme'
+        : 'variabilityDarkTheme';
 }
 
 </script>
