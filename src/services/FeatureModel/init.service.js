@@ -23,19 +23,37 @@ export function initialize(d3Data, data) {
         .on('zoom', (event) => svgContent.attr('transform', event.transform));
 
     // Create svg-container.
-    const svg = d3
-        .select('#svg-container')
-        .append('svg')
-        .classed('main-svg', true)
-        .attr('preserveAspectRatio', 'xMidYMid meet')
-        .call(d3Data.zoom) // Zooming and penning.
-        .on('dblclick.zoom', null);
+    let svg = undefined;
+    if (d3Data.isConf) {
+        svg = d3
+            .select('#svg-container')
+            .append('svg')
+            .attr('height', d3.select('#svg-container').style('height'))
+            .attr('preserveAspectRatio', 'xMidYMid meet')
+            .call(d3Data.zoom) // Zooming and penning.
+            .on('dblclick.zoom', null);
+    } else {
+        svg = d3
+            .select('#svg-container')
+            .append('svg')
+            .classed('main-svg', true)
+            .attr('preserveAspectRatio', 'xMidYMid meet')
+            .call(d3Data.zoom) // Zooming and penning.
+            .on('dblclick.zoom', null);
+    }
+
 
     const svgContent = svg.append('g');
 
     d3Data.container.highlightedConstraintsContainer = svgContent
         .append('g')
         .classed('highlighted-constraints-container', true);
+
+    if (d3Data.isConf) {
+        d3Data.container.selectedFeatureContainer = svgContent
+            .append('g')
+            .classed('selected-feature-container', true);
+    }
 
     d3Data.container.linksContainer = svgContent
         .append('g')
