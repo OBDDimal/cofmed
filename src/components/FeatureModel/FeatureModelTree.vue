@@ -452,6 +452,7 @@ export default {
                 this.onChangeFoundNodeIndex(0);
             } else {
                 update.updateSvg(this.d3Data);
+                view.reset(this.d3Data);
             }
         }
     },
