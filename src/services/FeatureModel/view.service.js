@@ -3,7 +3,6 @@ import * as update from '@/services/FeatureModel/update.service.js';
 import { PseudoNode } from '@/classes/PseudoNode';
 
 export function reset(d3Data, uncollapsedLevels = 4, maxChildrenCount = 3) {
-    // Collapses all nodes after depth 1.
 
     const visibleD3Nodes = d3Data.flexlayout(d3Data.root).descendants();
     visibleD3Nodes.forEach(node => {
@@ -11,6 +10,8 @@ export function reset(d3Data, uncollapsedLevels = 4, maxChildrenCount = 3) {
             node.data.unhideHiddenNodes();
         }
     } );
+
+    // Collapses all nodes after depth 1.
     d3Data.root.data.each(node => node.collapse());
     let parent = d3Data.root.data;
 
