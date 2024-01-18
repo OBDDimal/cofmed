@@ -10,6 +10,7 @@ import * as d3 from 'd3';
 import * as legendItems from '@/classes/Legend/LegendItemFactory';
 import { SelectionState } from '@/classes/SelectionState';
 
+let d3DataSaved = undefined;
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
         .selectAll('g.node')
@@ -578,6 +579,12 @@ function updateSegments(d3Data, visibleD3Nodes) {
 
 export function updateSvg(d3Data) {
     /*const start = performance.now();*/
+
+    if(d3Data === undefined) {
+        d3Data = d3DataSaved;
+    } else {
+        d3DataSaved = d3Data;
+    }
 
     // Calculate rect widths of all d3Nodes once for better performance instead of repeatedly during update.
     d3Data.root.descendants().forEach((d3Node) => {

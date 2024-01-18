@@ -20,6 +20,15 @@ const routes = [
             title: 'Collaboration Mode',
         },
     },
+    {
+        path: '/configurator',
+        name: 'Configurator',
+        props: true,
+        component: () => import('@/views/FeatureModelSoloConfigurator.vue'),
+        meta: {
+            title: 'Configurator',
+        },
+    },
 ];
 
 const router = createRouter({
