@@ -35,6 +35,10 @@
                                  title='Load Configuration' @click='$emit("openConf")'
                     >
                     </v-list-item>
+                    <v-list-item v-if='properties.fileIsLoaded' prepend-icon="mdi-file-edit"
+                                 title='Open in Editor' @click='$emit("openEdit")'
+                    >
+                    </v-list-item>
                     <v-list-item v-if='properties.fileIsLoaded' prepend-icon="mdi-content-save"
                                  title='Save Configuration to Local Storage' @click='$emit("localStorage")'>
                     </v-list-item>
@@ -131,11 +135,6 @@
                     @click="toggleTheme"
             >
             </v-btn>
-            <v-btn
-                    :class="breakpoints.smAndDown ? 'mr-3' : ''"
-                    icon="mdi-fullscreen"
-            >
-            </v-btn>
         </div>
     </v-app-bar>
 </template>
@@ -149,7 +148,7 @@ const theme = useTheme();
 const drawer = ref(false);
 const fileDrawer = ref(false)
 
-const emit = defineEmits(['localStorage', 'download', 'openFile', 'openConf', 'reset', 'theme', 'changeService'])
+const emit = defineEmits(['localStorage', 'download', 'openFile', 'openConf', 'reset', 'theme', 'changeService', 'openEdit'])
 
 const properties = defineProps({
     fileIsLoaded: Boolean,

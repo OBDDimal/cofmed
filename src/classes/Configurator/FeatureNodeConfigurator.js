@@ -4,7 +4,7 @@ import {PseudoNode} from "@/classes/PseudoNode";
 import {variabilityDarkTheme, variabilityLightTheme} from "@/plugins/vuetify";
 import {SelectionState} from "@/classes/Configurator/SelectionState";
 
-export class FeatureNode {
+export class FeatureNodeConfigurator {
     constructor(parent, name, id, groupType, mandatory, abstract) {
         this.parent = parent;
         this.id = id;
@@ -53,6 +53,21 @@ export class FeatureNode {
             return dark ? variabilityDarkTheme.colors.deselected : variabilityLightTheme.colors.deselected;
         } else if (this.selectionState === SelectionState.ImplicitlySelected) {
             return dark ? variabilityDarkTheme.colors["imp-selected"] : variabilityLightTheme.colors["imp-selected"];
+        }
+        return undefined;
+    }
+
+    selectionType() {
+        if (this.open) {
+            return "choice"
+        } else if (this.selectionState === SelectionState.ExplicitlySelected) {
+            return "selected-expl"
+        } else if (this.selectionState === SelectionState.ImplicitlySelected) {
+            return "selected-impl";
+        } else if (this.selectionState === SelectionState.ExplicitlyDeselected) {
+            return "deselected-expl";
+        } else if (this.selectionState === SelectionState.ImplicitlyDeselected) {
+            return "deselected-impl";
         }
         return undefined;
     }

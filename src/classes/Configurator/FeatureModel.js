@@ -1,6 +1,6 @@
 import {SelectionState} from "@/classes/Configurator/SelectionState";
 import beautify from "xml-beautifier";
-import {FeatureNode} from "@/classes/Configurator/FeatureNode";
+import {FeatureNodeConfigurator} from "@/classes/Configurator/FeatureNodeConfigurator";
 import {Version} from "@/classes/Configurator/Version";
 import {Feature} from "@/classes/Configurator/Feature";
 import {Constraint} from "@/classes/Constraint";
@@ -72,7 +72,7 @@ export class FeatureModel {
 
                 const feature = this.featureDict[featureName];
                 usedFeatures.push(feature);
-                let toAppend = new FeatureNode(
+                let toAppend = new FeatureNodeConfigurator(
                     feature,
                     parent,
                     featureName,

@@ -8,6 +8,7 @@
             @download='downloadXML'
             @localStorage='save'
             @openConf='openConfigFileDialog'
+            @openEdit='redirectToEditor'
             @openFile='openFileDialog'
             @reset='resetCommand'
             @theme="dark = !dark"
@@ -417,7 +418,10 @@ export default {
     },
 
     created() {
-        if (this.id) {
+        if (this.id === 'local') {
+            this.openFromLocalStorage()
+        }
+        else if (this.id) {
             this.initData();
         }
         this.setStartService();
@@ -458,6 +462,11 @@ export default {
                 5000,
                 true
             );
+        },
+
+        redirectToEditor() {
+            localStorage.featureModelData = this.xml;
+            this.$router.push({path: '/editor/local'});
         },
 
         downloadXML() {

@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
     {
-        path: '/:id?',
+        path: '/editor/:id?',
         name: 'FeatureModel',
         props: true,
         component: () => import('@/views/FeatureModel.vue'),
@@ -21,7 +21,7 @@ const routes = [
         },
     },
     {
-        path: '/configurator',
+        path: '/configurator/:id?',
         name: 'Configurator',
         props: true,
         component: () => import('@/views/FeatureModelSoloConfigurator.vue'),

@@ -28,6 +28,7 @@ export function initialize(d3Data, data) {
         svg = d3
             .select('#svg-container')
             .append('svg')
+            .classed('main-svg', true)
             .attr('height', d3.select('#svg-container').style('height'))
             .attr('preserveAspectRatio', 'xMidYMid meet')
             .call(d3Data.zoom) // Zooming and penning.

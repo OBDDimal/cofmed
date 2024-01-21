@@ -9,6 +9,7 @@ import { RECT_HEIGHT } from '@/classes/constants';
 import * as d3 from 'd3';
 import * as legendItems from '@/classes/Legend/LegendItemFactory';
 import { SelectionState } from '@/classes/SelectionState';
+import { FeatureNodeConfigurator } from '@/classes/Configurator/FeatureNodeConfigurator';
 
 let d3DataSaved = undefined;
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
@@ -16,7 +17,7 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         .selectAll('g.node')
         .data(
             visibleD3Nodes.filter(
-                (d3Node) => d3Node.data instanceof FeatureNode
+                (d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator
             ),
             (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter)
         );
@@ -324,7 +325,7 @@ function updatePseudoNodes(d3Data, visibleD3Nodes) {
 
 function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
     const highlightedNodes = visibleD3Nodes
-        .filter((d3Node) => d3Node.data instanceof FeatureNode)
+        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator)
         .map((d3Node) => ({
             d3Node: d3Node,
             highlightedConstraints: d3Node.data.getHighlightedConstraints()
@@ -408,7 +409,7 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
 function updateSelectionHighlight(d3Data, visibleD3Nodes) {
 
     const selectedNodes = visibleD3Nodes
-        .filter((d3Node) => d3Node.data instanceof FeatureNode)
+        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator)
         .map((d3Node) => ({
             d3Node: d3Node,
             feature: d3Node.data,
@@ -492,7 +493,7 @@ function updateSelectionHighlight(d3Data, visibleD3Nodes) {
 function updateLinks(d3Data, visibleD3Nodes) {
     const links = visibleD3Nodes
         .slice(1)
-        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof PseudoNode);
+        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof PseudoNode || d3Node.data instanceof FeatureNodeConfigurator);
     const link = d3Data.container.linksContainer
         .selectAll('path.link')
         .data(links, (d3Node) => d3Node.id);
@@ -533,7 +534,7 @@ function updateSegments(d3Data, visibleD3Nodes) {
         .data(
             visibleD3Nodes.filter(
                 (d3Node) =>
-                    d3Node.data instanceof FeatureNode &&
+                    (d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator) &&
                     (d3Node.data.isAlt() || d3Node.data.isOr())
             ),
             (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter)
@@ -590,7 +591,7 @@ export function updateSvg(d3Data) {
     d3Data.root.descendants().forEach((d3Node) => {
         d3Node.width = calcRectWidth(d3Data, d3Node);
 
-        if (d3Node.data instanceof FeatureNode) {
+        if (d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator) {
             const level = d3Node.data.level();
             if (d3Data.maxHorizontallyLevelWidth.length <= level) {
                 d3Data.maxHorizontallyLevelWidth.push(0);
@@ -629,7 +630,7 @@ export function updateSvg(d3Data) {
 
 // Calculates rect-width dependent on font-size dynamically.
 export function calcRectWidth(d3Data, d3Node) {
-    if (d3Node.data instanceof FeatureNode) {
+    if (d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator) {
         return (
             (d3Data.isShortenedName
                 ? d3Node.data.displayName.length

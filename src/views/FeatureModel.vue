@@ -438,8 +438,8 @@ export default {
         },
 
         openConfigurator() {
-            // TODO: Try to redirect to the right window
             localStorage.featureModelData = jsonToXML(this.data);
+            this.$router.push({path: '/configurator/local'});
         },
 
         async openFile(files) {
