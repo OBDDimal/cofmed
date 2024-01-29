@@ -18,7 +18,7 @@
                     @dragenter.prevent='dragover = true'
                     @dragleave.prevent='dragover = false'
             >
-                <v-card-text>
+                <v-card-text class='hidden-sm-and-down'>
                     <v-row :dense='true' align='center' class='d-flex flex-column'>
                         <v-icon class='mt-5' size='100'>
                             mdi-cloud-upload
@@ -27,6 +27,21 @@
                             Drop your FeatureModel file here, or click to select it.
                         </p>
                         <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text'
+                               @click.stop='loadInitialModel'>
+                            Or click here to load a default model.
+                        </v-btn>
+                    </v-row>
+                </v-card-text>
+
+                <v-card-text class='hidden-md-and-up'>
+                    <v-row :dense='true' align='center' class='d-flex flex-column'>
+                        <v-icon class='mt-5' size='75'>
+                            mdi-cloud-upload
+                        </v-icon>
+                        <p class='text-h5 text-center'>
+                            Drop your FeatureModel file here, or click to select it.
+                        </p>
+                        <v-btn class='mt-6 text-h6' color='primary' rounded='xl' variant='text'
                                @click.stop='loadInitialModel'>
                             Or click here to load a default model.
                         </v-btn>
