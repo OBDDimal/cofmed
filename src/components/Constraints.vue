@@ -1,102 +1,206 @@
 <template>
-    <v-navigation-drawer
-        v-model="isOpenDialog"
-        location='bottom'
-        style='height: 30rem'
-    >
-        <constraint-add-edit-dialog
-            :all-nodes="rootNode ? rootNode.descendants() : undefined"
-            :constraint="constraintAddEdit"
-            :mode="modeAddEdit"
-            :show="showAddEditDialog"
-            @close="closeAddEditDialog"
-            @save="(newConstraint) => save(newConstraint)"
-        ></constraint-add-edit-dialog>
+    <div class='hidden-sm-and-down'>
+        <v-navigation-drawer
+            v-model='isOpenDialog'
+            location='bottom'
+            style='height: 30rem'
 
-        <v-data-table
-            :key="updateKey"
-            :headers="headers"
-            :items="tableConstraints"
-            :items-per-page="5"
-            :search="search"
-            hide-default-header
-            style="padding: 10px"
         >
-            <template v-slot:top>
-                <div class="d-flex justify-center align-center">
-                    <v-text-field
-                        v-model="search"
-                        class="mx-4"
-                        label="Search"
-                        prepend-inner-icon="mdi-magnify"
-                    ></v-text-field>
+            <constraint-add-edit-dialog
+                :all-nodes='rootNode ? rootNode.descendants() : undefined'
+                :constraint='constraintAddEdit'
+                :mode='modeAddEdit'
+                :show='showAddEditDialog'
+                @close='closeAddEditDialog'
+                @save='(newConstraint) => save(newConstraint)'
+            ></constraint-add-edit-dialog>
 
-                    <v-btn
-                        icon
-                        outlined
-                        :disabled="!editRights"
-                        class="mr-1"
-                        @click="openAddEditDialog('Add', undefined)"
-                    >
-                        <v-icon :disabled="!editRights">mdi-plus</v-icon>
-                    </v-btn>
+            <v-data-table
+                :key='updateKey'
+                :headers='headers'
+                :items='tableConstraints'
+                :items-per-page='5'
+                :search='search'
+                hide-default-header
+                style='padding: 10px'
+            >
+                <template v-slot:top>
+                    <div class='d-flex justify-center align-center'>
+                        <v-text-field
+                            v-model='search'
+                            class='mx-4'
+                            label='Search'
+                            prepend-inner-icon='mdi-magnify'
+                        ></v-text-field>
 
-                    <v-btn
-                        :disabled="
+                        <v-btn
+                            :disabled='!editRights'
+                            class='mr-1'
+                            icon
+                            outlined
+                            @click="openAddEditDialog('Add', undefined)"
+                        >
+                            <v-icon :disabled='!editRights'>mdi-plus</v-icon>
+                        </v-btn>
+
+                        <v-btn
+                            :disabled='
                             !commandManager.isUndoAvailable() || !editRights
-                        "
-                        icon
-                        outlined
-                        class="mr-1"
-                        @click="undo"
-                    >
-                        <v-icon>mdi-undo</v-icon>
-                    </v-btn>
+                        '
+                            class='mr-1'
+                            icon
+                            outlined
+                            @click='undo'
+                        >
+                            <v-icon>mdi-undo</v-icon>
+                        </v-btn>
 
-                    <v-btn
-                        :disabled="
+                        <v-btn
+                            :disabled='
                             !commandManager.isRedoAvailable() || !editRights
-                        "
-                        icon
-                        outlined
-                        @click="redo"
+                        '
+                            icon
+                            outlined
+                            @click='redo'
+                        >
+                            <v-icon>mdi-redo</v-icon>
+                        </v-btn>
+
+                        <v-btn icon @click="$emit('close')">
+                            <v-icon>mdi-close</v-icon>
+                        </v-btn>
+                    </div>
+                </template>
+
+                <template v-slot:item.formula='{ item }'>
+                    <v-chip
+                        :color='item.raw.constraint.color'
+                        @click='highlightConstraint(item.raw)'
                     >
-                        <v-icon>mdi-redo</v-icon>
+                        {{ item.raw.formula }}
+                    </v-chip>
+                </template>
+
+                <template v-slot:item.actions='{ item }'>
+                    <v-btn
+                        :disabled='!editRights'
+                        icon='mdi-pencil'
+                        variant='text'
+                        @click="openAddEditDialog('Edit', item.raw.constraint)"
+                    >
                     </v-btn>
-
-                    <v-btn icon @click="$emit('close')">
-                        <v-icon>mdi-close</v-icon>
+                    <v-btn
+                        :disabled='!editRights'
+                        icon='mdi-delete'
+                        variant='text'
+                        @click='deleteConstraint(item.raw.constraint)'
+                    >
                     </v-btn>
-                </div>
-            </template>
+                </template>
+            </v-data-table>
+        </v-navigation-drawer>
+    </div>
 
-            <template v-slot:item.formula="{ item }">
-                <v-chip
-                    :color="item.raw.constraint.color"
-                    @click="highlightConstraint(item.raw)"
-                >
-                {{ item.raw.formula }}
-                </v-chip>
-            </template>
+    <div class='hidden-md-and-up'>
+        <v-navigation-drawer
+            v-model='isOpenDialog'
+            location='bottom'
+            style='height: 25rem'
+        >
+            <constraint-add-edit-dialog
+                :all-nodes='rootNode ? rootNode.descendants() : undefined'
+                :constraint='constraintAddEdit'
+                :mode='modeAddEdit'
+                :show='showAddEditDialog'
+                @close='closeAddEditDialog'
+                @save='(newConstraint) => save(newConstraint)'
+            ></constraint-add-edit-dialog>
 
-            <template v-slot:item.actions="{ item }">
-                <v-btn
-                    icon="mdi-pencil"
-                    variant="text"
-                    @click="openAddEditDialog('Edit', item.raw.constraint)"
-                    :disabled="!editRights"
-                >
-                </v-btn>
-                <v-btn
-                    icon="mdi-delete"
-                    variant="text"
-                    @click="deleteConstraint(item.raw.constraint)"
-                    :disabled="!editRights"
-                >
-                </v-btn>
-            </template>
-        </v-data-table>
-    </v-navigation-drawer>
+            <v-data-table
+                :key='updateKey'
+                :headers='headers'
+                :items='tableConstraints'
+                :items-per-page='5'
+                :search='search'
+                hide-default-header
+                style='padding: 10px'
+            >
+                <template v-slot:top>
+                    <div class='d-flex justify-center align-center'>
+                        <v-text-field
+                            v-model='search'
+                            class='mx-4'
+                            label='Search'
+                            prepend-inner-icon='mdi-magnify'
+                        ></v-text-field>
+
+                        <v-btn
+                            :disabled='!editRights'
+                            class='mr-1'
+                            icon
+                            outlined
+                            @click="openAddEditDialog('Add', undefined)"
+                        >
+                            <v-icon :disabled='!editRights'>mdi-plus</v-icon>
+                        </v-btn>
+
+                        <v-btn
+                            :disabled='
+                            !commandManager.isUndoAvailable() || !editRights
+                        '
+                            class='mr-1'
+                            icon
+                            outlined
+                            @click='undo'
+                        >
+                            <v-icon>mdi-undo</v-icon>
+                        </v-btn>
+
+                        <v-btn
+                            :disabled='
+                            !commandManager.isRedoAvailable() || !editRights
+                        '
+                            icon
+                            outlined
+                            @click='redo'
+                        >
+                            <v-icon>mdi-redo</v-icon>
+                        </v-btn>
+
+                        <v-btn icon @click="$emit('close')">
+                            <v-icon>mdi-close</v-icon>
+                        </v-btn>
+                    </div>
+                </template>
+
+                <template v-slot:item.formula='{ item }'>
+                    <v-chip
+                        :color='item.raw.constraint.color'
+                        @click='highlightConstraint(item.raw)'
+                    >
+                        {{ item.raw.formula }}
+                    </v-chip>
+                </template>
+
+                <template v-slot:item.actions='{ item }'>
+                    <v-btn
+                        :disabled='!editRights'
+                        icon='mdi-pencil'
+                        variant='text'
+                        @click="openAddEditDialog('Edit', item.raw.constraint)"
+                    >
+                    </v-btn>
+                    <v-btn
+                        :disabled='!editRights'
+                        icon='mdi-delete'
+                        variant='text'
+                        @click='deleteConstraint(item.raw.constraint)'
+                    >
+                    </v-btn>
+                </template>
+            </v-data-table>
+        </v-navigation-drawer>
+    </div>
 </template>
 
 <script>
@@ -110,7 +214,7 @@ export default {
     name: 'Constraints',
 
     components: {
-        ConstraintAddEditDialog: ConstraintAddEditDialog,
+        ConstraintAddEditDialog: ConstraintAddEditDialog
     },
 
     props: {
@@ -118,34 +222,35 @@ export default {
         constraints: Array,
         rootNode: undefined,
         editRights: undefined,
-        isOpen: Boolean,
+        isOpen: Boolean
     },
 
     data: () => ({
         headers: [
             { title: 'Constraint', key: 'formula', width: '50%' },
-            { title: 'Actions', key: 'actions', width: '50%' },
+            { title: 'Actions', key: 'actions', width: '50%' }
         ],
         search: '',
         showAddEditDialog: false,
         modeAddEdit: undefined,
         constraintAddEdit: undefined,
-        updateKey: 0,
+        updateKey: 0
     }),
 
-  computed: {
+    computed: {
         isOpenDialog: {
             get() {
                 return this.isOpen;
             },
-            set() {},
+            set() {
+            }
         },
         tableConstraints() {
             return this.constraints.map((e) => ({
                 constraint: e,
-                formula: e.toString(),
+                formula: e.toString()
             }));
-        },
+        }
     },
 
     methods: {
@@ -178,7 +283,7 @@ export default {
         },
 
         deleteConstraint(constraint) {
-            if(constraint.isHighlighted){ //reset highlight to free up color
+            if (constraint.isHighlighted) { //reset highlight to free up color
                 constraint.toggleHighlighted();
             }
             const command = new DeleteCommand(this.constraints, constraint);
@@ -205,7 +310,7 @@ export default {
         redo() {
             this.commandManager.redo();
             this.$emit('update-feature-model');
-        },
+        }
     },
 
     watch: {
@@ -213,12 +318,12 @@ export default {
             if (!this.editRights) {
                 this.showAddEditDialog = false;
             }
-        },
-    },
+        }
+    }
 };
 </script>
 
-<style lang="scss" scoped>
+<style lang='scss' scoped>
 .feature-model-constraints {
     position: absolute;
     bottom: 0;

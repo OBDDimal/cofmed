@@ -35,7 +35,7 @@
 
                 <v-card-text class='hidden-md-and-up'>
                     <v-row :dense='true' align='center' class='d-flex flex-column'>
-                        <v-icon class='mt-5' size='75'>
+                        <v-icon class='mt-5' size='50'>
                             mdi-cloud-upload
                         </v-icon>
                         <p class='text-h5 text-center'>

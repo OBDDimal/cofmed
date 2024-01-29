@@ -300,8 +300,6 @@
                     >
                     </v-btn>
                 </template>
-                <v-list density='compact'>
-                    <v-list-item>
                         <v-menu>
                             <template v-slot:activator='{ props }'>
                                 <v-btn
@@ -338,7 +336,6 @@
                                 </v-list-item>
                             </v-list>
                         </v-menu>
-                    </v-list-item>
                     <v-menu :close-on-content-click='false' class='mx-1' offset-y
                     >
                         <template v-slot:activator='{ props }'>
@@ -562,7 +559,6 @@
                     >
                         Service Status
                     </v-btn>
-                </v-list>
             </v-menu>
         </div>
         <div class='hidden-sm-and-down'>
