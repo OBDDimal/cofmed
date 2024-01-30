@@ -123,7 +123,9 @@
                 :items-per-page='5'
                 :search='search'
                 hide-default-header
-                style='padding: 10px'
+                style='padding: 10px; height: 40%; width: 100%'
+                class='mobile-device'
+
             >
                 <template v-slot:top>
                     <div class='d-flex justify-center align-center'>
@@ -177,6 +179,9 @@
                     <v-chip
                         :color='item.raw.constraint.color'
                         @click='highlightConstraint(item.raw)'
+                        class='text-wrap'
+                        label
+                        style='height: 90%'
                     >
                         {{ item.raw.formula }}
                     </v-chip>
@@ -332,5 +337,14 @@ export default {
     min-height: 10%;
     max-height: 40%;
     overflow: hidden;
+}
+
+.mobile-device .v-data-table__wrapper{
+    overflow-x: hidden;
+}
+
+.v-btn__content {
+  white-space: normal;
+  flex: auto;
 }
 </style>

@@ -13,6 +13,7 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         .selectAll('g.node')
         .data(visibleD3Nodes.filter((d3Node) => d3Node.data instanceof FeatureNode), (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter));
 
+    var touchDevice = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
     // Enter new nodes
     const featureNodeEnter = featureNode
         .enter()
@@ -21,7 +22,7 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         // Open contextmenu with right-click on d3Node.
         .on('contextmenu', (event, d3Node) => {
             // only use contextmenu on non-mobile devices
-            if (!('ontouchstart' in window)) {
+            if (!touchDevice) {
                 event.preventDefault();
                 d3Data.contextMenu.selectedD3Node = d3Node;
                 d3Data.contextMenu.event = event;
@@ -32,7 +33,7 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         // Toggle collapsing on double-clock on feature-node.
         .on('click', (event, d3Node) => {
             // Use click for contextmenu on mobile
-            if ('ontouchstart' in window) {
+            if (touchDevice) {
                 d3Data.contextMenu.selectedD3Node = d3Node;
                 d3Data.contextMenu.event = event;
             }

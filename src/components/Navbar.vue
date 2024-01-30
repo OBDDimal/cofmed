@@ -37,7 +37,7 @@
                                  @click='$emit("newEmptyModel")'>
                     </v-list-item>
                     <v-list-item v-if='isFileLoaded' prepend-icon='mdi-file-cog'
-                                 title='Start Configurator' @click='$emit("openConf")'
+                                 title='Switch to Configurator' @click='$emit("openConf")'
                     >
                     </v-list-item>
                     <v-list-item v-if='isFileLoaded' prepend-icon='mdi-content-save'
@@ -321,7 +321,7 @@
                                              @click='$emit("newEmptyModel")'>
                                 </v-list-item>
                                 <v-list-item v-if='isFileLoaded' prepend-icon='mdi-file-cog'
-                                             title='Start Configurator' @click='$emit("openConf")'
+                                             title='Switch to Configurator' @click='$emit("openConf")'
                                 >
                                 </v-list-item>
                                 <v-list-item v-if='isFileLoaded' prepend-icon='mdi-content-save'
