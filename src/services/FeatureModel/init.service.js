@@ -27,6 +27,7 @@ export function initialize(d3Data, data) {
     const svg = d3
         .select('#svg-container')
         .append('svg')
+        .classed("main-svg", true)
         .attr('preserveAspectRatio', 'xMidYMid meet')
         .call(d3Data.zoom) // Zooming and penning.
         .on('dblclick.zoom', null);
@@ -81,26 +82,28 @@ export function initLegend(d3Data){
     /**
      * Initialize Legend drawn in SVG by appending a svg to the main-svg
      */
-    let svg=  d3.select('.main-svg')
-    .append('svg')
-    .append('g')
-    .attr("transform", "translate(200,200)");
+    var touchDevice = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
+    if (!touchDevice) {
+        let svg = d3.select('.main-svg')
+            .append('svg')
+            .append('g')
+            .attr("transform", "translate(200,200)");
 
-    let rect= svg.append('rect')
-        .attr("width", 300)
-        .attr("height", 100)
-        .attr("fill", "white")
-        .attr("stroke", "black")
-        .attr("stroke-width", "2px")
-        .classed("legend-container", true);
+        let rect = svg.append('rect')
+            .attr("width", 300)
+            .attr("height", 100)
+            .attr("fill", "white")
+            .attr("stroke", "black")
+            .attr("stroke-width", "2px")
+            .classed("legend-container", true);
 
-    let items= svg
-        .append('g')
-        .classed('legend-items', true)
-        .append('text')
-        .attr("transform", "translate(10,20)")
-        .text("Legend: ");
+        let items = svg
+            .append('g')
+            .classed('legend-items', true)
+            .append('text')
+            .attr("transform", "translate(10,20)")
+            .text("Legend: ");
 
-    updateService.updateLegend(d3Data);
-
+        updateService.updateLegend(d3Data);
+    }
 }

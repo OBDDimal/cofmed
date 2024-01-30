@@ -101,12 +101,13 @@
 
         <div id='svg-container'></div>
         <v-btn
-            v-show="showHideLegendBtn"
+            v-show="d3Data.showLegend"
             elevation='2'
             icon
+            size='xs'
             position="absolute"
-            style='left: 500px; top: 230px; background-color: rgb(var(--v-theme-primary))'
-            theme='dark'
+            style='left: 483px; top: 250px;'
+            color='primary'
             @click="$emit('hide-legend')"
             >
                 <v-icon>mdi-close</v-icon>
@@ -236,6 +237,7 @@ export default {
             flexLayout: undefined,
             zoom: undefined,
             nodeIdCounter: 0,
+            showLegend: true,
             isShortenedName: false,
             drag: {
                 listener: undefined,
@@ -273,7 +275,6 @@ export default {
         showEditDialog: false,
         showRemoveDialog: false,
         editNode: undefined,
-        showHideLegendBtn:true,
         search: {
             showSearch: false,
             searchText: undefined,
@@ -331,12 +332,10 @@ export default {
                 // Legend shown until now=> hide
                 update.hideLegend();
                 this.d3Data.showLegend=false;
-                this.showHideLegendBtn=false;
             }else{
                 // Legend not shown until now => re initialize
                 init.initLegend(this.d3Data);
                 this.d3Data.showLegend=true;
-                this.showHideLegendBtn=true;
             }
             update_service.updateSvg(this.d3Data);
 
@@ -581,7 +580,10 @@ export default {
                 update.updateSvg(this.d3Data);
                 view.reset(this.d3Data);
             }
-        }
+        },
+        showLegend(){
+            this.toggleLegend();
+        },
     }
 };
 </script>

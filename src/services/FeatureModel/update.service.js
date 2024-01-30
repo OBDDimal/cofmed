@@ -470,8 +470,7 @@ export function updateLegend(d3Data){
         return;
     }
     let legendItems= getDOMItems(d3Data);
-    d3
-        .selectAll('.legend-item')
+    d3.selectAll('.legend-item')
         .remove();
 
     let container= d3.select(".legend-container");
@@ -486,12 +485,12 @@ export function updateLegend(d3Data){
 
 }
 export function hideLegend(){
-    d3
-        .selectAll('.legend-items')
+    d3.selectAll('.legend-items')
         .remove();
-    d3
-        .selectAll('.legend-container')
+
+    d3.selectAll('.legend-container')
         .remove();
+
     return;
 }
 function getDOMItems(d3Data){
@@ -584,15 +583,14 @@ function enterLegendItems(selection){
             .attr("transform", (d,i)=> "translate(10," + (CONSTANTS.LEGEND_CONTAINER_OFFSET+ i*CONSTANTS.LEGEND_ITEM_HEIGHT) + ")")
             .classed('legend-item', true);
 
-    let img= legendItem
-            .append('svg:image')
+    let img= legendItem.append('svg:image')
                 .attr('class', 'iconUserTotal')
                 .attr('width', CONSTANTS.LEGEND_IMG_WIDTH)
                 .attr('height', CONSTANTS.LEGEND_IMG_HEIGHT)
                 .attr('y', -CONSTANTS.LEGEND_IMG_HEIGHT)
                 .attr('href', item=> item.image);
-    let text= legendItem
-        .append('text')
+
+    let text= legendItem.append('text')
         .text(item=> item.description )
         .attr("transform", "translate(55,0)")
         .classed('legend-item', true);

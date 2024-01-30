@@ -75,8 +75,9 @@ function convertToConstraintItem(operator, stack) {
         if (stack.length < 2) {
             throw Error(`Too few arguments: Expected 2 arguments for ${operator}`);
         }
-        const second = stack.pop();
-        const first = stack.pop();
+
+        const first = stack.shift();
+        const second = stack.shift();
 
         if (operator === 'and') {
             constraintItem = new Conjunction(first, second);
