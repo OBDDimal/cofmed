@@ -2,6 +2,7 @@ import { flextree } from 'd3-flextree';
 import * as CONSTANTS from '@/classes/constants';
 import * as d3 from 'd3';
 import * as windowResize from '@/services/FeatureModel/windowResize.service.js';
+import * as updateService from '@/services/FeatureModel/update.service';
 
 export function initData(d3Data, data) {
     // Create root-feature-node with d3 and the data of the feature-model.
@@ -55,6 +56,7 @@ export function initialize(d3Data, data) {
     // Listen to window resize.
     window.onresize = () => windowResize.update(d3Data);
     windowResize.update(d3Data);
+    initLegend(d3Data);
 }
 
 function calcNodeSize(d3Data, d3Node) {
@@ -73,4 +75,32 @@ function calcNodeSize(d3Data, d3Node) {
     }
 
     return [width, height];
+}
+
+export function initLegend(d3Data){
+    /**
+     * Initialize Legend drawn in SVG by appending a svg to the main-svg
+     */
+    let svg=  d3.select('.main-svg')
+    .append('svg')
+    .append('g')
+    .attr("transform", "translate(200,200)");
+
+    let rect= svg.append('rect')
+        .attr("width", 300)
+        .attr("height", 100)
+        .attr("fill", "white")
+        .attr("stroke", "black")
+        .attr("stroke-width", "2px")
+        .classed("legend-container", true);
+
+    let items= svg
+        .append('g')
+        .classed('legend-items', true)
+        .append('text')
+        .attr("transform", "translate(10,20)")
+        .text("Legend: ");
+
+    updateService.updateLegend(d3Data);
+
 }

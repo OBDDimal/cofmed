@@ -73,6 +73,7 @@
             :is-service-available='isServiceAvailable'
             :loadingData='loadingData'
             :rootNode='data.rootNode'
+            :show-legend='showLegend'
             @exportToXML='exportToXML'
             @reset='reset'
             @save='save'
@@ -89,9 +90,24 @@
             @show-tutorial='showTutorial = true'
             @error-closed='errorClosed'
             @error-new='message => errorNew(message)'
+            @hide-legend='showLegend=false'
         >
         </feature-model-tree>
 
+        <v-btn
+            id='feature-model-legend'
+            class='mr-14'
+            :x-large='$vuetify.display.mdAndUp'
+            data-cy='feature-model-legend-button'
+            elevation='2'
+            icon
+            location='right bottom'
+            position='absolute'
+            color='primary'
+            @click='showLegend=!showLegend'
+        >
+            <v-icon>mdi-map-legend</v-icon>
+        </v-btn>
         <v-btn
             id='feature-model-constraints'
             :x-large='$vuetify.display.mdAndUp'
@@ -246,6 +262,7 @@ export default {
             collaborationStatus: false,
             openConstraints: false,
             openInformation: false,
+            showLegend: true,
             showTutorial: false
         };
     },
@@ -470,7 +487,6 @@ export default {
         exportToXML() {
             xmlTranspiler.downloadXML(this.data);
         },
-
 
 
         commandEvent() {
