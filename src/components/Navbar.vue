@@ -675,6 +675,9 @@ export default {
             this.$emit('nonSemanticEditing', newValue);
         },
         semanticEditing: function(newValue) {
+            if(newValue){
+                this.nonSemanticEditing = true;
+            }
             this.$emit('semanticEditing', newValue);
         },
         quickEdit: function(newValue) {
