@@ -13,6 +13,7 @@
                         <v-combobox
                             ref='allNodes'
                             v-model='selectedFeatureNode'
+                            :disabled='isFeatureAvailable'
                             :items='allNodes'
                             item-title='name'
                             label='Select FeatureNode'
@@ -23,49 +24,56 @@
                             <v-col cols='6' sm='auto'>
                                 <v-btn
                                     variant='outlined'
-                                    @click="appendText('AND', true, true)"
+                                    :disabled='isGroupAvailable'
+                                    @click="appendGroupOperator('AND')"
                                 >and
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
                                     variant='outlined'
-                                    @click="appendText('OR', true, true)"
+                                    :disabled='isGroupAvailable'
+                                    @click="appendGroupOperator('OR')"
                                 >or
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
                                     variant='outlined'
-                                    @click="appendText('IMPLIES', true, true)"
+                                    :disabled='isGroupAvailable'
+                                    @click="appendGroupOperator('IMPLIES')"
                                 >implies
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
                                     variant='outlined'
-                                    @click="appendText('EQUI', true, true)"
+                                    :disabled='isGroupAvailable'
+                                    @click="appendGroupOperator('EQUI')"
                                 >equi
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
                                     variant='outlined'
-                                    @click="appendText('NOT', true, true)"
+                                    :disabled='isNotAvailable'
+                                    @click="appendNotOperator()"
                                 >not
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
                                     variant='outlined'
-                                    @click="appendText('(', true, false)"
+                                    :disabled='isOpenBracketAvailable'
+                                    @click="appendBracket('(')"
                                 >(
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
                                     variant='outlined'
-                                    @click="appendText(')', false, true)"
+                                    :disabled='isClosedBracketAvailable'
+                                    @click="appendBracket(')')"
                                 >)
                                 </v-btn>
                             </v-col>
@@ -75,6 +83,7 @@
                             <v-col class='pt-0' cols='12'>
                                 <v-text-field
                                     ref='inputField'
+                                    readonly
                                     v-model='constraintText'
                                     clearable
                                     hide-details
@@ -95,7 +104,7 @@
                             <template v-slot:activator='{ props }'>
                                 <div v-bind="props" class="d-inline-block">
                                     <v-btn
-                                        :disabled='!isValid'
+                                        :disabled='!isAddAvailable'
                                         color='primary'
                                         type='submit'
                                         variant='text'
@@ -103,7 +112,7 @@
                                     </v-btn>
                                 </div>
                             </template>
-                            <span>{{ errorText }}</span>
+                            <span>{{ tooltipText }}</span>
                         </v-tooltip>
                     </v-card-actions>
                 </v-form>
@@ -123,7 +132,9 @@ export default {
         constraintText: '',
         selectedFeatureNode: undefined,
         isValid: false,
-        errorText: ''
+        errorText: '',
+        lastOperator:'',
+        openBrackets: 0
     }),
 
     props: {
@@ -149,6 +160,35 @@ export default {
         showDialog: {
             get() {
                 return this.show;
+            }
+        },
+        isFeatureAvailable() {
+            return !(this.lastOperator !== "FEATURE" && this.lastOperator !== "BRACKETCLOSED");
+        },
+        isGroupAvailable() {
+            return !(this.lastOperator === "FEATURE" || this.lastOperator === "BRACKETCLOSED");
+        },
+        isNotAvailable(){
+            return !(this.lastOperator !== "FEATURE" && this.lastOperator !== "BRACKETCLOSED");
+        },
+        isOpenBracketAvailable(){
+            return !(this.lastOperator !== "FEATURE" && this.lastOperator !== "BRACKETCLOSED");
+        },
+        isClosedBracketAvailable(){
+            return !(this.openBrackets > 0 && (this.lastOperator === "FEATURE" || this.lastOperator === "BRACKETCLOSED"));
+        },
+        isAddAvailable(){
+            return this.openBrackets === 0 && this.lastOperator !== "GROUP" && this.lastOperator !== "NOT";
+        },
+        tooltipText(){
+            if(this.openBrackets > 0){
+                return "Missing one or more closing brackets";
+            } else if (this.lastOperator === "GROUP"){
+                return "Missing a second constraint item for the last group constraint.";
+            } else if (this.lastOperator === "NOT"){
+                return "Missing a constraint item for the last not constraint";
+            } else {
+                return '';
             }
         }
     },
@@ -187,10 +227,39 @@ export default {
         appendFeatureNode(featureNode) {
             if (!featureNode) return;
             let name = featureNode.name;
-            if (name.split(' ').length > 1) {
+            let regex = /^\s+$/;
+            if (regex.test(name)) {
                 name = `"${name}"`;
             }
-            this.appendText(name, true, true);
+            this.constraintText = this.constraintText + name + ' ';
+            this.lastOperator = "FEATURE";
+            this.$refs.allNodes.internalSearch = '';
+            this.selectedFeatureNode = undefined;
+        },
+
+        appendGroupOperator(operator){
+            if (!operator) return;
+            this.constraintText = this.constraintText + operator + ' ';
+            this.lastOperator = "GROUP";
+        },
+
+        appendNotOperator(){
+            this.constraintText = this.constraintText + "NOT" + ' ';
+            this.lastOperator = "NOT";
+        },
+
+        appendBracket(bracket){
+            if (!bracket) return;
+            if (bracket === '('){
+                this.openBrackets += 1;
+                this.constraintText = this.constraintText + bracket;
+                this.lastOperator = "BRACKETOPENED";
+            } else {
+                this.openBrackets -= 1;
+                this.constraintText = this.constraintText.slice(0, -1) + bracket;
+                this.lastOperator = "BRACKETCLOSED";
+            }
+
         },
 
         appendText(text, addSpaceBefore, addSpaceAfter) {
