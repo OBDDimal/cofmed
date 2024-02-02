@@ -360,7 +360,8 @@ export default {
 
         openConfigurator() {
             localStorage.featureModelData = jsonToXML(this.data);
-            window.location = 'https://variability.dev/conf/edit';
+            window.location = '"https://configurator.variability.dev/local"';
+            // variability.dev
         },
 
         async openFile(files) {
