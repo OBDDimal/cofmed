@@ -73,6 +73,12 @@ export const LEGEND_ITEM_TEXT_OFFSET=55;
 export const LEGEND_IMG_WIDTH=46;
 export const LEGEND_IMG_HEIGHT=18;
 
+export const LEGEND_CONTAINER_OFFSET_PHONE=30;
+export const LEGEND_ITEM_HEIGHT_PHONE=25;
+export const LEGEND_ITEM_TEXT_OFFSET_PHONE=55;
+export const LEGEND_IMG_WIDTH_PHONE=32;
+export const LEGEND_IMG_HEIGHT_PHONE=10;
+
 export const EXAMPLE_FEATURE_MODEL_XML = `
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 \t<featureModel>

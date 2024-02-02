@@ -51,10 +51,10 @@
             </v-card>
         </v-container>
         <navbar
-            :is-service-available='false'
-            :is-file-loaded='false'
             :collaborationStatus='true'
             :editRights='false'
+            :is-file-loaded='false'
+            :is-service-available='false'
             @openFile='openFilePicker'
             @new-empty-model='loadInitialModelSmall'
         ></navbar>
@@ -75,6 +75,8 @@
             :rootNode='data.rootNode'
             :show-legend='showLegend'
             @exportToXML='exportToXML'
+            @openConf='openConfigurator'
+            @openFile='openFilePicker'
             @reset='reset'
             @save='save'
             @slice='node => slice(node)'
@@ -84,8 +86,6 @@
             '
             @show-claim-dialog='showClaimDialog'
             @new-empty-model='newEmptyModel'
-            @openConf='openConfigurator'
-            @openFile='openFilePicker'
             @open-constraints='openConstraints = true'
             @show-tutorial='showTutorial = true'
             @error-closed='errorClosed'
@@ -96,27 +96,27 @@
 
         <v-btn
             id='feature-model-legend'
-            class='mr-14'
             :x-large='$vuetify.display.mdAndUp'
+            class='mr-14'
+            color='primary'
             data-cy='feature-model-legend-button'
             elevation='2'
             icon
             location='right bottom'
             position='absolute'
-            color='primary'
-            @click='showLegend=!showLegend'
+            @click='showLegendChange'
         >
             <v-icon>mdi-map-legend</v-icon>
         </v-btn>
         <v-btn
             id='feature-model-constraints'
             :x-large='$vuetify.display.mdAndUp'
+            color='primary'
             data-cy='feature-model-constraints-button'
             elevation='2'
             icon
             location='right bottom'
             position='absolute'
-            color='primary'
             @click='openConstraints = true'
         >
             <v-icon>mdi-format-list-checks</v-icon>
@@ -213,7 +213,6 @@ import Navbar from '@/components/Navbar.vue';
 import * as d3 from 'd3';
 
 const appStore = useAppStore();
-
 export default {
     name: 'FeatureModel',
 
@@ -263,7 +262,8 @@ export default {
             openConstraints: false,
             openInformation: false,
             showLegend: true,
-            showTutorial: false
+            showTutorial: false,
+            widthForLegend: true
         };
     },
 
@@ -305,6 +305,10 @@ export default {
             }
         }
         this.checkService();
+        this.widthForLegend = window.innerWidth > 700;
+        if (!this.widthForLegend) {
+            this.showLegend = false;
+        }
 
         // Start tutorial mode if it has not been completed before
         this.showTutorial = !localStorage.featureModelTutorialCompleted;
@@ -504,6 +508,15 @@ export default {
                     this.collaborationManager.collaborationKey
                 }`
             );
+        },
+
+        showLegendChange() {
+            this.widthForLegend = window.innerWidth > 700;
+            if (!this.widthForLegend) {
+                this.showLegend = false;
+            } else {
+                this.showLegend = !this.showLegend;
+            }
         },
 
         continueEditing() {

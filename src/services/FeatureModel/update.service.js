@@ -9,12 +9,14 @@ import { RECT_HEIGHT } from '@/classes/constants';
 import * as d3 from 'd3';
 import * as legendItems from '@/classes/Legend/LegendItemFactory';
 
+
+const touchDevice = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
+
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
         .selectAll('g.node')
         .data(visibleD3Nodes.filter((d3Node) => d3Node.data instanceof FeatureNode), (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter));
 
-    var touchDevice = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
     // Enter new nodes
     const featureNodeEnter = featureNode
         .enter()
@@ -464,27 +466,36 @@ function dblClickEvent(event, d3Data, d3Node) {
     }
 }
 
-export function updateLegend(d3Data){
-    if(!d3Data.showLegend){
+export function updateLegend(d3Data) {
+    if (!d3Data.showLegend) {
         // Legend not shown so just return
         return;
     }
-    let legendItems= getDOMItems(d3Data);
+    let legendItems = getDOMItems(d3Data);
     d3.selectAll('.legend-item')
         .remove();
 
-    let container= d3.select(".legend-container");
-    let containerHeight= CONSTANTS.LEGEND_CONTAINER_OFFSET+ legendItems.length *CONSTANTS.LEGEND_ITEM_HEIGHT;
-    container.attr("height",containerHeight ); // dynamically adjust container height
 
-    let join= d3
+    if (!touchDevice) {
+        let container = d3.select('.legend-container');
+        let containerWidth = CONSTANTS.LEGEND_CONTAINER_OFFSET + legendItems.length * (CONSTANTS.LEGEND_IMG_WIDTH + 50);
+        container.attr('width', containerWidth); // dynamically adjust container height
+    } else {
+        let container = d3.select('.legend-container');
+        let containerHeight = CONSTANTS.LEGEND_CONTAINER_OFFSET_PHONE + legendItems.length * CONSTANTS.LEGEND_ITEM_HEIGHT_PHONE;
+        container.attr('height', containerHeight); // dynamically adjust container height
+    }
+
+
+    let join = d3
         .select('.legend-items')
         .selectAll('legend-item')
         .data(legendItems)
         .join(enterLegendItems); //update legend items within container
 
 }
-export function hideLegend(){
+
+export function hideLegend() {
     d3.selectAll('.legend-items')
         .remove();
 
@@ -493,12 +504,13 @@ export function hideLegend(){
 
     return;
 }
-function getDOMItems(d3Data){
+
+function getDOMItems(d3Data) {
     /**
      * Go through d3 elements to determine the set of present Items to add to the legend
      */
-    // let or_present= d3Data.container.segmentsContainer.classed('.or-group');
-    let presentItems= [];
+        // let or_present= d3Data.container.segmentsContainer.classed('.or-group');
+    let presentItems = [];
     presentItems.push(...addGroupItems());
     presentItems.push(...addElementItems(d3Data));
     presentItems.push(...addColorItems());
@@ -509,66 +521,68 @@ function getDOMItems(d3Data){
  *
  * @returns Array of distinct found groups
  */
-function addGroupItems(){
-    let presentGroups= [];
+function addGroupItems() {
+    let presentGroups = [];
     let or_groups = d3.select('.main-svg').selectAll('.or-group');
-    if(or_groups.size() > 0){
+    if (or_groups.size() > 0) {
         presentGroups.push(legendItems.getOrGroup());
     }
     let alt_groups = d3.select('.main-svg').selectAll('.alt-group');
-    if(alt_groups.size() > 0){
+    if (alt_groups.size() > 0) {
         presentGroups.push(legendItems.getAltGroup());
     }
     return presentGroups;
 }
+
 /**
  * Add Element Items e.g. Abstract, concrete, Mandatory, Optional
  *  @returns Array of distinct found elements
  */
-function addElementItems(d3Data){
-    let presentItems=[];
-    let mandatoryPresent=false, optionalPresent=false; //mutually exclusive
-    let abstractPresent=false, concretePresent=false;
+function addElementItems(d3Data) {
+    let presentItems = [];
+    let mandatoryPresent = false, optionalPresent = false; //mutually exclusive
+    let abstractPresent = false, concretePresent = false;
     try {
-        d3Data.featureModelTree.allNodes.forEach((fNode)=>{
-                if(fNode.isAbstract){
-                   abstractPresent=true;
-                }else{
-                    concretePresent= true;
-                }
-                if(fNode.isMandatory){
-                    mandatoryPresent=true;
-                }else{
-                    optionalPresent=true;
-                }
+        d3Data.featureModelTree.allNodes.forEach((fNode) => {
+            if (fNode.isAbstract) {
+                abstractPresent = true;
+            } else {
+                concretePresent = true;
+            }
+            if (fNode.isMandatory) {
+                mandatoryPresent = true;
+            } else {
+                optionalPresent = true;
+            }
         });
-        if(mandatoryPresent){
+        if (mandatoryPresent) {
             presentItems.push(legendItems.getMandatoryFeature());
         }
-        if(optionalPresent){
+        if (optionalPresent) {
             presentItems.push(legendItems.getOptionalFeature());
         }
-        if(abstractPresent){
+        if (abstractPresent) {
             presentItems.push(legendItems.getAbstractFeature());
         }
-        if(concretePresent){
+        if (concretePresent) {
             presentItems.push(legendItems.getConcreteFeature());
         }
 
 
     } catch (error) {
         console.error(error);
-    }finally{
-        return  presentItems;
+    } finally {
+        return presentItems;
     }
 
 }
+
 /**
  * TODO Add color items
  *  @returns Array of distinct found colors
  */
-function addColorItems(presentItems){
-   return [];
+function addColorItems(presentItems) {
+    return [];
 }
 
 
@@ -576,24 +590,43 @@ function addColorItems(presentItems){
  *
  * @param selection where to hook the legendItems
  */
-function enterLegendItems(selection){
+function enterLegendItems(selection) {
 
-    let legendItem= selection
+    if (!touchDevice) {
+        let legendItem = selection
             .append('g')
-            .attr("transform", (d,i)=> "translate(10," + (CONSTANTS.LEGEND_CONTAINER_OFFSET+ i*CONSTANTS.LEGEND_ITEM_HEIGHT) + ")")
+            .attr('transform', (d, i) => 'translate(10,' + (CONSTANTS.LEGEND_CONTAINER_OFFSET + i * CONSTANTS.LEGEND_ITEM_HEIGHT) + ')')
             .classed('legend-item', true);
 
-    let img= legendItem.append('svg:image')
-                .attr('class', 'iconUserTotal')
-                .attr('width', CONSTANTS.LEGEND_IMG_WIDTH)
-                .attr('height', CONSTANTS.LEGEND_IMG_HEIGHT)
-                .attr('y', -CONSTANTS.LEGEND_IMG_HEIGHT)
-                .attr('href', item=> item.image);
+        let img = legendItem.append('svg:image')
+            .attr('class', 'iconUserTotal')
+            .attr('width', CONSTANTS.LEGEND_IMG_WIDTH)
+            .attr('height', CONSTANTS.LEGEND_IMG_HEIGHT)
+            .attr('y', -CONSTANTS.LEGEND_IMG_HEIGHT)
+            .attr('href', item => item.image);
 
-    let text= legendItem.append('text')
-        .text(item=> item.description )
-        .attr("transform", "translate(55,0)")
-        .classed('legend-item', true);
+        let text = legendItem.append('text')
+            .text(item => item.description)
+            .attr('transform', 'translate(55,0)')
+            .classed('legend-item', true);
+    } else {
+        let legendItem = selection
+            .append('g')
+            .attr('transform', (d, i) => 'translate(5,' + (10 + CONSTANTS.LEGEND_CONTAINER_OFFSET_PHONE + i * CONSTANTS.LEGEND_ITEM_HEIGHT_PHONE) + ')')
+            .classed('legend-item', true);
+
+        let img = legendItem.append('svg:image')
+            .attr('class', 'iconUserTotal')
+            .attr('width', CONSTANTS.LEGEND_IMG_WIDTH_PHONE)
+            .attr('height', CONSTANTS.LEGEND_IMG_HEIGHT_PHONE)
+            .attr('y', -CONSTANTS.LEGEND_IMG_HEIGHT_PHONE)
+            .attr('href', item => item.image);
+
+        let text = legendItem.append('text')
+            .text(item => item.description)
+            .attr('transform', 'translate(55,0)')
+            .classed('legend-item', true);
+    }
 
 
 }

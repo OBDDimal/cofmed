@@ -101,12 +101,27 @@
 
         <div id='svg-container'></div>
         <v-btn
-            v-show="d3Data.showLegend"
+            class='hidden-sm-and-down'
+            v-show="showLegend"
             elevation='2'
             icon
             size='xs'
             position="absolute"
             style='left: 483px; top: 250px;'
+            color='primary'
+            @click="$emit('hide-legend')"
+            >
+                <v-icon>mdi-close</v-icon>
+        </v-btn>
+
+        <v-btn
+            v-show="showLegend"
+            class='hidden-md-and-up'
+            elevation='2'
+            icon
+            size='xs'
+            position="absolute"
+            style='left: 238px; top: 103px;'
             color='primary'
             @click="$emit('hide-legend')"
             >
@@ -286,7 +301,7 @@ export default {
     }),
     mounted() {
         this.d3Data.featureModelTree = this;
-
+        this.d3Data.showLegend = this.showLegend;
         init.initialize(this.d3Data, this.rootNode);
         dragAndDrop.init(this.d3Data, this.commandManager);
         view.reset(this.d3Data);
@@ -334,8 +349,9 @@ export default {
                 this.d3Data.showLegend=false;
             }else{
                 // Legend not shown until now => re initialize
-                init.initLegend(this.d3Data);
                 this.d3Data.showLegend=true;
+                init.initLegend(this.d3Data);
+
             }
             update_service.updateSvg(this.d3Data);
 

@@ -79,6 +79,10 @@ function calcNodeSize(d3Data, d3Node) {
 }
 
 export function initLegend(d3Data){
+    if(!d3Data.showLegend){
+        return;
+    }
+
     /**
      * Initialize Legend drawn in SVG by appending a svg to the main-svg
      */
@@ -95,6 +99,28 @@ export function initLegend(d3Data){
             .attr("fill", "white")
             .attr("stroke", "black")
             .attr("stroke-width", "2px")
+            .classed("legend-container", true);
+
+        let items = svg
+            .append('g')
+            .classed('legend-items', true)
+            .append('text')
+            .attr("transform", "translate(10,20)")
+            .text("Legend: ");
+
+        updateService.updateLegend(d3Data);
+    } else {
+        let svg = d3.select('.main-svg')
+            .append('svg')
+            .append('g')
+            .attr("transform", "translate(50,50)");
+
+        let rect = svg.append('rect')
+            .attr("width", 200)
+            .attr("height", 100)
+            .attr("fill", "white")
+            .attr("stroke", "black")
+            .attr("stroke-width", "1px")
             .classed("legend-container", true);
 
         let items = svg
