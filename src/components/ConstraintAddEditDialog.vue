@@ -77,6 +77,15 @@
                                 >)
                                 </v-btn>
                             </v-col>
+                            <v-col cols='6' sm='auto'>
+                                <v-btn
+                                    variant='outlined'
+                                    :disabled='undoAvailable'
+                                    @click="undoLastAction"
+                                >&#129044;
+                                </v-btn>
+                            </v-col>
+
                         </v-row>
 
                         <v-row class='my-2'>
@@ -133,7 +142,7 @@ export default {
         selectedFeatureNode: undefined,
         isValid: false,
         errorText: '',
-        lastOperator:'',
+        lastOperator:[],
         openBrackets: 0
     }),
 
@@ -163,29 +172,32 @@ export default {
             }
         },
         isFeatureAvailable() {
-            return !(this.lastOperator !== "FEATURE" && this.lastOperator !== "BRACKETCLOSED");
+            return !(this.lastOperator.slice(-1)[0] !== "FEATURE" && this.lastOperator.slice(-1)[0] !== "BRACKETCLOSED");
         },
         isGroupAvailable() {
-            return !(this.lastOperator === "FEATURE" || this.lastOperator === "BRACKETCLOSED");
+            return !(this.lastOperator.slice(-1)[0] === "FEATURE" || this.lastOperator.slice(-1)[0] === "BRACKETCLOSED");
         },
         isNotAvailable(){
-            return !(this.lastOperator !== "FEATURE" && this.lastOperator !== "BRACKETCLOSED");
+            return !(this.lastOperator.slice(-1)[0] !== "FEATURE" && this.lastOperator.slice(-1)[0] !== "BRACKETCLOSED");
         },
         isOpenBracketAvailable(){
-            return !(this.lastOperator !== "FEATURE" && this.lastOperator !== "BRACKETCLOSED");
+            return !(this.lastOperator.slice(-1)[0] !== "FEATURE" && this.lastOperator.slice(-1)[0] !== "BRACKETCLOSED");
         },
         isClosedBracketAvailable(){
-            return !(this.openBrackets > 0 && (this.lastOperator === "FEATURE" || this.lastOperator === "BRACKETCLOSED"));
+            return !(this.openBrackets > 0 && (this.lastOperator.slice(-1)[0] === "FEATURE" || this.lastOperator.slice(-1)[0] === "BRACKETCLOSED"));
         },
         isAddAvailable(){
-            return this.openBrackets === 0 && this.lastOperator !== "GROUP" && this.lastOperator !== "NOT";
+            return this.openBrackets === 0 && this.lastOperator.slice(-1)[0] !== "GROUP" && this.lastOperator.slice(-1)[0] !== "NOT";
+        },
+        undoAvailable(){
+            return !this.lastOperator.length > 0;
         },
         tooltipText(){
             if(this.openBrackets > 0){
                 return "Missing one or more closing brackets";
-            } else if (this.lastOperator === "GROUP"){
+            } else if (this.lastOperator.slice(-1)[0] === "GROUP"){
                 return "Missing a second constraint item for the last group constraint.";
-            } else if (this.lastOperator === "NOT"){
+            } else if (this.lastOperator.slice(-1)[0] === "NOT"){
                 return "Missing a constraint item for the last not constraint";
             } else {
                 return '';
@@ -195,6 +207,7 @@ export default {
     methods: {
         discard() {
             this.constraintText = '';
+            this.lastOperator = [];
             this.$emit('close');
         },
 
@@ -205,6 +218,7 @@ export default {
                     this.allNodes
                 );
                 this.constraintText = '';
+                this.lastOperator = [];
                 this.$emit('save', newConstraintItem);
             } catch (e) {
                 console.log(e);
@@ -232,7 +246,7 @@ export default {
                 name = `"${name}"`;
             }
             this.constraintText = this.constraintText + name + ' ';
-            this.lastOperator = "FEATURE";
+            this.lastOperator.push("FEATURE");
             this.$refs.allNodes.internalSearch = '';
             this.selectedFeatureNode = undefined;
         },
@@ -240,12 +254,12 @@ export default {
         appendGroupOperator(operator){
             if (!operator) return;
             this.constraintText = this.constraintText + operator + ' ';
-            this.lastOperator = "GROUP";
+            this.lastOperator.push("GROUP");
         },
 
         appendNotOperator(){
             this.constraintText = this.constraintText + "NOT" + ' ';
-            this.lastOperator = "NOT";
+            this.lastOperator.push("NOT");
         },
 
         appendBracket(bracket){
@@ -253,13 +267,27 @@ export default {
             if (bracket === '('){
                 this.openBrackets += 1;
                 this.constraintText = this.constraintText + bracket;
-                this.lastOperator = "BRACKETOPENED";
+                this.lastOperator.push("BRACKETOPENED");
             } else {
                 this.openBrackets -= 1;
                 this.constraintText = this.constraintText.slice(0, -1) + bracket;
-                this.lastOperator = "BRACKETCLOSED";
+                this.lastOperator.push("BRACKETCLOSED");
             }
 
+        },
+
+        undoLastAction(){
+            let operator = this.lastOperator.pop();
+            if (operator === "BRACKETOPENED" || operator === "BRACKETCLOSED"){
+                this.constraintText.slice(0, -1)
+            } else {
+                let lastIndex = this.constraintText.slice(0, -1).lastIndexOf(" ");
+                if (lastIndex === -1){
+                    this.constraintText = "";
+                } else {
+                    this.constraintText = this.constraintText.slice(0, this.constraintText.slice(0, -1).lastIndexOf(" "));
+                }
+            }
         },
 
         appendText(text, addSpaceBefore, addSpaceAfter) {
