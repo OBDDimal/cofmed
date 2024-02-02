@@ -11,6 +11,7 @@ import * as legendItems from '@/classes/Legend/LegendItemFactory';
 
 
 const touchDevice = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
+let smartphone = window.innerWidth < 960;
 
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
@@ -471,15 +472,16 @@ export function updateLegend(d3Data) {
         // Legend not shown so just return
         return;
     }
+    smartphone = window.innerWidth < 960;
     let legendItems = getDOMItems(d3Data);
     d3.selectAll('.legend-item')
         .remove();
 
 
-    if (!touchDevice) {
+    if (!smartphone) {
         let container = d3.select('.legend-container');
-        let containerWidth = CONSTANTS.LEGEND_CONTAINER_OFFSET + legendItems.length * (CONSTANTS.LEGEND_IMG_WIDTH + 50);
-        container.attr('width', containerWidth); // dynamically adjust container height
+        let containerHeight = CONSTANTS.LEGEND_CONTAINER_OFFSET + legendItems.length * CONSTANTS.LEGEND_ITEM_HEIGHT;
+        container.attr('height', containerHeight); // dynamically adjust container height
     } else {
         let container = d3.select('.legend-container');
         let containerHeight = CONSTANTS.LEGEND_CONTAINER_OFFSET_PHONE + legendItems.length * CONSTANTS.LEGEND_ITEM_HEIGHT_PHONE;
@@ -592,7 +594,7 @@ function addColorItems(presentItems) {
  */
 function enterLegendItems(selection) {
 
-    if (!touchDevice) {
+    if (!smartphone) {
         let legendItem = selection
             .append('g')
             .attr('transform', (d, i) => 'translate(10,' + (CONSTANTS.LEGEND_CONTAINER_OFFSET + i * CONSTANTS.LEGEND_ITEM_HEIGHT) + ')')

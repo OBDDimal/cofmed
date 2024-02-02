@@ -86,8 +86,8 @@ export function initLegend(d3Data){
     /**
      * Initialize Legend drawn in SVG by appending a svg to the main-svg
      */
-    var touchDevice = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
-    if (!touchDevice) {
+    let smartphone = window.innerWidth < 960;
+    if (!smartphone) {
         let svg = d3.select('.main-svg')
             .append('svg')
             .append('g')
