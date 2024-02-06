@@ -4,17 +4,17 @@ services:
     image: traefik:v2.6
     # Enables the web UI and tells Traefik to listen to docker
     command:
-      - "--log.level=DEBUG"
+      - "--log.level=WARN"
       - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       # - "--providers.docker.exposedbydefault=false"
-      - "--entrypoints.web.address=:80"
-      # - "--entrypoints.websecure.address=:4443"
-      # - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
-      # - "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
-      # - "--certificatesresolvers.myresolver.acme.email=tobias.hess@uni-ulm.com"
-      # - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+      # - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=tobias.hess@uni-ulm.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     labels:
       - "traefik.http.routers.traefik.service=api@internal"
       # - traefik.http.routers.traefik.rule=HostRegexp(`localhost`)
@@ -23,14 +23,15 @@ services:
       # - traefik.http.routers.to-https.entrypoints=http
       # - traefik.http.routers.to-https.middlewares=to-https
     ports:
-      - "3000:80"
-      # - "4443:4443"
+      # - "80:80"
+      - "443:443"
       # The Web UI (enabled by --api.insecure=true)
       - "8080:8080"
     volumes:
       # So that Traefik can listen to the Docker events
-      # - "./letsencrypt:/letsencrypt"
-      - "/run/user/1000/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+      #- "/run/user/1000/docker.sock:/var/run/docker.sock:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
     networks:
       - vdev
 
@@ -44,13 +45,13 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.editor.rule=Host(`editor.localhost`)"
-      - "traefik.http.routers.editor.entrypoints=web"
+      - "traefik.http.routers.editor.rule=Host(`editor.variability.dev`)"
+      - "traefik.http.routers.editor.entrypoints=websecure"
       - "traefik.http.services.editor.loadbalancer.server.port=3000"
       # - "traefik.http.routers.frontend.entrypoints=websecure"
-      # - "traefik.http.routers.frontend.tls.certresolver=myresolver"
-      # - "traefik.http.middlewares.redirector.redirectscheme.scheme=https"
-      # - "traefik.http.middlewares.redirector.redirectscheme.permanent=true"
+      - "traefik.http.routers.editor.tls.certresolver=myresolver"
+      #- "traefik.http.middlewares.redirector.redirectscheme.scheme=https"
+      #- "traefik.http.middlewares.redirector.redirectscheme.permanent=true"
 
   peerjs:
     image: peerjs/peerjs-server    
@@ -59,13 +60,15 @@ services:
       - vdev
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.peerjs.rule=Host(`peerjs.localhost`)"
-      - "traefik.http.routers.peerjs.entrypoints=web"
+      - "traefik.http.routers.peerjs.rule=Host(`peerjs.variability.dev`)"
+      - "traefik.http.routers.peerjs.entrypoints=websecure"
       - "traefik.http.services.peerjs.loadbalancer.server.port=9000"
-      # - "traefik.http.routers.peerjs.entrypoints=websecure"
-      # - "traefik.http.routers.peerjs.tls.certresolver=myresolver"
-      # - "traefik.http.middlewares.redirector.redirectscheme.scheme=https"
-      # - "traefik.http.middlewares.redirector.redirectscheme.permanent=true"
+      - "traefik.tcp.services.peerjs.loadbalancer.server.port=9000"
+        #- "traefik.http.middlewares.sslheader.headers.customrequestheaders.X-Forwarded-Proto=https,wss"
+        # - "traefik.http.routers.peerjs.entrypoints=websecure"
+      - "traefik.http.routers.peerjs.tls.certresolver=myresolver"
+      #- "traefik.http.middlewares.redirector.redirectscheme.scheme=https"
+      #- "traefik.http.middlewares.redirector.redirectscheme.permanent=true"
 
 networks:
   vdev:
