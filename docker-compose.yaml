@@ -70,6 +70,19 @@ services:
       #- "traefik.http.middlewares.redirector.redirectscheme.scheme=https"
       #- "traefik.http.middlewares.redirector.redirectscheme.permanent=true"
 
+  greeter:
+    image: nginx
+    volumes:
+      - ./greeter:/usr/share/nginx/html
+    networks:
+      - vdev
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.greeter.rule=Host(`variability.dev`)"
+      - "traefik.http.routers.greeter.entrypoints=websecure"
+      - "traefik.http.services.greeter.loadbalancer.server.port=80"
+      - "traefik.http.routers.greeter.tls.certresolver=myresolver"
+
 networks:
   vdev:
     name: vdev
