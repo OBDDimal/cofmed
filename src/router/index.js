@@ -29,6 +29,15 @@ const routes = [
             title: 'Configurator',
         },
     },
+    {
+        path: '/texteditor/:id?',
+        name: 'Text Editor',
+        props: true,
+        component: () => import('@/views/TextEditor.vue'),
+        meta: {
+            title: 'Text Editor',
+        },
+    },
 ];
 
 const router = createRouter({
