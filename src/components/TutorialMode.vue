@@ -1,126 +1,131 @@
 <template>
-    <v-dialog v-model="showDialog" persistent width="400">
-        <div id="tutorial-dialog">
-            <svg
-                v-if="!isMobile && isTop && isLeft"
-                height="50px"
-                width="400px"
-            >
-                <polygon
-                    points="0,0 120,50 220,50"
-                    :style="
-                        $vuetify.theme.dark
-                            ? 'fill: #121212; stroke: #ffffff; stroke-width: 1px'
-                            : 'fill: #ffffff; stroke: #121212; stroke-width: 1px'
-                    "
-                />
-            </svg>
-            <svg
-                v-if="!isMobile && isTop && !isLeft"
-                height="50px"
-                width="400px"
-            >
-                <polygon
-                    points="400,0 280,50 180,50"
-                    :style="
-                        $vuetify.theme.dark
-                            ? 'fill: #121212; stroke: #ffffff; stroke-width: 1px'
-                            : 'fill: #ffffff; stroke: #121212; stroke-width: 1px'
-                    "
-                />
-            </svg>
-            <v-card
-                v-if="step"
-                outlined
+    <v-dialog v-model='showDialog'
+              content-class='tutorial-dialog'
+              persistent width='400'
+              @keydown.esc='exit'
+              @click:outside='exit'
+    >
+        <svg
+            v-if='!isMobile && isTop && isLeft'
+            height='50px'
+            width='400px'
+        >
+            <polygon
                 :style="
+                        $vuetify.theme.dark
+                            ? 'fill: #121212; stroke: #ffffff; stroke-width: 1px'
+                            : 'fill: #ffffff; stroke: #121212; stroke-width: 1px'
+                    "
+                points='0,0 120,50 220,50'
+            />
+        </svg>
+        <svg
+            v-if='!isMobile && isTop && !isLeft'
+            height='50px'
+            width='400px'
+        >
+            <polygon
+                :style="
+                        $vuetify.theme.dark
+                            ? 'fill: #121212; stroke: #ffffff; stroke-width: 1px'
+                            : 'fill: #ffffff; stroke: #121212; stroke-width: 1px'
+                    "
+                points='400,0 280,50 180,50'
+            />
+        </svg>
+        <v-card
+            v-if='step'
+            :style="
                     $vuetify.theme.dark
                         ? 'border: 1px solid white;'
                         : 'border: 1px solid #121212'
                 "
-            >
-                <v-card-title>
+            outlined
+        >
+            <v-card-title>
+                <v-layout row>
                     <span>{{ step.title }}</span>
                     <v-spacer></v-spacer>
-                    <v-btn icon text @click="exit">
+                    <v-btn icon variant='text' @click='exit' class='d-flex justify-center'>
                         <v-icon>mdi-close</v-icon>
                     </v-btn>
-                </v-card-title>
+                </v-layout>
+            </v-card-title>
 
-                <v-card-text>
-                    {{ step.description }}
-                </v-card-text>
+            <v-card-text>
+                {{ step.description }}
+            </v-card-text>
 
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn
-                        :disabled="!beforeSteps.length"
-                        text
-                        color="error"
-                        @click="beforeStep"
-                        >Back</v-btn
-                    >
-                    <v-btn color="primary" text @click="nextStep"
-                        >Continue</v-btn
-                    >
-                </v-card-actions>
-            </v-card>
-            <v-card v-else>
-                <v-card-title>
-                    Do you want to start the tutorial?
-                </v-card-title>
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn
+                    :disabled='!beforeSteps.length'
+                    color='error'
+                    text
+                    @click='beforeStep'
+                >Back
+                </v-btn
+                >
+                <v-btn color='primary' text @click='nextStep'
+                >Continue
+                </v-btn
+                >
+            </v-card-actions>
+        </v-card>
+        <v-card v-else>
+            <v-card-title>
+                Do you want to start the tutorial?
+            </v-card-title>
 
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn text color="error" @click="$emit('close')"
-                        >Close</v-btn
-                    >
-                    <v-btn color="primary" text @click="startTutorial"
-                        >Start Tutorial</v-btn
-                    >
-                </v-card-actions>
-            </v-card>
-            <svg
-                v-if="!isMobile && !isTop && isLeft"
-                height="50px"
-                width="400px"
-            >
-                <polygon
-                    points="120,0 220,0 0,50"
-                    :style="
+            <v-card-actions>
+                <v-spacer></v-spacer>
+                <v-btn color='error' text @click="$emit('close')">Close</v-btn>
+                <v-btn color='primary' text @click='startTutorial'>Start Tutorial</v-btn>
+            </v-card-actions>
+        </v-card>
+        <svg
+            v-if='!isMobile && !isTop && isLeft'
+            height='50px'
+            width='400px'
+        >
+            <polygon
+                :style="
                         $vuetify.theme.dark
                             ? 'fill: #121212; stroke: #ffffff; stroke-width: 1px'
                             : 'fill: #ffffff; stroke: #121212; stroke-width: 1px'
                     "
-                />
-            </svg>
-            <svg
-                v-if="!isMobile && !isTop && !isLeft"
-                height="50px"
-                width="400px"
-            >
-                <polygon
-                    points="180,0 280,0 400,50"
-                    :style="
+                points='120,0 220,0 0,50'
+            />
+        </svg>
+        <svg
+            v-if='!isMobile && !isTop && !isLeft'
+            height='50px'
+            width='400px'
+        >
+            <polygon
+                :style="
                         $vuetify.theme.dark
                             ? 'fill: #121212; stroke: #ffffff; stroke-width: 1px'
                             : 'fill: #ffffff; stroke: #121212; stroke-width: 1px'
                     "
-                />
-            </svg>
-        </div>
+                points='180,0 280,0 400,50'
+            />
+        </svg>
     </v-dialog>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue';
+import { count } from 'd3';
+import { onMounted, ref, computed } from 'vue';
 
+const DIALOG_SELECTOR = '.tutorial-dialog';
 const step = ref(undefined);
 const beforeSteps = ref([]);
 const isTop = ref(false);
 const isLeft = ref(false);
 const isMobile = ref(false);
 const counter = ref(0);
-
+const emit = defineEmits(['close']);
 const props = defineProps({
     show: Boolean,
     nextSteps: {
@@ -131,89 +136,78 @@ const props = defineProps({
                 title: 'Welcome to the tutorial!',
                 description:
                     'You can restart the tutorial anytime by clicking on this icon on the left.',
-                elementCssSelector: '#tutorial-mode',
-            },
-            {
-                title: 'The menu',
-                description:
-                    "For a more precise description of the menu's icons click on this icon on the left.",
-                elementCssSelector: '#feature-model-toolbar-extend',
+                elementCssSelector: '#tutorial-mode-button'
             },
             {
                 title: 'Your feature model',
                 description:
                     'This is your main workspace. The feature model tree. You can move around and zoom in and out with your mouse or your fingers, depending on your platform.',
-                elementCssSelector: '#svg-container',
+                elementCssSelector: '#svg-container'
             },
             {
                 title: 'Your feature model',
                 description:
                     'Feature model nodes are collapsed and uncollapsed when double-clicking. You can edit individual nodes with a right click and also use the corresponding context menu for other means of interacting with the feature model.',
-                elementCssSelector: '#svg-container',
+                elementCssSelector: '#svg-container'
             },
             {
                 title: 'Search',
                 description:
                     'Feature models can get rather complex. To search for a node an navigate there automatically just click the magnifying glass above and enter your search query. In case there are multiple results you can navigate them with the arrows above.',
-                elementCssSelector: '#feature-model-search',
+                elementCssSelector: '#feature-model-search'
             },
             {
                 title: 'Your feature model',
                 description:
-                    "You may move around individual feature model nodes with 'drang and drop™'️. This does not allow semantic changes by default.",
-                elementCssSelector: '#svg-container',
+                    'You may move around individual feature model nodes with \'drag and drop\'️. This does not allow semantic changes by default.',
+                elementCssSelector: '#svg-container'
             },
             {
                 title: 'Undo and redo',
                 description:
                     'When making changes to a feature model it is important to have the possibility to revert changes. On the left you can find the undo and redo button.',
-                elementCssSelector: '#feature-model-toolbar-undo',
+                elementCssSelector: '#feature-model-navbar-undo'
             },
             {
-                title: 'Save your changes',
+                title: 'File menu',
                 description:
-                    'All of your modifications can be saved via the button on the left, even when you are offline!',
-                elementCssSelector: '#feature-model-toolbar-save',
+                    'Use the file menu to either load new feature models or download your current model.',
+                elementCssSelector: '#feature-model-navbar-save'
             },
             {
                 title: 'Collaboration',
                 description:
                     'You want to show others your feature model, or even edit it together with them? Just click the collaboration button on the left and share your thoughts!',
-                elementCssSelector: '#feature-model-toolbar-collaboration',
+                elementCssSelector: '#feature-model-navbar-collaboration'
             },
             {
                 title: 'Constraints',
                 description:
                     'To edit and view all of your cross-tree-constraints just click the button below. You may click individual constraints to highlight the corresponding feature model nodes in the tree above.',
-                elementCssSelector: '#feature-model-constraints',
+                elementCssSelector: '#feature-model-constraints'
             },
             {
-                title: 'Information',
-                description:
-                    'You may see individual statistics about your model by clicking the button below.',
-                elementCssSelector: '#feature-model-information',
-            },
-            {
-                title: 'Other settings',
+                title: 'View',
                 description:
                     'To change defaults and other settings just click on this icon on the left. You may also experiment around with all the other options. Remember the undo option.',
-                elementCssSelector: '#feature-model-toolbar-other-settings',
-            },
-        ],
+                elementCssSelector: '#feature-model-navbar-view'
+            }
+        ]
     },
     localStorageIdentifier: {
         type: String,
         required: false,
-        default: 'featureModelTutorialCompleted',
-    },
+        default: 'featureModelTutorialCompleted'
+    }
 });
 
 onMounted(() => {
     reset();
 });
+
 function startTutorial() {
     isMobile.value = 'ontouchstart' in window;
-    step.value = this.nextSteps[this.counter];
+    step.value = props.nextSteps[counter.value];
     counter.value++;
     if (!isMobile.value) {
         setBubblePosition();
@@ -221,24 +215,23 @@ function startTutorial() {
 }
 
 function setBubblePosition() {
-    const tutorialDialog = document.querySelector('#tutorial-dialog');
-    if (this.isMobile) {
+    const tutorialDialog = document.querySelector(DIALOG_SELECTOR);
+    if (isMobile.value) {
         tutorialDialog.style.position = 'block';
     } else {
         tutorialDialog.style.position = 'absolute';
     }
-    if (this.step.elementCssSelector) {
+    if (step.value.elementCssSelector) {
+        reset(); /// Reset bubble position until fixed
         const rect = document
-            .querySelector(this.step.elementCssSelector)
+            .querySelector(step.value.elementCssSelector)
             .getBoundingClientRect();
-        const middleX = (rect.left - rect.right) / 2 + rect.right;
+        const middleX = (rect.right - rect.left) / 2 + rect.left;
         const middleY = (rect.bottom - rect.top) / 2 + rect.top;
-
         tutorialDialog.style.left = null;
         tutorialDialog.style.right = null;
         tutorialDialog.style.top = null;
         tutorialDialog.style.bottom = null;
-
         if (
             middleX + 400 >
             (window.innerWidth || document.documentElement.clientWidth)
@@ -253,9 +246,7 @@ function setBubblePosition() {
             middleY + 200 >
             (window.innerHeight || document.documentElement.clientHeight)
         ) {
-            tutorialDialog.style.bottom = `calc(${
-                window.innerHeight - middleY
-            }px)`;
+            tutorialDialog.style.bottom = `calc(${window.innerHeight - middleY}px)`;
             isTop.value = false;
         } else {
             tutorialDialog.style.top = middleY + 'px';
@@ -265,41 +256,32 @@ function setBubblePosition() {
 }
 
 function nextStep() {
-    if (this.nextSteps.length > this.counter) {
-        this.beforeSteps.unshift(this.step);
-        this.step = this.nextSteps[this.counter];
-        this.counter++;
-        if (!this.isMobile) {
-            this.setBubblePosition();
+    if (props.nextSteps.length > counter.value) {
+        beforeSteps.value.unshift(step.value);
+        step.value = props.nextSteps[counter.value];
+        counter.value++;
+        if (!isMobile.value) {
+            setBubblePosition();
         }
     } else {
-        this.exit();
+        exit();
     }
 }
 
 function exit() {
-    console.log('start');
-    if (!isMobile.value) {
-        const tutorialDialog = document.querySelector('#tutorial-dialog');
-        tutorialDialog.style.left = '';
-        tutorialDialog.style.top = '';
-        tutorialDialog.style.position = '';
-    }
+    reset();
     step.value = undefined;
     beforeSteps.value = [];
-    isTop.value = Boolean;
-    isLeft.value = Boolean;
-    isMobile.value = Boolean;
+    isTop.value = false;
+    isLeft.value = false;
+    isMobile.value = false;
     counter.value = 0;
     localStorage[props.localStorageIdentifier] = true;
-    console.log('midd');
-    this.$emit('close');
-    console.log('end');
+    emit('close');
 }
 
 function beforeStep() {
-    counter.value = counter - 1;
-    //this.nextSteps.unshift(this.step);
+    counter.value = counter.value - 1;
     step.value = beforeSteps.value.shift();
     if (!isMobile.value) {
         setBubblePosition();
@@ -307,41 +289,36 @@ function beforeStep() {
 }
 
 function reset() {
-    if (!isMobile.value) {
-        const tutorialDialog = document.querySelector('#tutorial-dialog');
-        tutorialDialog.style.left = 0;
-        tutorialDialog.style.top = 0;
-        tutorialDialog.style.position = 'absolute';
+    try {
+        if (!isMobile.value) {
+            const tutorialDialog = document.querySelector(DIALOG_SELECTOR);
+            if (tutorialDialog) {
+                tutorialDialog.style.left = 0;
+                tutorialDialog.style.top = 0;
+                tutorialDialog.style.position = 'fixed';
+            }
+        }
+    } catch (error) {
+        console.error(error);
     }
 }
 
-watch(show, (newValue, oldValue) => {
-    if (oldValue) {
-        /*this.nextSteps = [
-        ...this.beforeSteps.reverse(),
-        this.step,
-        ...this.nextSteps,
-    ];*/
-        step.value = undefined;
-        beforeSteps.value = [];
-        isTop.value = false;
-        isLeft.value = false;
-        isMobile.value = false;
-        counter.value = 0;
-
-        // Reset position to 0 0 when restarting the tutorial again
-        reset();
-    }
+const showDialog = computed(() => {
+    return props.show;
 });
 </script>
 
-<style lang="scss">
-#tutorial-dialog {
+<style lang='scss'>
+.tutorial-dialog {
     max-width: 400px;
     transition: all 0.75s;
 
     > .v-card {
         margin-top: -10px;
     }
+}
+
+.v-dialog > .v-overlay__content {
+    margin: 0px;
 }
 </style>

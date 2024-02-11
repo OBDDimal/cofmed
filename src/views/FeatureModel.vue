@@ -1,4 +1,50 @@
 <template>
+    <f-m-navbar
+        :collaborationStatus='collaborationStatus'
+        :editRights='editRights'
+        :is-file-loaded='data.rootNode !== undefined'
+        :is-redo-available='
+                featureModelCommandManager && featureModelCommandManager.isRedoAvailable()
+            '
+        :is-save-available='
+                (featureModelCommandManager && featureModelCommandManager.isUndoAvailable()) ||
+                constraintCommandManager.isUndoAvailable()
+            '
+        :is-service-available='isServiceAvailable'
+        :is-undo-available='
+                featureModelCommandManager && featureModelCommandManager.isUndoAvailable()
+            '
+        @download='exportToXML'
+        @fitToView='fitToView'
+        @nonSemanticEditing='(value) => updateNonSemanticEdit(value)'
+        @openConf='openConfigurator'
+        @openFile='openFilePicker'
+        @quickEdit='(value) => updateQuickEdit(value)'
+        @redo='redo'
+        @reset='reset'
+        @resetView='(levels, maxChildren) => resetView(levels, maxChildren)'
+        @save='save'
+        @semanticEditing='(value) => updateSemanticEdit(value)'
+        @shortName='(value) => changeShortName(value)'
+        @spaceBetweenParentChild='(value) =>changeSpaceBetweenParentChild(value)'
+        @spaceBetweenSiblings='(value) =>changeSpaceBetweenSiblings(value)'
+        @toggleDirection='toggleDirection'
+        @undo='undo'
+        @open-constraints='openConstraints = true'
+        @show-collaboration-dialog='showStartCollaborationSessionDialog = true'
+        @show-tutorial='showTutorial = true'
+        @new-empty-model='newEmptyModel'
+        @download-svg='downloadSVG'
+
+
+    ></f-m-navbar>
+    <input
+        id='filePicker'
+        accept='.xml'
+        class='d-none'
+        type='file'
+        @change='onFileInputChanged'
+    >
     <div v-if='xml === undefined'>
         <v-container :fluid='true'>
             <v-card :class="{ 'grey lighten-2': dragover }"
@@ -19,18 +65,12 @@
                         <p class='text-h4'>
                             Drop your FeatureModel file here, or click to select it.
                         </p>
-                        <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text' @click.stop='loadInitialModel'>
+                        <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text'
+                               @click.stop='loadInitialModel'>
                             Or click here to load a default model.
                         </v-btn>
                     </v-row>
                 </v-card-text>
-                <input
-                    ref='filePicker'
-                    accept='.xml'
-                    class='d-none'
-                    type='file'
-                    @change='onFileInputChanged'
-                >
             </v-card>
         </v-container>
     </div>
@@ -42,12 +82,14 @@
             :collaborationStatus='collaborationStatus'
             :command-manager='featureModelCommandManager'
             :constraints='data.constraints'
+            :d3-data='d3Data'
             :editRights='editRights'
             :error='error'
             :error-message='errorMessage'
             :is-service-available='isServiceAvailable'
             :loadingData='loadingData'
             :rootNode='data.rootNode'
+            :showLegend='showLegend'
             @exportToXML='exportToXML'
             @reset='reset'
             @save='save'
@@ -61,38 +103,56 @@
             @show-tutorial='showTutorial = true'
             @error-closed='errorClosed'
             @error-new='message => errorNew(message)'
+            @hide-legend='showLegend=false'
         >
         </feature-model-tree>
-        <v-btn
-            id='feature-model-information'
-            :x-large='$vuetify.display.mdAndUp'
-            class='mr-15'
-            elevation='2'
-            icon
-            location='right bottom'
-            position='absolute'
-            style='background-color: rgb(var(--v-theme-primary))'
-            theme='dark'
-            @click='openInformation = !openInformation'
+        <v-row
+            class='mr-2 '
+            justify='end'
         >
-            <v-icon>mdi-information</v-icon>
-        </v-btn>
+            <v-btn
+                id='feature-model-legend'
+                class='mr-2'
+                color='primary'
+                elevation='2'
+                icon
+                @click='showLegend=!showLegend'
+            >
+                <v-icon>mdi-map-legend</v-icon>
+            </v-btn>
+            <v-btn
+                id='feature-model-information'
+                :x-large='$vuetify.display.mdAndUp'
+                class='mr-2'
+                color='primary'
+                elevation='2'
+                icon
+                @click='openInformation = !openInformation'
+            >
+                <v-icon>mdi-information</v-icon>
+            </v-btn>
+            <v-btn
+                id='feature-model-constraints'
+                :x-large='$vuetify.display.mdAndUp'
+                class='mr-2'
+                color='primary'
+                data-cy='feature-model-constraints-button'
+                elevation='2'
+                icon
+                @click='openConstraints = true'
+            >
+                <v-icon>mdi-format-list-checks</v-icon>
+            </v-btn>
+        </v-row>
 
-        <v-btn
-            id='feature-model-constraints'
-            :x-large='$vuetify.display.mdAndUp'
-            data-cy='feature-model-constraints-button'
-            elevation='2'
-            icon
-            location='right bottom'
-            position='absolute'
-            style='background-color:  rgb(var(--v-theme-primary))'
-            theme='dark'
-            @click='openConstraints = true'
-        >
-            <v-icon>mdi-format-list-checks</v-icon>
-        </v-btn>
 
+        <feature-model-fact-label-bar
+            :analysis='facts.analysis'
+            :isOpen='openInformation'
+            :metadata='facts.metadata'
+            :metrics='facts.metrics'
+            @close='openInformation = false'>
+        </feature-model-fact-label-bar>
         <constraints
             v-if='data.constraints'
             ref='constraints'
@@ -152,7 +212,10 @@
         >
         </collaboration-continue-editing-dialog>
 
-
+        <tutorial-mode
+            :show='showTutorial'
+            @close='showTutorial = false'
+        ></tutorial-mode>
     </div>
 </template>
 
@@ -160,6 +223,7 @@
 import FeatureModelTree from '../components/FeatureModel/FeatureModelTree.vue';
 import Constraints from '../components/Constraints.vue';
 import * as update from '@/services/FeatureModel/update.service';
+import * as FactLabelFactory from '@/classes/Factlabel/FactLabelFactory';
 import api from '@/services/api.service';
 import beautify from 'xml-beautifier';
 import CollaborationManager from '@/classes/CollaborationManager';
@@ -173,9 +237,12 @@ import { EXAMPLE_FEATURE_MODEL_XML } from '@/classes/constants';
 import TutorialMode from '@/components/TutorialMode';
 import { NewEmptyModelCommand } from '@/classes/Commands/FeatureModel/NewEmptyModelCommand';
 import { SliceCommand } from '@/classes/Commands/FeatureModel/SliceCommand';
+import FeatureModelFactLabelBar from '@/components/FeatureModel/FeatureModelFactLabelBar.vue';
 import FeatureModelInformation from '@/components/FeatureModel/FeatureModelInformation';
 import { useAppStore } from '@/store/app';
 import axios from 'axios';
+import FMNavbar from '@/components/FMNavbar.vue';
+import * as view from '@/services/FeatureModel/view.service';
 
 const appStore = useAppStore();
 
@@ -183,13 +250,15 @@ export default {
     name: 'FeatureModel',
 
     components: {
+        FMNavbar,
         TutorialMode,
         FeatureModelInformation,
         CollaborationContinueEditingDialog,
         CollaborationToolbar,
         FeatureModelTree,
         Constraints,
-        CollaborationNameDialog
+        CollaborationNameDialog,
+        FeatureModelFactLabelBar
     },
 
     props: {
@@ -226,7 +295,48 @@ export default {
             collaborationStatus: false,
             openConstraints: false,
             openInformation: false,
-            showTutorial: false
+            showTutorial: false,
+            showLegend: true,
+            facts: FactLabelFactory.getEmptyFactLabel(),
+            d3Data: {
+                root: undefined,
+                flexLayout: undefined,
+                zoom: undefined,
+                nodeIdCounter: 0,
+                showLegend: true,
+                isShortenedName: false,
+                drag: {
+                    listener: undefined,
+                    hasStarted: false,
+                    ghostNodes: [],
+                    selectedD3Node: undefined,
+                    selectedGhostNode: undefined,
+                    selectedD3NodePosition: undefined,
+                    mode: 'mouse' // touch or mouse
+                },
+                contextMenu: {
+                    selectedD3Node: undefined,
+                    event: undefined
+                },
+                container: {
+                    highlightedConstraintsContainer: undefined,
+                    linksContainer: undefined,
+                    segmentsContainer: undefined,
+                    featureNodesContainer: undefined,
+                    dragContainer: undefined
+                },
+                spaceBetweenParentChild: 75,
+                spaceBetweenSiblings: 20,
+                d3ParentOfAddNode: undefined,
+                d3AddNodeIndex: 0,
+                coloringIndex: -1,
+                semanticEditing: false,
+                nonSemanticEditing: false,
+                quickEdit: false,
+                direction: 'v', // h = horizontally, v = vertically
+                maxHorizontallyLevelWidth: [],
+                featureModelTree: undefined
+            }
         };
     },
 
@@ -271,6 +381,7 @@ export default {
 
         // Start tutorial mode if it has not been completed before
         this.showTutorial = !localStorage.featureModelTutorialCompleted;
+        this.updateFacts();
     },
 
     beforeRouteLeave(to, from, next) {
@@ -306,6 +417,15 @@ export default {
                 true
             );
         },
+        updateFacts() {
+            if (this.xml === undefined) {
+                return;
+            }
+            let nFeatures = this.data.rootNode.descendants().length;
+            this.facts.metrics.find((fact) => {
+                return fact.name === 'Features';
+            }).value = nFeatures;
+        },
 
         reset() {
             // TODO: Transpile the xml file new and restart viewer.
@@ -314,10 +434,16 @@ export default {
         },
 
         openFilePicker() {
-            this.$refs.filePicker.click();
+            document.getElementById('filePicker').click();
+        },
+
+        openConfigurator() {
+            localStorage.featureModelData = jsonToXML(this.data);
+            this.$router.push({path: '/configurator/local'});
         },
 
         async openFile(files) {
+            this.xml = undefined;
             const data = await files[0].text();
             const xml = beautify(data);
             xmlTranspiler.xmlToJson(xml, this.data);
@@ -403,7 +529,7 @@ export default {
         newEmptyModel() {
             const command = new NewEmptyModelCommand(
                 this,
-                this.$refs.featureModelTree.d3Data
+                this.d3Data
             );
             this.featureModelCommandManager.execute(command);
             this.updateFeatureModel();
@@ -425,10 +551,11 @@ export default {
             const xml = beautify(EXAMPLE_FEATURE_MODEL_XML);
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
+            this.updateFacts();
         },
 
         updateFeatureModel() {
-            update.updateSvg(this.$refs.featureModelTree.d3Data);
+            update.updateSvg(this.d3Data);
         },
 
         updateConstraints() {
@@ -440,6 +567,7 @@ export default {
         },
 
         commandEvent() {
+            this.updateFacts();
             // Can't override text for Chrome & Edge
             window.onbeforeunload = function() {
                 return 'Do you really want to leave the page? Collaboration sessions will be closed and data will be lost!';
@@ -475,7 +603,113 @@ export default {
         errorNew(message) {
             this.error = true;
             this.errorMessage = message;
+        },
+
+        fitToView() {
+            view.zoomFit(this.d3Data);
+        },
+
+        undo() {
+            this.featureModelCommandManager.undo();
+            update.updateSvg(this.d3Data);
+        },
+
+        redo() {
+            this.featureModelCommandManager.redo();
+            update.updateSvg(this.d3Data);
+        },
+
+        downloadSVG() {
+            // TODO: Implement download
+        },
+
+        toggleDirection() {
+            this.d3Data.direction = this.d3Data.direction === 'v' ? 'h' : 'v';
+            update.updateSvg(this.d3Data);
+            view.zoomFit(this.d3Data);
+        },
+
+        updateQuickEdit(newValue) {
+            this.d3Data.quickEdit = newValue;
+            update.updateSvg(this.d3Data);
+        },
+
+        resetView(levels, maxChildren) {
+            this.d3Data.direction = 'v';
+            view.reset(this.d3Data, levels, maxChildren);
+        },
+
+        updateSemanticEdit(value) {
+            this.d3Data.semanticEditing = value;
+            update.updateSvg(this.d3Data);
+        },
+
+        updateNonSemanticEdit(value) {
+            this.d3Data.nonSemanticEditing = value;
+            update.updateSvg(this.d3Data);
+        },
+
+        changeShortName(value) {
+            this.d3Data.isShortenedName = value;
+            update.updateSvg(this.d3Data);
+        },
+
+        changeSpaceBetweenParentChild(spacing) {
+            this.d3Data.spaceBetweenParentChild = spacing;
+            update.updateSvg(this.d3Data);
+        },
+
+        changeSpaceBetweenSiblings(spacing) {
+            this.d3Data.spaceBetweenSiblings = spacing;
+            update.updateSvg(this.d3Data);
         }
     }
 };
 </script>
+<style lang='scss'>
+.feature {
+    font-family: sans-serif;
+    display: inline-block;
+    fill: #ebebff;
+    border: 2px solid #999999;
+    padding: 0.5rem;
+}
+
+.abstract {
+    font-style: italic;
+}
+
+.dead {
+    text-decoration: line-through;
+}
+
+.core {
+    text-decoration: underline;
+}
+
+.false-optional {
+    stroke: #FF4500;
+    stroke-width: 1.5px;
+}
+
+
+.selected-expl {
+    border: 4px solid #31a354;
+}
+
+.selected-impl {
+    border: 4px solid #a1d99b;
+}
+
+.deselected-expl {
+    border: 4px dashed #d01c8b;
+}
+
+.deselected-impl {
+    border: 4px dashed #f1b6da;
+}
+
+.choice {
+    border: 4px dotted #0058B3;
+}
+</style>

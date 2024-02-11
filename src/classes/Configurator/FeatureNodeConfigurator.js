@@ -1,45 +1,77 @@
-import * as CONSTANTS from './constants';
+import * as CONSTANTS from '../constants';
 import * as d3 from "d3";
 import {PseudoNode} from "@/classes/PseudoNode";
+import {variabilityDarkTheme, variabilityLightTheme} from "@/plugins/vuetify";
+import {SelectionState} from "@/classes/Configurator/SelectionState";
 
-export class FeatureNode {
-    constructor(parent, name, groupType, mandatory, abstract) {
+export class FeatureNodeConfigurator {
+    constructor(parent, name, id, groupType, mandatory, abstract) {
         this.parent = parent;
-        this.name = name;
-        this.setDisplayName(name);
+        this.id = id;
         this.children = [];
+
+        // FM syntax properties
         this.groupType = groupType;
         this.isRoot = parent === null;
         this.isMandatory = mandatory;
         this.isAbstract = abstract;
-        this.colorValue = CONSTANTS.NODE_COLOR;
+        this.name = name;
+
+        // Configuration States
+        this.selectionState = SelectionState.Unselected;
+        this.open = null;
+
+        // Cross tree constraint references
         this.constraints = [];
+
+        // D3 connection for drawing purposes
+        this.displayName = this.name.slice(0, CONSTANTS.DISPLAY_NAME_LENGTH) + '...';
         this.isCollapsed = false;
         this.isHidden = false;
         this.d3Node = null;
         this.markedAsEdited = false;
-        this.core = false;
-        this.dead = false;
-        this.falseOptional = false;
     }
-    setDisplayName(newName ){
-        ///Sets the Displayname of the Featurenode
-        if(newName.length<= CONSTANTS.DISPLAY_NAME_LENGTH){
-            this.displayName= newName;
-        }else{
-            this.displayName= newName.slice(0, CONSTANTS.DISPLAY_NAME_RAW) + CONSTANTS.POINTS;
-        }
 
-    }
-    color() {
-        if (this.markedAsEdited) {
-            return CONSTANTS.NODE_EDITED_COLOR;
-        } else if (this.isAbstract) {
-            return CONSTANTS.NODE_ABSTRACT_COLOR;
+    color(dark = false) {
+        if (this.isAbstract) {
+            return dark ? variabilityDarkTheme.colors.secondary : variabilityLightTheme.colors.secondary;
         } else {
-            return this.colorValue;
+            return dark ? variabilityDarkTheme.colors.primary : variabilityLightTheme.colors.primary;
         }
     }
+
+    selectionColor(dark = false) {
+        if (this.open) {
+            return dark ? variabilityDarkTheme.colors["should-select"] : variabilityLightTheme.colors["should-select"];
+        } else if (this.open !== null) {
+            return dark ? variabilityDarkTheme.colors["should-select-parent"] : variabilityLightTheme.colors["should-select-parent"];
+        }else if (this.selectionState === SelectionState.ExplicitlySelected) {
+            return dark ? variabilityDarkTheme.colors.selected : variabilityLightTheme.colors.selected;
+        } else if (this.selectionState === SelectionState.ImplicitlyDeselected) {
+            return dark ? variabilityDarkTheme.colors["imp-deselected"] : variabilityLightTheme.colors["imp-deselected"];
+        } else if (this.selectionState === SelectionState.ExplicitlyDeselected) {
+            return dark ? variabilityDarkTheme.colors.deselected : variabilityLightTheme.colors.deselected;
+        } else if (this.selectionState === SelectionState.ImplicitlySelected) {
+            return dark ? variabilityDarkTheme.colors["imp-selected"] : variabilityLightTheme.colors["imp-selected"];
+        }
+        return undefined;
+    }
+
+    selectionType() {
+        if (this.open) {
+            return "choice"
+        } else if (this.selectionState === SelectionState.ExplicitlySelected) {
+            return "selected-expl"
+        } else if (this.selectionState === SelectionState.ImplicitlySelected) {
+            return "selected-impl";
+        } else if (this.selectionState === SelectionState.ExplicitlyDeselected) {
+            return "deselected-expl";
+        } else if (this.selectionState === SelectionState.ImplicitlyDeselected) {
+            return "deselected-impl";
+        }
+        return undefined;
+    }
+
 
     level() {
         if (this.isRoot) {
@@ -83,14 +115,6 @@ export class FeatureNode {
 
     isLeaf() {
         return this.children.length === 0;
-    }
-
-    setGroupType(groupType) {
-        this.groupType = groupType;
-    }
-
-    setColor(color) {
-        this.colorValue = color;
     }
 
     uncollapse(toRoot = true) {
@@ -240,7 +264,7 @@ export class FeatureNode {
         rightSiblings.forEach(node => node.isHidden = false);
 
         const index = this.parent.d3Node.children.indexOf(this.d3Node);
-        const leftD3Siblings = this.parent.d3Node.children.slice(0,index);
+        const leftD3Siblings = this.parent.d3Node.children.slice(index + 1);
         const rightD3Siblings = rightSiblings.map(node => node.d3Node);
         this.parent.d3Node.children = [...leftD3Siblings, this.d3Node, ...rightD3Siblings];
     }
@@ -365,6 +389,29 @@ export class FeatureNode {
 
     highlightConstraints() {
         this.constraints.forEach((constraint) => constraint.isHighlighted = true);
+    }
+
+    toConfigString(){
+      let configText = '';
+
+      switch (this.selectionState){
+        case SelectionState.ImplicitlySelected:
+          configText = "automatic=\"selected\"";
+          break;
+        case SelectionState.ExplicitlySelected:
+          configText = "manual=\"selected\"";
+          break;
+        case SelectionState.ImplicitlyDeselected:
+          configText = "automatic=\"deselected\"";
+          break;
+        case SelectionState.ExplicitlyDeselected:
+          configText = "manual=\"deselected\"";
+          break;
+        case 'Unselected':
+          break;
+      }
+
+      return `<feature ${configText} name="${this.name}"/>`
     }
 }
 

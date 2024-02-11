@@ -6,13 +6,18 @@ import { PseudoNode } from '@/classes/PseudoNode';
 import * as count from '@/services/FeatureModel/count.service';
 import { ghostNodeTouchMove } from '@/services/FeatureModel/dragAndDrop.service';
 import { RECT_HEIGHT } from '@/classes/constants';
+import * as d3 from 'd3';
+import * as legendItems from '@/classes/Legend/LegendItemFactory';
+import { SelectionState } from '@/classes/SelectionState';
+import { FeatureNodeConfigurator } from '@/classes/Configurator/FeatureNodeConfigurator';
 
+let d3DataSaved = undefined;
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
         .selectAll('g.node')
         .data(
             visibleD3Nodes.filter(
-                (d3Node) => d3Node.data instanceof FeatureNode
+                (d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator
             ),
             (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter)
         );
@@ -22,29 +27,38 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         .enter()
         .append('g')
         .classed('node', true)
-        .call(d3Data.drag.listener)
-        // Highlight and reset highlighting of ghost-nodes during drag and drop of feature-nodes.
-        .on('touchmove', (event) => ghostNodeTouchMove(event, d3Data), true)
-        // Open contextmenu with right-click on d3Node.
         .on('contextmenu', (event, d3Node) => {
-            // only use contextmenu on non-mobile devices
-            if (!('ontouchstart' in window)) {
+            if (d3Data.isConf) {
                 event.preventDefault();
-                d3Data.contextMenu.selectedD3Node = d3Node;
-                d3Data.contextMenu.event = event;
+                d3Data.selectedD3Node = d3Node.data;
             } else {
-                event.preventDefault();
+                // only use contextmenu on non-mobile devices
+                if (!('ontouchstart' in window)) {
+                    event.preventDefault();
+                    d3Data.contextMenu.selectedD3Node = d3Node;
+                    d3Data.contextMenu.event = event;
+                } else {
+                    event.preventDefault();
+                }
             }
+
         })
         // Toggle collapsing on double-clock on feature-node.
         .on('click', (event, d3Node) => {
-            // Use click for contextmenu on mobile
-            if ('ontouchstart' in window) {
-                d3Data.contextMenu.selectedD3Node = d3Node;
-                d3Data.contextMenu.event = event;
+            if (d3Data.isConf) {
+                dblClickEvent(event, d3Data, d3Node);
+                collapse.collapseShortcut(d3Data, event, d3Node); // Collapse d3Node with Ctrl + left-click on d3Node.
+            } else {
+                // Use click for contextmenu on mobile
+                if ('ontouchstart' in window) {
+                    d3Data.contextMenu.selectedD3Node = d3Node;
+                    d3Data.contextMenu.event = event;
+                }
+                dblClickEvent(event, d3Data, d3Node);
+                collapse.collapseShortcut(d3Data, event, d3Node); // Collapse d3Node with Ctrl + left-click on d3Node.
             }
-            dblClickEvent(event, d3Data, d3Node);
-            collapse.collapseShortcut(d3Data, event, d3Node); // Collapse d3Node with Ctrl + left-click on d3Node.
+
+
         });
 
     const rectAndTextEnter = featureNodeEnter
@@ -68,49 +82,42 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
     );
     featureNodeUpdate
         .select('.and-group-circle')
-        .classed(
-            'mandatory-and-group-circle',
-            (d3Node) =>
-                d3Node.parent &&
-                d3Node.parent.data.isAnd() &&
-                d3Node.data.isMandatory
-        )
-        .classed(
-            'optional-and-group-circle',
-            (d3Node) =>
-                d3Node.parent &&
-                d3Node.parent.data.isAnd() &&
-                !d3Node.data.isMandatory
-        );
+        .classed('mandatory-and-group-circle', (d3Node) => d3Node.parent && (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) && d3Node.data.isMandatory)
+        .classed('optional-and-group-circle', (d3Node) => d3Node.parent && (d3Node.parent.data.isAnd() || d3Node.parent.data.children.length === 1) && !d3Node.data.isMandatory)
+        .classed('false-optional', (d3Node) => d3Node.data.falseOptional);
+
+    if (d3Data.nonSemanticEditing) {
+        featureNodeUpdate
+            .call(d3Data.drag.listener)
+            // Highlight and reset highlighting of ghost-nodes during drag and drop of feature-nodes.
+            .on('touchmove', (event) => ghostNodeTouchMove(event, d3Data), true);
+    } else {
+        featureNodeUpdate
+            .on('mousedown.drag', null)
+            .on('touchmove', null);
+    }
 
     const rectAndTextUpdate = featureNodeUpdate.select('.rect-and-text');
     rectAndTextUpdate
         .select('rect')
         .classed('is-searched-feature', (d3Node) => d3Node.data.isSearched)
-        .attr('fill', (d3Node) => d3Node.data.color())
-        .attr('x', (d3Node) =>
-            d3Data.direction === 'v' ? -d3Node.width / 2 : 0
-        )
+        .classed('feature', true)
+        .attr('x', (d3Node) => d3Data.direction === 'v' ? -d3Node.width / 2 : 0)
         .attr('y', d3Data.direction === 'v' ? 0 : -CONSTANTS.RECT_HEIGHT / 2)
         .attr('width', (d3Node) => d3Node.width);
     rectAndTextUpdate
         .select('text')
-        .attr('font-style', (d3Node) =>
-            d3Node.data.isAbstract ? 'italic' : 'normal'
-        )
-        .attr(
-            'dy',
-            d3Data.direction === 'v' ? CONSTANTS.RECT_HEIGHT / 2 + 5.5 : 5.5
-        )
+        .attr('dy', d3Data.direction === 'v' ? CONSTANTS.RECT_HEIGHT / 2 + 5.5 : 5.5)
+        .classed('abstract', (d3Node) => d3Node.data.isAbstract)
+        .classed('core', (d3Node) => d3Node.data.core)
+        .classed('dead', (d3Node) => d3Node.data.dead)
         .attr('x', d3Data.direction === 'v' ? 0 : (d3Node) => d3Node.width / 2)
         .classed('whiteText', (d3Node) => {
             let color = d3Node.data.color();
             const rgb = color.replace(/[^\d,]/g, '').split(',');
             return rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 <= 186;
         })
-        .text((d3Node) =>
-            d3Data.isShortenedName ? d3Node.data.displayName : d3Node.data.name
-        );
+        .text((d3Node) => d3Data.isShortenedName ? d3Node.data.displayName : d3Node.data.name);
 
     // Remove old/invisible nodes.
     featureNode.exit().remove();
@@ -230,7 +237,7 @@ function updateChildrenCount(d3Data, featureNodeUpdate) {
             (d) => (d.data.isLeaf() || !d.data.isCollapsed ? [] : [d]),
             (d) => d.id
         );
-    
+
     const childrenCountEnter = childrenCount
         .enter()
         .append('g')
@@ -254,17 +261,16 @@ function updateChildrenCount(d3Data, featureNodeUpdate) {
 
     const childrenCountUpdate = childrenCountEnter.merge(childrenCount);
     childrenCountUpdate.attr('transform', (d3Node) => {
-        if(d3Data.direction === 'v'){
-            const x = 0 ;
+        if (d3Data.direction === 'v') {
+            const x = 0;
             const y = CONSTANTS.RECT_HEIGHT + CONSTANTS.TRIANGLE_BORDER_OFFSET;
             return `translate(${x}, ${y})`;
-        }else{
-            const angle= CONSTANTS.TRIANGLE_HORIZONTAL_ROTATION;
-            const x = d3Node.width+CONSTANTS.TRIANGLE_BORDER_OFFSET;
-            const y =   0;
+        } else {
+            const angle = CONSTANTS.TRIANGLE_HORIZONTAL_ROTATION;
+            const x = d3Node.width + CONSTANTS.TRIANGLE_BORDER_OFFSET;
+            const y = 0;
             return `translate(${x}, ${y})rotate(${angle})`;
         }
-        
     });
     childrenCountUpdate
         .selectAll('text.direct-children')
@@ -319,10 +325,10 @@ function updatePseudoNodes(d3Data, visibleD3Nodes) {
 
 function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
     const highlightedNodes = visibleD3Nodes
-        .filter((d3Node) => d3Node.data instanceof FeatureNode)
+        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator)
         .map((d3Node) => ({
             d3Node: d3Node,
-            highlightedConstraints: d3Node.data.getHighlightedConstraints(),
+            highlightedConstraints: d3Node.data.getHighlightedConstraints()
         }))
         .filter((d) => d.highlightedConstraints.length);
 
@@ -346,7 +352,7 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
             (d) =>
                 d.highlightedConstraints.map((c) => ({
                     constraint: c,
-                    d3Node: d.d3Node,
+                    d3Node: d.d3Node
                 })),
             (d) => d.constraint.toString() + d.d3Node.id
         );
@@ -384,15 +390,15 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
             'transform',
             (json, i) => `
     translate(${
-        json.d3Node.x -
-        i * CONSTANTS.STROKE_WIDTH_CONSTANT -
-        CONSTANTS.STROKE_WIDTH_CONSTANT / 2
-    },
+                json.d3Node.x -
+                i * CONSTANTS.STROKE_WIDTH_CONSTANT -
+                CONSTANTS.STROKE_WIDTH_CONSTANT / 2
+            },
         ${
-            json.d3Node.y -
-            i * CONSTANTS.STROKE_WIDTH_CONSTANT -
-            CONSTANTS.STROKE_WIDTH_CONSTANT / 2
-        })`
+                json.d3Node.y -
+                i * CONSTANTS.STROKE_WIDTH_CONSTANT -
+                CONSTANTS.STROKE_WIDTH_CONSTANT / 2
+            })`
         );
 
     // Remove constraints highlighted nodes
@@ -400,10 +406,94 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
     highlightedConstraintNodeRects.exit().remove();
 }
 
+function updateSelectionHighlight(d3Data, visibleD3Nodes) {
+
+    const selectedNodes = visibleD3Nodes
+        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator)
+        .map((d3Node) => ({
+            d3Node: d3Node,
+            feature: d3Node.data,
+        }))
+        .filter((d) => d.feature.selectionState !== SelectionState.Unselected || d.feature.open);
+
+    const selectedFeatureNodes =
+        d3Data.container.selectedFeatureContainer
+            .selectAll('g.selected-nodes')
+            .data(
+                selectedNodes,
+                (d) => d.d3Node.id || (d.d3Node.id = ++d3Data.nodeIdCounter)
+            );
+
+    const selectedFeatureNodesEnter = selectedFeatureNodes
+        .enter()
+        .append('g')
+        .classed('selected-nodes', true);
+
+    const selectedFeatureNodesRects = selectedFeatureNodesEnter
+        .merge(selectedFeatureNodes)
+        .selectAll('rect')
+        .data((d) =>
+            selectedNodes.filter((d3) => d3.d3Node.id === d.d3Node.id).map((d3) => ({
+                    feature: d3.feature,
+                    d3Node: d.d3Node,
+                })),
+            (d) => d.d3Node.name + d.d3Node.id
+        );
+
+    // Enter highlighted constraint rects
+    const selectedFeatureNodesRectsEnter = selectedFeatureNodesRects
+        .enter()
+        .append('rect')
+        .attr('fill', 'transparent');
+
+    // Update highlighted constraint rects
+    selectedFeatureNodesRectsEnter
+        .merge(selectedFeatureNodesRects)
+        .attr('class', (json) => {
+            return json.feature.selectionType();
+        })
+        .attr('x', (json) =>
+            d3Data.direction === 'v' ? -json.d3Node.width / 2 : 0
+        )
+        .attr('y', d3Data.direction === 'v' ? 0 : -CONSTANTS.RECT_HEIGHT / 2)
+        .attr(
+            'height',
+            (_, i) =>
+                CONSTANTS.RECT_HEIGHT +
+                i * 2 * CONSTANTS.STROKE_WIDTH_CONSTANT +
+                CONSTANTS.STROKE_WIDTH_CONSTANT
+        )
+        .attr(
+            'width',
+            (json, i) =>
+                json.d3Node.width +
+                i * 2 * CONSTANTS.STROKE_WIDTH_CONSTANT +
+                CONSTANTS.STROKE_WIDTH_CONSTANT
+        )
+        .attr(
+            'transform',
+            (json, i) => `
+    translate(${
+                json.d3Node.x -
+                i * CONSTANTS.STROKE_WIDTH_CONSTANT -
+                CONSTANTS.STROKE_WIDTH_CONSTANT / 2
+            },
+        ${
+                json.d3Node.y -
+                i * CONSTANTS.STROKE_WIDTH_CONSTANT -
+                CONSTANTS.STROKE_WIDTH_CONSTANT / 2
+            })`
+        );
+
+    // Remove constraints highlighted nodes
+    selectedFeatureNodesRects.exit().remove();
+    selectedFeatureNodes.exit().remove();
+}
+
 function updateLinks(d3Data, visibleD3Nodes) {
     const links = visibleD3Nodes
         .slice(1)
-        .filter((d3Node) => d3Node.data instanceof FeatureNode);
+        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof PseudoNode || d3Node.data instanceof FeatureNodeConfigurator);
     const link = d3Data.container.linksContainer
         .selectAll('path.link')
         .data(links, (d3Node) => d3Node.id);
@@ -413,14 +503,20 @@ function updateLinks(d3Data, visibleD3Nodes) {
     const linkUpdate = linkEnter.merge(link);
     linkUpdate
         .classed('is-searched-link', (d3Node) => d3Node.data.isSearched)
+        .classed('false-optional', (d3Node) => d3Node.data.falseOptional)
         .attr('d', (d3Node) => {
             if (d3Data.direction === 'v') {
-                return createPaths.createLinkVertically(d3Node.parent, d3Node);
+                if (d3Node.data instanceof PseudoNode) {
+                    return createPaths.createLinkVertically(d3Node.data.parent.d3Node, d3Node);
+                } else {
+                    return createPaths.createLinkVertically(d3Node.parent, d3Node);
+                }
             } else {
-                return createPaths.createLinkHorizontally(
-                    d3Node.parent,
-                    d3Node
-                );
+                if (d3Node.data instanceof PseudoNode) {
+                    return createPaths.createLinkHorizontally(d3Node.data.parent.d3Node, d3Node);
+                } else {
+                    return createPaths.createLinkHorizontally(d3Node.parent, d3Node);
+                }
             }
         });
 
@@ -438,7 +534,7 @@ function updateSegments(d3Data, visibleD3Nodes) {
         .data(
             visibleD3Nodes.filter(
                 (d3Node) =>
-                    d3Node.data instanceof FeatureNode &&
+                    (d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator) &&
                     (d3Node.data.isAlt() || d3Node.data.isOr())
             ),
             (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter)
@@ -485,11 +581,17 @@ function updateSegments(d3Data, visibleD3Nodes) {
 export function updateSvg(d3Data) {
     /*const start = performance.now();*/
 
+    if(d3Data === undefined) {
+        d3Data = d3DataSaved;
+    } else {
+        d3DataSaved = d3Data;
+    }
+
     // Calculate rect widths of all d3Nodes once for better performance instead of repeatedly during update.
     d3Data.root.descendants().forEach((d3Node) => {
         d3Node.width = calcRectWidth(d3Data, d3Node);
 
-        if (d3Node.data instanceof FeatureNode) {
+        if (d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator) {
             const level = d3Node.data.level();
             if (d3Data.maxHorizontallyLevelWidth.length <= level) {
                 d3Data.maxHorizontallyLevelWidth.push(0);
@@ -514,24 +616,27 @@ export function updateSvg(d3Data) {
     }
 
     updateColoring(d3Data);
+    if(d3Data.isConf){
+        updateSelectionHighlight(d3Data, visibleD3Nodes);
+    }
     updateHighlightedConstraints(d3Data, visibleD3Nodes);
     updateSegments(d3Data, visibleD3Nodes);
     updateFeatureNodes(d3Data, visibleD3Nodes);
     updatePseudoNodes(d3Data, visibleD3Nodes);
     updateLinks(d3Data, visibleD3Nodes);
-
+    updateLegend(d3Data);
     /*console.log('Rendertime', performance.now() - start);*/
 }
 
 // Calculates rect-width dependent on font-size dynamically.
 export function calcRectWidth(d3Data, d3Node) {
-    if (d3Node.data instanceof FeatureNode) {
+    if (d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator) {
         return (
             (d3Data.isShortenedName
                 ? d3Node.data.displayName.length
                 : d3Node.data.name.length) *
-                (CONSTANTS.FEATURE_FONT_SIZE *
-                    CONSTANTS.MONOSPACE_HEIGHT_WIDTH_FACTOR) +
+            (CONSTANTS.FEATURE_FONT_SIZE *
+                CONSTANTS.MONOSPACE_HEIGHT_WIDTH_FACTOR) +
             CONSTANTS.RECT_MARGIN.left +
             CONSTANTS.RECT_MARGIN.right
         );
@@ -559,4 +664,144 @@ function dblClickEvent(event, d3Data, d3Node) {
             touchtime = new Date().getTime();
         }
     }
+}
+
+export function updateLegend(d3Data) {
+    if (!d3Data.showLegend) {
+        // Legend not shown so just return
+        return;
+    }
+    let legendItems = getDOMItems(d3Data);
+    d3
+        .selectAll('.legend-item')
+        .remove();
+
+    let container = d3.select('.legend-container');
+    let containerHeight = CONSTANTS.LEGEND_CONTAINER_OFFSET + legendItems.length * CONSTANTS.LEGEND_ITEM_HEIGHT;
+    container.attr('height', containerHeight); // dynamically adjust container height
+
+    let join = d3
+        .select('.legend-items')
+        .selectAll('legend-item')
+        .data(legendItems)
+        .join(enterLegendItems); //update legend items within container
+
+}
+
+export function hideLegend() {
+    d3
+        .selectAll('.legend-items')
+        .remove();
+    d3
+        .selectAll('.legend-container')
+        .remove();
+    return;
+}
+
+function getDOMItems(d3Data) {
+    /**
+     * Go through d3 elements to determine the set of present Items to add to the legend
+     */
+        // let or_present= d3Data.container.segmentsContainer.classed('.or-group');
+    let presentItems = [];
+    presentItems.push(...addGroupItems());
+    presentItems.push(...addElementItems(d3Data));
+    presentItems.push(...addColorItems());
+    return presentItems;
+}
+
+/**
+ *
+ * @returns Array of distinct found groups
+ */
+function addGroupItems() {
+    let presentGroups = [];
+    let or_groups = d3.select('.main-svg').selectAll('.or-group');
+    if (or_groups.size() > 0) {
+        presentGroups.push(legendItems.getOrGroup());
+    }
+    let alt_groups = d3.select('.main-svg').selectAll('.alt-group');
+    if (alt_groups.size() > 0) {
+        presentGroups.push(legendItems.getAltGroup());
+    }
+    return presentGroups;
+}
+
+/**
+ * Add Element Items e.g. Abstract, concrete, Mandatory, Optional
+ *  @returns Array of distinct found elements
+ */
+function addElementItems(d3Data) {
+    let presentItems = [];
+    let mandatoryPresent = false, optionalPresent = false; //mutually exclusive
+    let abstractPresent = false, concretePresent = false;
+    try {
+        d3Data.featureModelTree.allNodes.forEach((fNode) => {
+            if (fNode.isAbstract) {
+                abstractPresent = true;
+            } else {
+                concretePresent = true;
+            }
+            if (fNode.isMandatory) {
+                mandatoryPresent = true;
+            } else {
+                optionalPresent = true;
+            }
+        });
+        if (mandatoryPresent) {
+            presentItems.push(legendItems.getMandatoryFeature());
+        }
+        if (optionalPresent) {
+            presentItems.push(legendItems.getOptionalFeature());
+        }
+        if (abstractPresent) {
+            presentItems.push(legendItems.getAbstractFeature());
+        }
+        if (concretePresent) {
+            presentItems.push(legendItems.getConcreteFeature());
+        }
+
+
+    } catch (error) {
+        console.error(error);
+    } finally {
+        return presentItems;
+    }
+
+}
+
+/**
+ * TODO Add color items
+ *  @returns Array of distinct found colors
+ */
+function addColorItems(presentItems) {
+    return [];
+}
+
+
+/**
+ *
+ * @param selection where to hook the legendItems
+ */
+function enterLegendItems(selection) {
+
+    let legendItem = selection
+        .append('g')
+        .attr('transform', (d, i) => 'translate(10,' + (CONSTANTS.LEGEND_CONTAINER_OFFSET + i * CONSTANTS.LEGEND_ITEM_HEIGHT) + ')')
+        .classed('legend-item', true);
+
+    let img = legendItem
+        .append('svg:image')
+        .attr('class', 'iconUserTotal')
+        .attr('width', CONSTANTS.LEGEND_IMG_WIDTH)
+        .attr('height', CONSTANTS.LEGEND_IMG_HEIGHT)
+        .attr('y', -CONSTANTS.LEGEND_IMG_HEIGHT)
+        .attr('href', item => item.image);
+    let text = legendItem
+        .append('text')
+        .text(item => item.description)
+        .attr('transform', 'translate(55,0)')
+        .classed('legend-item', true);
+
+
 }

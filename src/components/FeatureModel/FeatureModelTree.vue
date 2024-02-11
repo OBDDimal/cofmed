@@ -41,7 +41,6 @@
                     single-line
                     @blur="search.showSearch = false"
                     @focus="search.showSearch = true"
-                    @input="onChangeSearchText"
                 ></v-text-field>
 
                 <v-badge
@@ -61,42 +60,19 @@
             </v-toolbar>
         </div>
 
-        <feature-model-tree-toolbar
-            :collaborationStatus="collaborationStatus"
-            :direction="d3Data.direction"
-            :editRights="editRights"
-            :is-redo-available="
-                commandManager && commandManager.isRedoAvailable()
-            "
-            :is-save-available="
-                (commandManager && commandManager.isUndoAvailable()) ||
-                commandManager.collaborationManager.constraintCommandManager.isUndoAvailable()
-            "
-            :is-undo-available="
-                commandManager && commandManager.isUndoAvailable()
-            "
-            :is-service-available="isServiceAvailable"
-            @coloring="(coloringIndex) => coloring(coloringIndex)"
-            @export="$emit('exportToXML')"
-            @fitToView="fitToView"
-            @quickEdit="(value) => updateQuickEdit(value)"
-            @redo="redo"
-            @reset="$emit('reset')"
-            @resetView="(levels, maxChildren) => resetView(levels, maxChildren)"
-            @save="$emit('save')"
-            @semanticEditing="(value) => (d3Data.semanticEditing = value)"
-            @shortName="changeShortName"
-            @spaceBetweenParentChild="changeSpaceBetweenParentChild"
-            @spaceBetweenSiblings="changeSpaceBetweenSiblings"
-            @toggleDirection="toggleDirection"
-            @undo="undo"
-            @show-collaboration-dialog="$emit('show-collaboration-dialog')"
-            @show-tutorial="$emit('show-tutorial')"
-            @new-empty-model="$emit('new-empty-model')"
-        ></feature-model-tree-toolbar>
-
         <div id="svg-container"></div>
-
+        <v-btn
+            v-show="d3Data.showLegend"
+            elevation='2'
+            icon
+            size='xs'
+            position="absolute"
+            style='left: 480px; top: 250px;'
+            color='primary'
+            @click="$emit('hide-legend')"
+            >
+                <v-icon>mdi-close</v-icon>
+        </v-btn>
         <feature-model-tree-context-menu
             :d3Node="d3Data.contextMenu.selectedD3Node"
             :d3NodeEvent="d3Data.contextMenu.event"
@@ -207,46 +183,11 @@ export default {
         loadingData: Boolean,
         errorMessage: String,
         error: Boolean,
+        showLegend: Boolean,
+        d3Data: undefined
     },
 
     data: () => ({
-        d3Data: {
-            root: undefined,
-            flexLayout: undefined,
-            zoom: undefined,
-            nodeIdCounter: 0,
-            isShortenedName: false,
-            drag: {
-                listener: undefined,
-                hasStarted: false,
-                ghostNodes: [],
-                selectedD3Node: undefined,
-                selectedGhostNode: undefined,
-                selectedD3NodePosition: undefined,
-                mode: 'mouse', // touch or mouse
-            },
-            contextMenu: {
-                selectedD3Node: undefined,
-                event: undefined,
-            },
-            container: {
-                highlightedConstraintsContainer: undefined,
-                linksContainer: undefined,
-                segmentsContainer: undefined,
-                featureNodesContainer: undefined,
-                dragContainer: undefined,
-            },
-            spaceBetweenParentChild: 75,
-            spaceBetweenSiblings: 20,
-            d3ParentOfAddNode: undefined,
-            d3AddNodeIndex: 0,
-            coloringIndex: -1,
-            semanticEditing: false,
-            quickEdit: false,
-            direction: 'v', // h = horizontally, v = vertically
-            maxHorizontallyLevelWidth: [],
-            featureModelTree: undefined,
-        },
         showAddDialog: false,
         showEditDialog: false,
         showRemoveDialog: false,
@@ -299,21 +240,21 @@ export default {
             }
         },
 
-        onChangeSearchText(searchText) {
-            this.search.foundNodeDistances = search.search(
-                this.d3Data,
-                searchText
-            );
-            search.resetSearch(this.d3Data);
-            if (this.search.foundNodeDistances.length) {
-                this.onChangeFoundNodeIndex(0);
-            } else {
-                update.updateSvg(this.d3Data);
-            }
-        },
-
         updateSvg() {
             update.updateSvg(this.d3Data);
+        },
+        toggleLegend(){
+            if(!this.showLegend){
+                // Legend shown until now=> hide
+                update.hideLegend();
+                this.d3Data.showLegend=false;
+            }else{
+                // Legend not shown until now => re initialize
+                init.initLegend(this.d3Data);
+                this.d3Data.showLegend=true;
+            }
+            update_service.updateSvg(this.d3Data);
+
         },
 
         fitToView() {
@@ -498,6 +439,22 @@ export default {
 
             this.updateSvg();
         },
+        showLegend(){
+            this.toggleLegend();
+        },
+        'search.searchText'(newValue) {
+            this.search.foundNodeDistances = search.search(
+                this.d3Data,
+                newValue
+            );
+            search.resetSearch(this.d3Data);
+            if (this.search.foundNodeDistances.length) {
+                this.onChangeFoundNodeIndex(0);
+            } else {
+                update.updateSvg(this.d3Data);
+                view.reset(this.d3Data);
+            }
+        }
     },
 };
 </script>
@@ -514,7 +471,7 @@ export default {
 
 #svg-container {
     width: 100%;
-    height: calc(100vh - 64px);
+    height: 100%;
 }
 
 .node {
