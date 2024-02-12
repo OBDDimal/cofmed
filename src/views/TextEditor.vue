@@ -6,14 +6,15 @@
         type='file'
         @change='onFileInputChanged'
     >
-    <MonacoEditor
-        theme='vs-dark'
-        :options='options'
-        language='javascript'
-        :width=innerWidth
-        :height=innerHeight
-        v-model:value='test'
-    ></MonacoEditor>
+    <div class='texteditor'>
+        <MonacoEditor
+            theme='vs-dark'
+            :options='options'
+            language='javascript'
+            v-model:value='test'
+        ></MonacoEditor>
+    </div>
+
 </template>
 
 <script>
@@ -40,7 +41,20 @@ export default {
             },
             test: ''
         };
+    },
+
+    methods: {
+        onFileInputChanged() {
+            return;
+        }
     }
 };
 </script>
-<style lang='scss' scoped></style>
+<style lang='scss' scoped>
+
+.texteditor {
+    width: 10%;
+    height: 100%;
+    overflow: hidden;
+}
+</style>
