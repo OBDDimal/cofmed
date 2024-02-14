@@ -1,7 +1,7 @@
 <template>
     <input
         id='filePicker'
-        accept='.xml'
+        accept='.xml, .uvl, .dimacs'
         class='d-none'
         type='file'
         @change='onFileInputChanged'
@@ -366,10 +366,44 @@ export default {
 
         async openFile(files) {
             this.xml = undefined;
-            const data = await files[0].text();
+            let data = await files[0].text();
+            const fileExtension = files[0].name.split('.').pop();
+            if(fileExtension === 'uvl' || fileExtension === 'dimacs'){
+                data = await this.changeFileFormat(data, fileExtension);
+            } else if (fileExtension !== 'xml'){
+                appStore.updateSnackbar(
+                    'Could not load the feature model, because filetype is not supported.',
+                    'error',
+                    3000,
+                    true
+                );
+            }
             const xml = beautify(data);
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
+        },
+
+        async changeFileFormat(text, fileExtension) {
+            await this.checkService();
+            if (this.isServiceAvailable) {
+                const content = new TextEncoder().encode(text);
+                let response = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FEATUREIDESERVICE}convert`, {
+                    name: 'hello.' + fileExtension,
+                    typeOutput: ['featureIde'],
+                    content: Array.from(content)
+                });
+                let contentAsString = new TextDecoder().decode(Uint8Array.from(response.data.content[0]));
+                return contentAsString;
+            } else {
+                appStore.updateSnackbar(
+                    'Could not convert the feature model, because service is down.',
+                    'error',
+                    3000,
+                    true
+                );
+                return '';
+            }
+
         },
 
         onFileInputChanged(e) {
