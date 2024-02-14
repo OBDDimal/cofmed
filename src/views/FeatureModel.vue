@@ -369,7 +369,7 @@ export default {
             let data = await files[0].text();
             const fileExtension = files[0].name.split('.').pop();
             if(fileExtension === 'uvl' || fileExtension === 'dimacs'){
-                data = await this.changeFileFormat(data, fileExtension);
+                data = await this.changeFileFormat(data, fileExtension,'featureIde');
             } else if (fileExtension !== 'xml'){
                 appStore.updateSnackbar(
                     'Could not load the feature model, because filetype is not supported.',
@@ -377,19 +377,20 @@ export default {
                     3000,
                     true
                 );
+                return;
             }
             const xml = beautify(data);
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
         },
 
-        async changeFileFormat(text, fileExtension) {
+        async changeFileFormat(text, fileExtension, newFileExtension) {
             await this.checkService();
             if (this.isServiceAvailable) {
                 const content = new TextEncoder().encode(text);
                 let response = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FEATUREIDESERVICE}convert`, {
                     name: 'hello.' + fileExtension,
-                    typeOutput: ['featureIde'],
+                    typeOutput: [newFileExtension],
                     content: Array.from(content)
                 });
                 let contentAsString = new TextDecoder().decode(Uint8Array.from(response.data.content[0]));
@@ -403,7 +404,6 @@ export default {
                 );
                 return '';
             }
-
         },
 
         onFileInputChanged(e) {
