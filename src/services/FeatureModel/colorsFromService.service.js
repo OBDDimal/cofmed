@@ -22,14 +22,20 @@ export async function getColorsFromService(featureModel, d3Data) {
         if (coreFeatures.length > 0) {
             d3Data.root.descendants().filter(node => coreFeatures.includes(node.data.name)).forEach(node => node.data.core = true);
             d3Data.root.descendants().filter(node => !coreFeatures.includes(node.data.name)).forEach(node => node.data.core = false);
+        } else {
+            d3Data.root.descendants().forEach(node => node.data.core = false);
         }
         if (falseOptionalFeatures.length > 0) {
             d3Data.root.descendants().filter(node => falseOptionalFeatures.includes(node.data.name)).forEach(node => node.data.falseOptional = true);
             d3Data.root.descendants().filter(node => !falseOptionalFeatures.includes(node.data.name)).forEach(node => node.data.falseOptional = false);
+        } else {
+            d3Data.root.descendants().forEach(node => node.data.falseOptional = false);
         }
         if (deadFeatures.length > 0) {
             d3Data.root.descendants().filter(node => deadFeatures.includes(node.data.name)).forEach(node => node.data.dead = true);
             d3Data.root.descendants().filter(node => !deadFeatures.includes(node.data.name)).forEach(node => node.data.dead = false);
+        } else {
+            d3Data.root.descendants().forEach(node => node.data.dead = false);
         }
 
         return true;

@@ -368,9 +368,9 @@ export default {
             this.xml = undefined;
             let data = await files[0].text();
             const fileExtension = files[0].name.split('.').pop();
-            if(fileExtension === 'uvl' || fileExtension === 'dimacs'){
-                data = await this.changeFileFormat(data, fileExtension,'featureIde');
-            } else if (fileExtension !== 'xml'){
+            if (fileExtension === 'uvl' || fileExtension === 'dimacs') {
+                data = await this.changeFileFormat(data, fileExtension, 'featureIde');
+            } else if (fileExtension !== 'xml') {
                 appStore.updateSnackbar(
                     'Could not load the feature model, because filetype is not supported.',
                     'error',
@@ -379,9 +379,11 @@ export default {
                 );
                 return;
             }
-            const xml = beautify(data);
-            xmlTranspiler.xmlToJson(xml, this.data);
-            this.xml = xml;
+            if (data !== '') {
+                const xml = beautify(data);
+                xmlTranspiler.xmlToJson(xml, this.data);
+                this.xml = xml;
+            }
         },
 
         async changeFileFormat(text, fileExtension, newFileExtension) {
@@ -394,10 +396,20 @@ export default {
                     content: Array.from(content)
                 });
                 let contentAsString = new TextDecoder().decode(Uint8Array.from(response.data.content[0]));
+
+                if (contentAsString.trim().toLowerCase() === text.trim().toLowerCase()) {
+                    appStore.updateSnackbar(
+                        'Could not convert the feature model, because feature model is not supported by FeatureIDE.',
+                        'error',
+                        3000,
+                        true
+                    );
+                    return '';
+                }
                 return contentAsString;
             } else {
                 appStore.updateSnackbar(
-                    'Could not convert the feature model, because service is down.',
+                    'Cannot open non-XML feature model as the FeatureIDE Service is down.',
                     'error',
                     3000,
                     true

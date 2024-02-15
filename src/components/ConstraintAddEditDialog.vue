@@ -23,65 +23,65 @@
                         <v-row justify='space-between'>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
-                                    variant='outlined'
                                     :disabled='isGroupAvailable'
+                                    variant='outlined'
                                     @click="appendGroupOperator('AND')"
                                 >and
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
-                                    variant='outlined'
                                     :disabled='isGroupAvailable'
+                                    variant='outlined'
                                     @click="appendGroupOperator('OR')"
                                 >or
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
-                                    variant='outlined'
                                     :disabled='isGroupAvailable'
+                                    variant='outlined'
                                     @click="appendGroupOperator('IMPLIES')"
                                 >implies
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
-                                    variant='outlined'
                                     :disabled='isGroupAvailable'
+                                    variant='outlined'
                                     @click="appendGroupOperator('EQUI')"
                                 >equi
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
-                                    variant='outlined'
                                     :disabled='isNotAvailable'
-                                    @click="appendNotOperator()"
+                                    variant='outlined'
+                                    @click='appendNotOperator()'
                                 >not
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
-                                    variant='outlined'
                                     :disabled='isOpenBracketAvailable'
+                                    variant='outlined'
                                     @click="appendBracket('(')"
                                 >(
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
-                                    variant='outlined'
                                     :disabled='isClosedBracketAvailable'
+                                    variant='outlined'
                                     @click="appendBracket(')')"
                                 >)
                                 </v-btn>
                             </v-col>
                             <v-col cols='6' sm='auto'>
                                 <v-btn
-                                    variant='outlined'
                                     :disabled='undoAvailable'
-                                    @click="undoLastAction"
+                                    variant='outlined'
+                                    @click='undoLastAction'
                                 >&#129044;
                                 </v-btn>
                             </v-col>
@@ -92,11 +92,11 @@
                             <v-col class='pt-0' cols='12'>
                                 <v-text-field
                                     ref='inputField'
-                                    readonly
                                     v-model='constraintText'
                                     clearable
                                     hide-details
                                     label='Constraint'
+                                    readonly
                                 ></v-text-field>
                             </v-col>
                         </v-row>
@@ -111,7 +111,7 @@
                         </v-btn>
                         <v-tooltip :disabled='isValid' location='top'>
                             <template v-slot:activator='{ props }'>
-                                <div v-bind="props" class="d-inline-block">
+                                <div class='d-inline-block' v-bind='props'>
                                     <v-btn
                                         :disabled='!isAddAvailable'
                                         color='primary'
@@ -142,7 +142,7 @@ export default {
         selectedFeatureNode: undefined,
         isValid: false,
         errorText: '',
-        lastOperator:[],
+        lastOperator: [],
         openBrackets: 0
     }),
 
@@ -155,13 +155,37 @@ export default {
 
     watch: {
         constraint() {
-            this.constraintText = this.constraint
-                ? this.constraint.toStringForEdit()
-                : '';
+            if (this.constraint) {
+                this.constraintText = this.constraint.toStringForEdit();
+                let splitted = this.constraintText.split(' ');
+                splitted.forEach(
+                    (element) => {
+                        if (element.startsWith('(')) {
+                            this.lastOperator.push('BRACKETOPENED');
+                        }
+                        if (element === 'AND' || element === 'OR' || element === 'IMPLIES' || element === 'EQUI') {
+                            this.lastOperator.push('GROUP');
+                        } else if (element === 'NOT') {
+                            this.lastOperator.push('NOT');
+                        } else {
+                            this.lastOperator.push('FEATURE');
+                        }
+                        if (element.endsWith(')')) {
+                            this.lastOperator.push('BRACKETCLOSED');
+                        }
+                    }
+                );
+            } else {
+                this.constraintText = '';
+            }
         },
 
-        constraintText(newValue){
-            this.checkParse(newValue);
+        constraintText(newValue) {
+            if (newValue === null) {
+                this.constraintText = '';
+                this.lastOperator = [];
+                this.openBrackets = 0;
+            }
         }
     },
 
@@ -172,33 +196,33 @@ export default {
             }
         },
         isFeatureAvailable() {
-            return !(this.lastOperator.slice(-1)[0] !== "FEATURE" && this.lastOperator.slice(-1)[0] !== "BRACKETCLOSED");
+            return !(this.lastOperator.slice(-1)[0] !== 'FEATURE' && this.lastOperator.slice(-1)[0] !== 'BRACKETCLOSED');
         },
         isGroupAvailable() {
-            return !(this.lastOperator.slice(-1)[0] === "FEATURE" || this.lastOperator.slice(-1)[0] === "BRACKETCLOSED");
+            return !(this.lastOperator.slice(-1)[0] === 'FEATURE' || this.lastOperator.slice(-1)[0] === 'BRACKETCLOSED');
         },
-        isNotAvailable(){
-            return !(this.lastOperator.slice(-1)[0] !== "FEATURE" && this.lastOperator.slice(-1)[0] !== "BRACKETCLOSED");
+        isNotAvailable() {
+            return !(this.lastOperator.slice(-1)[0] !== 'FEATURE' && this.lastOperator.slice(-1)[0] !== 'BRACKETCLOSED');
         },
-        isOpenBracketAvailable(){
-            return !(this.lastOperator.slice(-1)[0] !== "FEATURE" && this.lastOperator.slice(-1)[0] !== "BRACKETCLOSED");
+        isOpenBracketAvailable() {
+            return !(this.lastOperator.slice(-1)[0] !== 'FEATURE' && this.lastOperator.slice(-1)[0] !== 'BRACKETCLOSED');
         },
-        isClosedBracketAvailable(){
-            return !(this.openBrackets > 0 && (this.lastOperator.slice(-1)[0] === "FEATURE" || this.lastOperator.slice(-1)[0] === "BRACKETCLOSED"));
+        isClosedBracketAvailable() {
+            return !(this.openBrackets > 0 && (this.lastOperator.slice(-1)[0] === 'FEATURE' || this.lastOperator.slice(-1)[0] === 'BRACKETCLOSED'));
         },
-        isAddAvailable(){
-            return this.openBrackets === 0 && this.lastOperator.slice(-1)[0] !== "GROUP" && this.lastOperator.slice(-1)[0] !== "NOT";
+        isAddAvailable() {
+            return this.openBrackets === 0 && this.lastOperator.slice(-1)[0] !== 'GROUP' && this.lastOperator.slice(-1)[0] !== 'NOT';
         },
-        undoAvailable(){
+        undoAvailable() {
             return !this.lastOperator.length > 0;
         },
-        tooltipText(){
-            if(this.openBrackets > 0){
-                return "Missing one or more closing brackets";
-            } else if (this.lastOperator.slice(-1)[0] === "GROUP"){
-                return "Missing a second constraint item for the last group constraint.";
-            } else if (this.lastOperator.slice(-1)[0] === "NOT"){
-                return "Missing a constraint item for the last not constraint";
+        tooltipText() {
+            if (this.openBrackets > 0) {
+                return 'Missing one or more closing brackets';
+            } else if (this.lastOperator.slice(-1)[0] === 'GROUP') {
+                return 'Missing a second constraint item for the last group constraint.';
+            } else if (this.lastOperator.slice(-1)[0] === 'NOT') {
+                return 'Missing a constraint item for the last not constraint';
             } else {
                 return '';
             }
@@ -246,47 +270,60 @@ export default {
                 name = `"${name}"`;
             }
             this.constraintText = this.constraintText + name + ' ';
-            this.lastOperator.push("FEATURE");
+            this.lastOperator.push('FEATURE');
             this.$refs.allNodes.internalSearch = '';
             this.selectedFeatureNode = undefined;
         },
 
-        appendGroupOperator(operator){
+        appendGroupOperator(operator) {
             if (!operator) return;
             this.constraintText = this.constraintText + operator + ' ';
-            this.lastOperator.push("GROUP");
+            this.lastOperator.push('GROUP');
         },
 
-        appendNotOperator(){
-            this.constraintText = this.constraintText + "NOT" + ' ';
-            this.lastOperator.push("NOT");
+        appendNotOperator() {
+            this.constraintText = this.constraintText + 'NOT' + ' ';
+            this.lastOperator.push('NOT');
         },
 
-        appendBracket(bracket){
+        appendBracket(bracket) {
             if (!bracket) return;
-            if (bracket === '('){
+            if (bracket === '(') {
                 this.openBrackets += 1;
                 this.constraintText = this.constraintText + bracket;
-                this.lastOperator.push("BRACKETOPENED");
+                this.lastOperator.push('BRACKETOPENED');
             } else {
                 this.openBrackets -= 1;
-                this.constraintText = this.constraintText.slice(0, -1) + bracket;
-                this.lastOperator.push("BRACKETCLOSED");
+                this.constraintText = this.constraintText.slice(0, -1) + bracket + ' ';
+                this.lastOperator.push('BRACKETCLOSED');
             }
 
         },
 
-        undoLastAction(){
+        undoLastAction() {
             let operator = this.lastOperator.pop();
-            if (operator === "BRACKETOPENED" || operator === "BRACKETCLOSED"){
-                this.constraintText.slice(0, -1)
+            if (operator === 'BRACKETCLOSED') {
+                this.constraintText = this.constraintText.slice(0, -2);
+                this.openBrackets = this.openBrackets + 1;
+            } else if (operator === 'BRACKETOPENED') {
+                this.constraintText = this.constraintText.slice(0, -1);
+                this.openBrackets = this.openBrackets - 1;
             } else {
-                let lastIndex = this.constraintText.slice(0, -1).lastIndexOf(" ");
-                if (lastIndex === -1){
-                    this.constraintText = "";
+                let lastIndex = this.constraintText.slice(0, -1).lastIndexOf(' ');
+                if (this.lastOperator.slice(-1)[0] === 'BRACKETOPENED') {
+                    if (lastIndex === -1) {
+                        this.constraintText = '(';
+                    } else {
+                        this.constraintText = this.constraintText.slice(0, lastIndex + 2);
+                    }
                 } else {
-                    this.constraintText = this.constraintText.slice(0, this.constraintText.slice(0, -1).lastIndexOf(" "));
+                    if (lastIndex === -1) {
+                        this.constraintText = '';
+                    } else {
+                        this.constraintText = this.constraintText.slice(0, lastIndex + 1);
+                    }
                 }
+
             }
         },
 
