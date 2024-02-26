@@ -48,8 +48,8 @@ function getChildrenOfFeature(struct, parent, data) {
                 child.getAttribute('mandatory') === 'true',
                 child.getAttribute('abstract') === 'true'
             );
-            if(child.tagName === 'feature'){
-              toAppend.setGroupType('and')
+            if (child.tagName === 'feature') {
+                toAppend.setGroupType('and');
             }
             toAppend.children = getChildrenOfFeature(child, toAppend, data);
 
@@ -64,7 +64,7 @@ function getChildrenOfFeature(struct, parent, data) {
 function readConstraints(constraints, data) {
     if (!constraints) return [];
 
-    const childNodes = [...constraints.childNodes]
+    const childNodes = [...constraints.childNodes];
     return childNodes
         .filter((rule) => rule.tagName)
         .map((rule) => {
@@ -86,21 +86,17 @@ function readConstraintItem(item, data) {
             .filter((childItem) => childItem.tagName)
             .map((childItem) => readConstraintItem(childItem, data));
 
-        if (childItems.length > 1 || item.tagName === 'not') {
-            switch (item.tagName) {
-                case 'disj':
-                    return new Disjunction(childItems[0], childItems[1]);
-                case 'conj':
-                    return new Conjunction(childItems[0], childItems[1]);
-                case 'imp':
-                    return new Implication(childItems[0], childItems[1]);
-                case 'eq':
-                    return new Equivalence(childItems[0], childItems[1]);
-                case 'not':
-                    return new Negation(childItems[0]);
-            }
-        } else {
-            return new SoloDisjunction(childItems[0]);
+        switch (item.tagName) {
+            case 'disj':
+                return new Disjunction(childItems);
+            case 'conj':
+                return new Conjunction(childItems);
+            case 'imp':
+                return new Implication(childItems[0], childItems[1]);
+            case 'not':
+                return new Negation(childItems[0]);
+            case 'eq':
+                return new Equivalence(childItems);
         }
     }
 }
@@ -113,7 +109,7 @@ function getProperties(properties) {
         .map((element) => ({
             tag: element.tagName,
             key: element.getAttribute('key'),
-            value: element.getAttribute('value'),
+            value: element.getAttribute('value')
         }));
 }
 
@@ -125,7 +121,7 @@ function getCalculations(calculationsSection) {
         Constraints: calculationsSection.getAttribute('Constraints'),
         Features: calculationsSection.getAttribute('Features'),
         Redundant: calculationsSection.getAttribute('Redundant'),
-        Tautology: calculationsSection.getAttribute('Tautology'),
+        Tautology: calculationsSection.getAttribute('Tautology')
     };
 }
 
@@ -141,7 +137,7 @@ function getFeatureOrder(featureOrder) {
     if (!featureOrder) return null;
 
     return {
-        userDefined: featureOrder.getAttribute('userDefined'),
+        userDefined: featureOrder.getAttribute('userDefined')
     };
 }
 
@@ -150,7 +146,7 @@ export function jsonToXML(data) {
 
     xml += `<properties>${data.properties.reduce(
         (prev, prop) =>
-            prev + `<${prop.tag} key="${prop.key}" value="${prop.value}"/>`,
+            prev + `<${prop.tag} key='${prop.key}' value='${prop.value}'/>`,
         ''
     )}</properties>`;
 
@@ -163,11 +159,11 @@ export function jsonToXML(data) {
 
     if (data.calculations) {
         xml += `<calculations
-                    Auto="${data.calculations.Auto}"
-                    Constraints="${data.calculations.Constraints}"
-                    Redundant="${data.calculations.Redundant}"
-                    Tautology="${data.calculations.Tautology}"
-                    Features="${data.calculations.Features}"
+                    Auto='${data.calculations.Auto}'
+                    Constraints='${data.calculations.Constraints}'
+                    Redundant='${data.calculations.Redundant}'
+                    Tautology='${data.calculations.Tautology}'
+                    Features='${data.calculations.Features}'
                     />`;
     }
 
@@ -177,7 +173,7 @@ export function jsonToXML(data) {
 
     if (data.featureOrder) {
         xml += `<featureOrder
-                    userDefined="${data.featureOrder.userDefined}"
+                    userDefined='${data.featureOrder.userDefined}'
                     />`;
     }
 
@@ -207,11 +203,11 @@ function nodeToXML(node) {
     if (node.isLeaf()) {
         return `<feature ${node.isAbstract ? 'abstract="true" ' : ''}${
             node.isMandatory ? 'mandatory="true" ' : ''
-        }name="${node.name}"/>`;
+        }name='${node.name}'/>`;
     } else {
         let toReturn = `<${node.groupType} ${
             node.isAbstract ? 'abstract="true" ' : ''
-        }${node.isMandatory ? 'mandatory="true" ' : ''}name="${node.name}">`;
+        }${node.isMandatory ? 'mandatory="true" ' : ''}name='${node.name}'>`;
 
         node.children.forEach((childNode) => {
             toReturn += nodeToXML(childNode);

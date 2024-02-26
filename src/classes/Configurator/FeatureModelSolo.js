@@ -1,11 +1,11 @@
 import beautify from "xml-beautifier";
 import {Constraint} from "@/classes/Constraint";
-import {FeatureNodeConstraintItem} from "@/classes/Configurator/Constraint/FeatureNodeConstraintItem";
-import {Disjunction} from "@/classes/Configurator/Constraint/Disjunction";
-import {Conjunction} from "@/classes/Configurator/Constraint/Conjunction";
-import {Implication} from "@/classes/Configurator/Constraint/Implication";
-import {Negation} from "@/classes/Configurator/Constraint/Negation";
-import {Equivalence} from '@/classes/Configurator/Constraint/Equivalence';
+import {FeatureNodeConstraintItem} from "@/classes/Constraint/FeatureNodeConstraintItem";
+import {Disjunction} from "@/classes/Constraint/Disjunction";
+import {Conjunction} from "@/classes/Constraint/Conjunction";
+import {Implication} from "@/classes/Constraint/Implication";
+import {Negation} from "@/classes/Constraint/Negation";
+import {Equivalence} from '@/classes/Constraint/Equivalence';
 import {SelectionState, SelectionStateValidator} from '@/classes/SelectionState';
 import { FeatureNode } from '@/classes/FeatureNode';
 

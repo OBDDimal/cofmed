@@ -344,7 +344,7 @@ import {ConfiguratorManager} from '@/classes/Configurator/ConfiguratorManager';
 import {DecisionPropagationCommand} from '@/classes/Commands/Configurator/DecisionPropagationCommand';
 import {tr} from 'vuetify/locale';
 import api from '@/services/api.service';
-import {FeatureNodeConstraintItem} from '@/classes/Configurator/Constraint/FeatureNodeConstraintItem';
+import {FeatureNodeConstraintItem} from '@/classes/Constraint/FeatureNodeConstraintItem';
 import {SelectionState} from '@/classes/SelectionState';
 import ConfiguratorOpenFileDialog from '@/components/Configurator/ConfiguratorOpenFileDialog.vue';
 import FeatureModelViewerSolo from '@/components/Configurator/FeatureModelViewerSolo.vue';
