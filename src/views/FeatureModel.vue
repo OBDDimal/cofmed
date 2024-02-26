@@ -40,7 +40,7 @@
     ></f-m-navbar>
     <input
         id='filePicker'
-        accept='.xml'
+        accept='.xml, .uvl, .dimacs'
         class='d-none'
         type='file'
         @change='onFileInputChanged'
@@ -243,6 +243,7 @@ import { useAppStore } from '@/store/app';
 import axios from 'axios';
 import FMNavbar from '@/components/FMNavbar.vue';
 import * as view from '@/services/FeatureModel/view.service';
+import { changeFileFormat } from '@/classes/BackendAccess/FeatureIDEAccess';
 
 const appStore = useAppStore();
 
@@ -439,15 +440,44 @@ export default {
 
         openConfigurator() {
             localStorage.featureModelData = jsonToXML(this.data);
-            this.$router.push({path: '/configurator/local'});
+            this.$router.push({ path: '/configurator/local' });
         },
 
         async openFile(files) {
             this.xml = undefined;
-            const data = await files[0].text();
-            const xml = beautify(data);
-            xmlTranspiler.xmlToJson(xml, this.data);
-            this.xml = xml;
+            let data = await files[0].text();
+            const fileExtension = files[0].name.split('.').pop();
+            if (fileExtension === 'uvl' || fileExtension === 'dimacs') {
+                data = await changeFileFormat(data, fileExtension, 'featureIde');
+            } else if (fileExtension !== 'xml') {
+                appStore.updateSnackbar(
+                    'Could not load the feature model, because filetype is not supported.',
+                    'error',
+                    3000,
+                    true
+                );
+                return;
+            }
+            if (data === 'bad') {
+                appStore.updateSnackbar(
+                    'Could not convert the feature model, because feature model is not supported by FeatureIDE.',
+                    'error',
+                    3000,
+                    true
+                );
+            } else if (data === ''){
+                appStore.updateSnackbar(
+                    'Cannot open non-XML feature model as the FeatureIDE Service is down.',
+                    'error',
+                    3000,
+                    true
+                );
+            } else {
+                const xml = beautify(data);
+                xmlTranspiler.xmlToJson(xml, this.data);
+                this.xml = xml;
+
+            }
         },
 
         onFileInputChanged(e) {

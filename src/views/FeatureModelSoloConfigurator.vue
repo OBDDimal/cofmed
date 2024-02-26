@@ -311,7 +311,7 @@
                 </v-card-text>
                 <input
                         ref="filePicker"
-                        accept=".xml"
+                        accept=".xml, .uvl, .dimacs"
                         class="d-none"
                         type="file"
                         @change="onFileInputChanged"
@@ -353,7 +353,7 @@ import {useAppStore} from '@/store/app';
 import {ResetCommand} from '@/classes/Commands/Configurator/ResetCommand';
 import {LoadConfigCommand} from '@/classes/Commands/Configurator/LoadConfigCommand';
 import {decisionPropagationFL, pingFL} from "@/classes/BackendAccess/FlaskAccess";
-import {decisionPropagationFIDE, pingFIDE} from "@/classes/BackendAccess/FeatureIDEAccess";
+import { changeFileFormat, decisionPropagationFIDE, pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
 import beautify from "xml-beautifier";
 import ConfNavbar from '@/components/Configurator/ConfNavbar.vue';
 
@@ -591,36 +591,64 @@ export default {
 
         async openFile(files) {
             this.fmIsLoaded = true;
-            const data = await files[0].text();
-            try {
-                this.xml = data;
-                const featureModelSolo = FeatureModelSolo.loadXmlDataFromFile(this.xml);
-                this.commandManager = new ConfiguratorManager();
-                this.features = featureModelSolo.features;
-                this.updateFeatures();
-                this.featureModelName = files[0].name.slice(0, files[0].name.length - 4);
-                featureModelSolo.name = this.featureModelName;
-                this.allConstraints = featureModelSolo.constraints.map((e) => ({
-                    constraint: e,
-                    formula: e.toList(),
-                    evaluation: e.evaluate()
-                }));
-                this.filteredConstraints = this.allConstraints;
-                this.featureModelSolo = featureModelSolo;
-                const selectionData = await this.getSelectionDataFromAPI();
-                this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
-                this.initialResetCommand.execute();
-            } catch (e) {
-                console.log(e)
+            let data = await files[0].text();
+            const fileExtension = files[0].name.split('.').pop();
+            if (fileExtension === 'uvl' || fileExtension === 'dimacs') {
+                data = await changeFileFormat(data, fileExtension, 'featureIde');
+            } else if (fileExtension !== 'xml') {
                 appStore.updateSnackbar(
-                    'Could not load the feature model.',
+                    'Could not load the feature model, because filetype is not supported.',
                     'error',
-                    5000,
+                    3000,
                     true
                 );
-                this.fmIsLoaded = false;
+                return;
             }
-            this.showOpenDialog = false;
+            if (data === 'bad') {
+                appStore.updateSnackbar(
+                    'Could not convert the feature model, because feature model is not supported by FeatureIDE.',
+                    'error',
+                    3000,
+                    true
+                );
+            } else if (data === ''){
+                appStore.updateSnackbar(
+                    'Cannot open non-XML feature model as the FeatureIDE Service is down.',
+                    'error',
+                    3000,
+                    true
+                );
+            } else {
+                try {
+                    this.xml = data;
+                    const featureModelSolo = FeatureModelSolo.loadXmlDataFromFile(this.xml);
+                    this.commandManager = new ConfiguratorManager();
+                    this.features = featureModelSolo.features;
+                    this.updateFeatures();
+                    this.featureModelName = files[0].name.slice(0, files[0].name.length - 4);
+                    featureModelSolo.name = this.featureModelName;
+                    this.allConstraints = featureModelSolo.constraints.map((e) => ({
+                        constraint: e,
+                        formula: e.toList(),
+                        evaluation: e.evaluate()
+                    }));
+                    this.filteredConstraints = this.allConstraints;
+                    this.featureModelSolo = featureModelSolo;
+                    const selectionData = await this.getSelectionDataFromAPI();
+                    this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
+                    this.initialResetCommand.execute();
+                } catch (e) {
+                    console.log(e)
+                    appStore.updateSnackbar(
+                        'Could not load the feature model.',
+                        'error',
+                        5000,
+                        true
+                    );
+                    this.fmIsLoaded = false;
+                }
+                this.showOpenDialog = false;
+            }
         },
 
         openConfig(file) {

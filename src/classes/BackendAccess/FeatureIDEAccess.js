@@ -1,4 +1,4 @@
-import axios, {CancelToken} from "axios";
+import axios, { CancelToken } from 'axios';
 
 
 export async function decisionPropagationFIDE(xml, selection = [], deselection = []) {
@@ -11,11 +11,11 @@ export async function decisionPropagationFIDE(xml, selection = [], deselection =
         const content = new TextEncoder().encode(xml);
         const data = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FEATUREIDESERVICE}propagation`,
             ({
-                name: "vue" + ".xml",
+                name: 'vue' + '.xml',
                 selection: selection,
                 deselection: deselection,
                 content: Array.from(content)
-            }), {cancelToken: source.token});
+            }), { cancelToken: source.token });
         clearTimeout(timeout);
         return data.data;
     } catch (e) {
@@ -30,10 +30,29 @@ export async function pingFIDE() {
             source.cancel();
             // Timeout Logic
         }, 450);
-        let data = await axios.get(`${import.meta.env.VITE_APP_DOMAIN_FEATUREIDESERVICE}`, {cancelToken: source.token});
+        let data = await axios.get(`${import.meta.env.VITE_APP_DOMAIN_FEATUREIDESERVICE}`, { cancelToken: source.token });
         clearTimeout(timeout);
         return true;
     } catch (e) {
         return false;
+    }
+}
+
+export async function changeFileFormat(text, fileExtension, newFileExtension) {
+    try {
+        const content = new TextEncoder().encode(text);
+        let response = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FEATUREIDESERVICE}convert`, {
+            name: 'hello.' + fileExtension,
+            typeOutput: [newFileExtension],
+            content: Array.from(content)
+        });
+        let contentAsString = new TextDecoder().decode(Uint8Array.from(response.data.content[0]));
+
+        if (contentAsString.trim().toLowerCase() === text.trim().toLowerCase()) {
+            return 'bad';
+        }
+        return contentAsString;
+    } catch (e) {
+        return '';
     }
 }
