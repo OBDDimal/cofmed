@@ -344,9 +344,8 @@ import {ConfiguratorManager} from '@/classes/Configurator/ConfiguratorManager';
 import {DecisionPropagationCommand} from '@/classes/Commands/Configurator/DecisionPropagationCommand';
 import {tr} from 'vuetify/locale';
 import api from '@/services/api.service';
-import {Feature} from '@/classes/Configurator/Feature';
 import {FeatureNodeConstraintItem} from '@/classes/Configurator/Constraint/FeatureNodeConstraintItem';
-import {SelectionState} from '@/classes/Configurator/SelectionState';
+import {SelectionState} from '@/classes/SelectionState';
 import ConfiguratorOpenFileDialog from '@/components/Configurator/ConfiguratorOpenFileDialog.vue';
 import FeatureModelViewerSolo from '@/components/Configurator/FeatureModelViewerSolo.vue';
 import {FeatureModelSolo} from '@/classes/Configurator/FeatureModelSolo';
@@ -906,10 +905,6 @@ export default {
     computed: {
         tr() {
             return tr;
-        },
-
-        Feature() {
-            return Feature;
         },
 
         FeatureNodeConstraintItem() {

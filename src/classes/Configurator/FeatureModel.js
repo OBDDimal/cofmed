@@ -1,4 +1,4 @@
-import {SelectionState} from "@/classes/Configurator/SelectionState";
+import {SelectionState} from "@/classes/SelectionState";
 import beautify from "xml-beautifier";
 import {FeatureNodeConfigurator} from "@/classes/Configurator/FeatureNodeConfigurator";
 import {Version} from "@/classes/Configurator/Version";

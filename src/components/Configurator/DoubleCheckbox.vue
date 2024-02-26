@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import { SelectionState } from '@/classes/Configurator/SelectionState';
+import { SelectionState } from '@/classes/SelectionState';
 import {variabilityDarkTheme, variabilityLightTheme} from "@/plugins/vuetify";
 
 export default {

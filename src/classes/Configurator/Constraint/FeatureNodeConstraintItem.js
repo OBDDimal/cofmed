@@ -1,5 +1,5 @@
 import {ConstraintItem} from "@/classes/Configurator/Constraint/ConstraintItem";
-import { SelectionState } from '@/classes/Configurator/SelectionState';
+import { SelectionState } from '@/classes/SelectionState';
 
 export class FeatureNodeConstraintItem extends ConstraintItem {
     constructor(featureNode) {

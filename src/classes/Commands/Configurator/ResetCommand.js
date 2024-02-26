@@ -1,5 +1,5 @@
 import {ConfigurationCommand} from '@/classes/Commands/Configurator/ConfigurationCommand';
-import {SelectionState} from "@/classes/Configurator/SelectionState";
+import {SelectionState} from "@/classes/SelectionState";
 
 export class ResetCommand extends ConfigurationCommand {
     constructor(featureModel, data) {

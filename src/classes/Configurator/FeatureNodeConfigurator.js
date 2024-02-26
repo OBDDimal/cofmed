@@ -2,7 +2,7 @@ import * as CONSTANTS from '../constants';
 import * as d3 from "d3";
 import {PseudoNode} from "@/classes/PseudoNode";
 import {variabilityDarkTheme, variabilityLightTheme} from "@/plugins/vuetify";
-import {SelectionState} from "@/classes/Configurator/SelectionState";
+import {SelectionState} from "@/classes/SelectionState";
 
 export class FeatureNodeConfigurator {
     constructor(parent, name, id, groupType, mandatory, abstract) {
