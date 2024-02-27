@@ -1,5 +1,5 @@
 const operatorPrecedence = {};
-const operators = ['not', 'implies', 'and', 'or'];
+const operators = ['not', 'implies', 'and', 'or', 'equi'];
 operators.forEach((operator, i) => operatorPrecedence[operator] = i);
 
 export class ConstraintItem {
@@ -29,7 +29,9 @@ export class ConstraintItem {
     }
 
     getPrecedence() {
-        if (this.constructor.name === 'Disjunction') {
+        if (this.constructor.name === 'Equivalence') {
+            return operatorPrecedence['equi'];
+        } else if (this.constructor.name === 'Disjunction') {
             return operatorPrecedence['or'];
         } else if (this.constructor.name === 'Conjunction') {
             return operatorPrecedence['and'];

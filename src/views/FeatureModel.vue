@@ -33,7 +33,7 @@
         @open-constraints='openConstraints = true'
         @show-collaboration-dialog='showStartCollaborationSessionDialog = true'
         @show-tutorial='showTutorial = true'
-        @new-empty-model='newEmptyModel'
+        @new-empty-model='(value) => newEmptyModel(value)'
         @download-svg='downloadSVG'
 
 
@@ -106,17 +106,16 @@
             @hide-legend='showLegend=false'
         >
         </feature-model-tree>
-        <v-row
-            class='mr-2 '
-            justify='end'
-        >
+        <v-card location='right bottom'
+                position='fixed' variant='text'>
             <v-btn
                 id='feature-model-legend'
                 class='mr-2'
                 color='primary'
                 elevation='2'
                 icon
-                @click='showLegend=!showLegend'
+
+                @click='showLegendChange'
             >
                 <v-icon>mdi-map-legend</v-icon>
             </v-btn>
@@ -143,9 +142,7 @@
             >
                 <v-icon>mdi-format-list-checks</v-icon>
             </v-btn>
-        </v-row>
-
-
+        </v-card>
         <feature-model-fact-label-bar
             :analysis='facts.analysis'
             :isOpen='openInformation'
@@ -298,6 +295,7 @@ export default {
             openInformation: false,
             showTutorial: false,
             showLegend: true,
+            widthForLegend: true,
             facts: FactLabelFactory.getEmptyFactLabel(),
             d3Data: {
                 root: undefined,
@@ -465,7 +463,7 @@ export default {
                     3000,
                     true
                 );
-            } else if (data === ''){
+            } else if (data === '') {
                 appStore.updateSnackbar(
                     'Cannot open non-XML feature model as the FeatureIDE Service is down.',
                     'error',
@@ -490,6 +488,15 @@ export default {
                 );
             } else {
                 this.openFile(e.target.files);
+            }
+        },
+
+        showLegendChange() {
+            this.widthForLegend = window.innerWidth > 700;
+            if (!this.widthForLegend) {
+                this.showLegend = false;
+            } else {
+                this.showLegend = !this.showLegend;
             }
         },
 
@@ -556,13 +563,17 @@ export default {
             }
         },
 
-        newEmptyModel() {
-            const command = new NewEmptyModelCommand(
-                this,
-                this.d3Data
-            );
-            this.featureModelCommandManager.execute(command);
-            this.updateFeatureModel();
+        newEmptyModel(value) {
+            if (value) {
+                this.loadInitialModel();
+            } else {
+                const command = new NewEmptyModelCommand(
+                    this,
+                    this.d3Data
+                );
+                this.featureModelCommandManager.execute(command);
+                this.updateFeatureModel();
+            }
         },
 
         initData() {

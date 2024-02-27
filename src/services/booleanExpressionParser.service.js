@@ -83,7 +83,7 @@ function convertToConstraintItem(operator, stack) {
         } else if (operator === 'or') {
             constraintItem = new Disjunction([first, second]);
         } else if (operator === 'implies') {
-            constraintItem = new Implication([first, second]);
+            constraintItem = new Implication(first, second);
         } else if (operator === 'equi') {
             constraintItem = new Equivalence([first, second]);
         }

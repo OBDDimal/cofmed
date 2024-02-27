@@ -265,7 +265,7 @@ export default {
         appendFeatureNode(featureNode) {
             if (!featureNode) return;
             let name = featureNode.name;
-            let regex = /^\s+$/;
+            let regex = /\s/;
             if (regex.test(name)) {
                 name = `"${name}"`;
             }
