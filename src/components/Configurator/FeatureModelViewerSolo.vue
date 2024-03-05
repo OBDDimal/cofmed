@@ -1,8 +1,23 @@
 <template>
+    <view-menu
+        :direction='d3Data.direction'
+        :is-file-loaded='fmIsLoaded'
+        :editing='false'
+        :location='"end"'
+        @fitToView='fitToView'
+        @resetView='(levels, maxChildren) => resetView(levels, maxChildren)'
+        @shortName='(value) => changeShortName(value)'
+        @spaceBetweenParentChild='(value) => changeSpaceBetweenParentChild(value)'
+        @spaceBetweenSiblings='(value) => changeSpaceBetweenSiblings(value)'
+        @toggleDirection='toggleDirection'
+    >
+    </view-menu>
     <div id='svg-container'></div>
 </template>
 
 <script setup>
+import ViewMenu from '@/components/ViewMenu.vue';
+
 function refresh() {
     this.resetView(4, 3);
 }
@@ -27,7 +42,8 @@ export default {
 
     props: {
         featureModel: FeatureModelSolo,
-        dark: false
+        fmIsLoaded: Boolean,
+        dark: Boolean
     },
 
     data: () => ({
@@ -99,7 +115,7 @@ export default {
         init() {
             init.initialize(this.d3Data, this.featureModel.root);
             dragAndDrop.init(this.d3Data, null);
-            this.resetView(3, 7);
+            this.resetView(4, 3);
         },
         resetView(levels, maxChildren) {
             view.reset(this.d3Data, levels, maxChildren);

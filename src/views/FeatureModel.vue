@@ -14,6 +14,7 @@
         :is-undo-available='
                 featureModelCommandManager && featureModelCommandManager.isUndoAvailable()
             '
+        :direction='d3Data.direction'
         @download='exportToXML'
         @fitToView='fitToView'
         @nonSemanticEditing='(value) => updateNonSemanticEdit(value)'
@@ -30,7 +31,6 @@
         @spaceBetweenSiblings='(value) =>changeSpaceBetweenSiblings(value)'
         @toggleDirection='toggleDirection'
         @undo='undo'
-        @open-constraints='openConstraints = true'
         @show-collaboration-dialog='showStartCollaborationSessionDialog = true'
         @show-tutorial='showTutorial = true'
         @new-empty-model='(value) => newEmptyModel(value)'

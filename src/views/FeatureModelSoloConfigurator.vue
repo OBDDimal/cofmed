@@ -1,21 +1,21 @@
 <template>
     <conf-navbar
-            :file-is-loaded='fmIsLoaded'
-            :service-is-feature-i-d-e='serviceIsFeatureIDE'
-            :service-is-flask='!serviceIsFeatureIDE'
-            :service-is-working='serviceIsWorking'
-            :command-manager="commandManager"
-            @download='downloadXML'
-            @localStorage='save'
-            @openConf='openConfigFileDialog'
-            @openEdit='redirectToEditor'
-            @openFile='openFileDialog'
-            @reset='resetCommand'
-            @theme="dark = !dark"
-            @change-service="(boolean) => changeService(boolean)"
+        :command-manager='commandManager'
+        :file-is-loaded='fmIsLoaded'
+        :service-is-feature-i-d-e='serviceIsFeatureIDE'
+        :service-is-flask='!serviceIsFeatureIDE'
+        :service-is-working='serviceIsWorking'
+        @download='downloadXML'
+        @localStorage='save'
+        @openConf='openConfigFileDialog'
+        @openEdit='redirectToEditor'
+        @openFile='openFileDialog'
+        @reset='resetCommand'
+        @theme='dark = !dark'
+        @change-service='(boolean) => changeService(boolean)'
     ></conf-navbar>
     <v-container :fluid='true'>
-        <template v-if="fmIsLoaded">
+        <template v-if='fmIsLoaded'>
 
             <!-- First row with the three columns: Versions, Features, Third Column (#SAT, Explanations, Configuration history) -->
             <v-row>
@@ -45,46 +45,46 @@
                                         <tr>
                                             <td>Unselected</td>
                                             <td>{{
-                                                countSelectionStateInList(featureModelSolo.features, SelectionState.Unselected)
+                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.Unselected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Explicitly selected</td>
                                             <td>{{
-                                                countSelectionStateInList(featureModelSolo.features, SelectionState.ExplicitlySelected)
+                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ExplicitlySelected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Explicitly deselected</td>
                                             <td>{{
-                                                countSelectionStateInList(featureModelSolo.features, SelectionState.ExplicitlyDeselected)
+                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ExplicitlyDeselected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Implicitly selected</td>
                                             <td>{{
-                                                countSelectionStateInList(featureModelSolo.features, SelectionState.ImplicitlySelected)
+                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ImplicitlySelected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Implicitly deselected</td>
                                             <td>{{
-                                                countSelectionStateInList(featureModelSolo.features, SelectionState.ImplicitlyDeselected)
+                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ImplicitlyDeselected)
                                                 }}
                                             </td>
                                         </tr>
                                     </table>
                                 </v-tooltip>
-                                <div style="width: 20rem"></div>
+                                <div style='width: 20rem'></div>
                                 <v-checkbox
-                                        v-model="validCheckbox"
-                                        density="compact"
-                                        hide-details
-                                        label="Valid"
+                                    v-model='validCheckbox'
+                                    density='compact'
+                                    hide-details
+                                    label='Valid'
                                 ></v-checkbox>
                             </v-layout>
                         </v-card-title>
@@ -95,13 +95,13 @@
                             <v-tab key='treeView'>Tree View</v-tab>
                         </v-tabs>
                         <!-- Search box for features -->
-                        <v-layout class="align-center justify-center" row>
+                        <v-layout class='align-center justify-center' row>
                             <v-menu open-on-hover>
-                                <template v-slot:activator="{ props }">
+                                <template v-slot:activator='{ props }'>
                                     <v-btn
-                                            class="mx-1"
-                                            icon="mdi-menu"
-                                            v-bind="props"
+                                        class='mx-1'
+                                        icon='mdi-menu'
+                                        v-bind='props'
                                     >
                                     </v-btn>
                                 </template>
@@ -109,33 +109,33 @@
                                     <v-list-item title='Show Open Features'>
                                         <template v-slot:prepend>
                                             <v-checkbox
-                                                    v-model="showOpenFeatures"
-                                                    density="compact"
-                                                    hide-details
-                                                    @input="updateFeatures"
+                                                v-model='showOpenFeatures'
+                                                density='compact'
+                                                hide-details
+                                                @input='updateFeatures'
                                             ></v-checkbox>
                                         </template>
                                     </v-list-item>
                                     <v-list-item title='Show Abstract Features'>
                                         <template v-slot:prepend>
                                             <v-checkbox
-                                                    v-model="showAbstractFeatures"
-                                                    density="compact"
-                                                    hide-details
-                                                    @input="updateFeatures"
+                                                v-model='showAbstractFeatures'
+                                                density='compact'
+                                                hide-details
+                                                @input='updateFeatures'
                                             ></v-checkbox>
                                         </template>
                                     </v-list-item>
                                 </v-list>
                             </v-menu>
                             <v-text-field
-                                    v-model='searchFeatures'
-                                    :clearable=true
-                                    append-inner-icon='mdi-magnify'
-                                    class='mr-2 ml-2'
-                                    hide-details
-                                    label='Search'
-                                    single-line
+                                v-model='searchFeatures'
+                                :clearable=true
+                                append-inner-icon='mdi-magnify'
+                                class='mr-2 ml-2'
+                                hide-details
+                                label='Search'
+                                single-line
                             ></v-text-field>
                         </v-layout>
                         <v-window v-model='tabsFirstColumn'>
@@ -146,23 +146,23 @@
 
                                 <!-- Table with all features that are currently fitlered and searched -->
                                 <v-data-table
-                                        :headers='headersFeatures'
-                                        :items='featuresTrimmed'
-                                        :search='searchFeatures'
-                                        disable-pagination
-                                        fixed-header
-                                        height='67.75vh'
-                                        hide-default-footer
-                                        item-key='name'
-                                        show-group-by
-                                        single-select
+                                    :headers='headersFeatures'
+                                    :items='featuresTrimmed'
+                                    :search='searchFeatures'
+                                    disable-pagination
+                                    fixed-header
+                                    height='67.75vh'
+                                    hide-default-footer
+                                    item-key='name'
+                                    show-group-by
+                                    single-select
                                 >
                                     <!-- Customization of the column NAME -->
                                     <template v-slot:item.name='{ item }'>
                                         <v-tooltip location='bottom'>
                                             <template v-slot:activator='{ props }'>
                                                 <span v-bind='props'>{{ item.selectable.name }}</span>
-                                                <template v-if="item.selectable.isAbstract">
+                                                <template v-if='item.selectable.isAbstract'>
                                                     <i> Abstract</i>
                                                 </template>
                                             </template>
@@ -204,8 +204,10 @@
 
                                 <!-- Feature Model Viewer -->
                                 <v-window-item key='featureModelViewer'>
-                                    <feature-model-viewer-solo ref="featureModelViewerSolo"
+
+                                    <feature-model-viewer-solo ref='featureModelViewerSolo'
                                                                :dark='dark'
+                                                               :fm-is-loaded='fmIsLoaded'
                                                                :feature-model='featureModelSolo'
                                                                @select='(name) => searchFeatures = name'
                                     ></feature-model-viewer-solo>
@@ -223,14 +225,14 @@
 
                                     <!-- Table with all ctcs -->
                                     <v-data-table
-                                            v-model:sort-by="sortByCTC"
-                                            :custom-key-sort="sortByCTCEval"
-                                            :footer-props="{'items-per-page-options': [10, 20, 50, 100, 200]}"
-                                            :headers="headersCTC"
-                                            :items='filteredConstraints'
-                                            fixed-header
-                                            height='72vh'
-                                            show-group-by
+                                        v-model:sort-by='sortByCTC'
+                                        :custom-key-sort='sortByCTCEval'
+                                        :footer-props="{'items-per-page-options': [10, 20, 50, 100, 200]}"
+                                        :headers='headersCTC'
+                                        :items='filteredConstraints'
+                                        fixed-header
+                                        height='72vh'
+                                        show-group-by
                                     >
 
                                         <!-- Customization of the column FORMULA -->
@@ -238,10 +240,10 @@
                                             <div v-for='(f, i) in item.selectable.formula' :key='i'
                                                  style='display: inline;'>
                                                 <v-chip
-                                                        v-if='f instanceof FeatureNodeConstraintItem'
-                                                        :color='getColorOfConstraintItem(f)'
-                                                        class='ml-2 mr-2'
-                                                        @click='searchFeatures = f.featureNode.name'
+                                                    v-if='f instanceof FeatureNodeConstraintItem'
+                                                    :color='getColorOfConstraintItem(f)'
+                                                    class='ml-2 mr-2'
+                                                    @click='searchFeatures = f.featureNode.name'
                                                 >
                                                     {{ f.featureNode.name }}
                                                 </v-chip>
@@ -259,21 +261,21 @@
                                 </v-window-item>
                                 <v-window-item key='conf'>
                                     <v-data-table
-                                            :headers="[{title: 'Description', key: 'description'}, {title: '# Possible configs', key: 'newSatCount'}, {title: 'Validation', key: 'valid'}]"
-                                            :item-class="command => command.marked ? 'active-command clickable' : 'clickable'"
-                                            :items='commandManager.commands'
-                                            class='elevation-1'
-                                            disable-filtering
-                                            disable-pagination
-                                            disable-sort
-                                            fixed-header
-                                            height='72vh'
-                                            hide-default-footer
-                                            single-select
-                                            @click:row='redoCommand'
+                                        :headers="[{title: 'Description', key: 'description'}, {title: '# Possible configs', key: 'newSatCount'}, {title: 'Validation', key: 'valid'}]"
+                                        :item-class="command => command.marked ? 'active-command clickable' : 'clickable'"
+                                        :items='commandManager.commands'
+                                        class='elevation-1'
+                                        disable-filtering
+                                        disable-pagination
+                                        disable-sort
+                                        fixed-header
+                                        height='72vh'
+                                        hide-default-footer
+                                        single-select
+                                        @click:row='redoCommand'
                                     >
 
-                                        <template v-slot:item.valid="{ item }">
+                                        <template v-slot:item.valid='{ item }'>
                                             {{ item.selectable.valid ? 'true' : 'false' }}
                                         </template>
                                     </v-data-table>
@@ -287,52 +289,52 @@
         <template v-else>
             <v-card :class="{ 'grey lighten-2': dragover }"
                     :color="dragover ? 'grey-lighten-1': ''"
-                    class="d-flex align-center justify-center"
+                    class='d-flex align-center justify-center'
                     height='89.5vh'
-                    @click="openFilePicker"
-                    @drop.prevent="onFileDrop($event)"
-                    @dragover.prevent="dragover = true"
-                    @dragenter.prevent="dragover = true"
-                    @dragleave.prevent="dragover = false"
+                    @click='openFilePicker'
+                    @drop.prevent='onFileDrop($event)'
+                    @dragover.prevent='dragover = true'
+                    @dragenter.prevent='dragover = true'
+                    @dragleave.prevent='dragover = false'
             >
                 <v-card-text>
-                    <v-row :dense="true" align="center" class="d-flex flex-column">
-                        <v-icon class="mt-5" size="100">
+                    <v-row :dense='true' align='center' class='d-flex flex-column'>
+                        <v-icon class='mt-5' size='100'>
                             mdi-cloud-upload
                         </v-icon>
-                        <p class="text-h4">
+                        <p class='text-h4'>
                             Drop your FeatureModel file here, or click to select it.
                         </p>
-                        <v-btn class="mt-6 text-h4 " color="primary" rounded="xl" variant="text"
-                               @click.stop="openFromLocalStorage">
+                        <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text'
+                               @click.stop='openFromLocalStorage'>
                             Or click here to load it from your local storage.
                         </v-btn>
                     </v-row>
                 </v-card-text>
                 <input
-                        ref="filePicker"
-                        accept=".xml, .uvl, .dimacs"
-                        class="d-none"
-                        type="file"
-                        @change="onFileInputChanged"
+                    ref='filePicker'
+                    accept='.xml, .uvl, .dimacs'
+                    class='d-none'
+                    type='file'
+                    @change='onFileInputChanged'
                 >
             </v-card>
         </template>
     </v-container>
 
     <configurator-open-file-dialog
-            :show='showOpenDialog'
-            file-type="FeatureModel"
-            @close='showOpenDialog = false'
-            @open='(file) => openFile(file)'
+        :show='showOpenDialog'
+        file-type='FeatureModel'
+        @close='showOpenDialog = false'
+        @open='(file) => openFile(file)'
     >
     </configurator-open-file-dialog>
 
     <configurator-open-file-dialog
-            :show='showOpenConfigDialog'
-            file-type="Configuration"
-            @close='showOpenConfigDialog = false'
-            @open='(file) => openConfig(file)'
+        :show='showOpenConfigDialog'
+        file-type='Configuration'
+        @close='showOpenConfigDialog = false'
+        @open='(file) => openConfig(file)'
     >
     </configurator-open-file-dialog>
 
@@ -340,34 +342,35 @@
 
 <script>
 import DoubleCheckbox from '@/components/Configurator/DoubleCheckbox.vue';
-import {ConfiguratorManager} from '@/classes/Configurator/ConfiguratorManager';
-import {DecisionPropagationCommand} from '@/classes/Commands/Configurator/DecisionPropagationCommand';
-import {tr} from 'vuetify/locale';
+import { ConfiguratorManager } from '@/classes/Configurator/ConfiguratorManager';
+import { DecisionPropagationCommand } from '@/classes/Commands/Configurator/DecisionPropagationCommand';
+import { tr } from 'vuetify/locale';
 import api from '@/services/api.service';
-import {FeatureNodeConstraintItem} from '@/classes/Constraint/FeatureNodeConstraintItem';
-import {SelectionState} from '@/classes/SelectionState';
+import { FeatureNodeConstraintItem } from '@/classes/Constraint/FeatureNodeConstraintItem';
+import { SelectionState } from '@/classes/SelectionState';
 import ConfiguratorOpenFileDialog from '@/components/Configurator/ConfiguratorOpenFileDialog.vue';
 import FeatureModelViewerSolo from '@/components/Configurator/FeatureModelViewerSolo.vue';
-import {FeatureModelSolo} from '@/classes/Configurator/FeatureModelSolo';
-import {useAppStore} from '@/store/app';
-import {ResetCommand} from '@/classes/Commands/Configurator/ResetCommand';
-import {LoadConfigCommand} from '@/classes/Commands/Configurator/LoadConfigCommand';
-import {decisionPropagationFL, pingFL} from "@/classes/BackendAccess/FlaskAccess";
+import { FeatureModelSolo } from '@/classes/Configurator/FeatureModelSolo';
+import { useAppStore } from '@/store/app';
+import { ResetCommand } from '@/classes/Commands/Configurator/ResetCommand';
+import { LoadConfigCommand } from '@/classes/Commands/Configurator/LoadConfigCommand';
+import { decisionPropagationFL, pingFL } from '@/classes/BackendAccess/FlaskAccess';
 import { changeFileFormat, decisionPropagationFIDE, pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
-import beautify from "xml-beautifier";
+import beautify from 'xml-beautifier';
 import ConfNavbar from '@/components/Configurator/ConfNavbar.vue';
+import ViewMenu from '@/components/ViewMenu.vue';
 
 const appStore = useAppStore();
 export default {
     name: 'FeatureModelSoloConfigurator',
-    components: { ConfNavbar, ConfiguratorOpenFileDialog, FeatureModelViewerSolo, DoubleCheckbox},
+    components: { ViewMenu, ConfNavbar, ConfiguratorOpenFileDialog, FeatureModelViewerSolo, DoubleCheckbox },
 
     data: () => ({
         headersFeatures: [
-            {title: 'Selection', key: 'selectionState', width: '10%'},
-            {title: 'Name', key: 'name', groupable: false},
+            { title: 'Selection', key: 'selectionState', width: '10%' },
+            { title: 'Name', key: 'name', groupable: false }
         ],
-        headersCTC: [{title: 'Valid', value: 'evaluation', key: 'evaluation'}, {
+        headersCTC: [{ title: 'Valid', value: 'evaluation', key: 'evaluation' }, {
             title: 'Constraints',
             key: 'formula',
             value: 'formula'
@@ -386,7 +389,7 @@ export default {
                 return 0;
             }
         },
-        sortByCTC: [{key: 'evaluation', order: 'desc'}],
+        sortByCTC: [{ key: 'evaluation', order: 'desc' }],
         commandManager: new ConfiguratorManager(),
         initialResetCommand: undefined,
         featureModelSolo: FeatureModelSolo,
@@ -418,9 +421,8 @@ export default {
 
     created() {
         if (this.id === 'local') {
-            this.openFromLocalStorage()
-        }
-        else if (this.id) {
+            this.openFromLocalStorage();
+        } else if (this.id) {
             this.initData();
         }
         this.setStartService();
@@ -434,8 +436,8 @@ export default {
                         this.xml = beautify(rawData.data);
                         this.featureModelSolo = FeatureModelSolo.loadXmlDataFromFile(this.xml);
                         this.features = this.featureModelSolo.features;
-                        this.updateFeatures()
-                        this.featuresTrimmed = this.features.filter((f) => !f.featureNodes.find((node) => node.name === f.name).isAbstract)
+                        this.updateFeatures();
+                        this.featuresTrimmed = this.features.filter((f) => !f.featureNodes.find((node) => node.name === f.name).isAbstract);
                         this.featureModelName = data.data.label;
                         this.featureModelSolo.name = this.featureModelName;
                         this.allConstraints = this.featureModelSolo.constraints.map((e) => ({
@@ -465,7 +467,7 @@ export default {
 
         redirectToEditor() {
             localStorage.featureModelData = this.xml;
-            this.$router.push({path: '/editor/local'});
+            this.$router.push({ path: '/editor/local' });
         },
 
         downloadXML() {
@@ -486,14 +488,14 @@ export default {
         async decisionPropagation(item, selectionState) {
             const data = this.getSelection();
             if (selectionState === SelectionState.ExplicitlySelected) {
-                data.selection.push(item.name)
+                data.selection.push(item.name);
             } else if (selectionState === SelectionState.ExplicitlyDeselected) {
-                data.deselection.push(item.name)
+                data.deselection.push(item.name);
             } else if (selectionState === SelectionState.Unselected) {
                 if (item.selectionState === SelectionState.ExplicitlySelected) {
-                    data.selection.pop(item.name)
+                    data.selection.pop(item.name);
                 } else if (item.selectionState === SelectionState.ExplicitlyDeselected) {
-                    data.deselection.pop(item.name)
+                    data.deselection.pop(item.name);
                 }
             }
             const selectionData = await this.getSelectionDataFromAPI(data);
@@ -565,7 +567,7 @@ export default {
                 this.commandManager = new ConfiguratorManager();
                 this.features = featureModelSolo.features;
                 this.updateFeatures();
-                this.featureModelName = "LocalStorageFile";
+                this.featureModelName = 'LocalStorageFile';
                 featureModelSolo.name = this.featureModelName;
                 this.allConstraints = featureModelSolo.constraints.map((e) => ({
                     constraint: e,
@@ -611,7 +613,7 @@ export default {
                     3000,
                     true
                 );
-            } else if (data === ''){
+            } else if (data === '') {
                 appStore.updateSnackbar(
                     'Cannot open non-XML feature model as the FeatureIDE Service is down.',
                     'error',
@@ -638,7 +640,7 @@ export default {
                     this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
                     this.initialResetCommand.execute();
                 } catch (e) {
-                    console.log(e)
+                    console.log(e);
                     appStore.updateSnackbar(
                         'Could not load the feature model.',
                         'error',
@@ -735,8 +737,8 @@ export default {
 
             return {
                 selection: selection,
-                deselection: deselection,
-            }
+                deselection: deselection
+            };
         },
 
         async getWorkingService() {
@@ -761,7 +763,7 @@ export default {
 
             let selectionData = undefined;
             if (!this.serviceIsWorking) {
-              let serviceStatus = await this.setStartService();
+                let serviceStatus = await this.setStartService();
                 if (!serviceStatus) {
                     appStore.updateSnackbar(
                         'No service is available.',
@@ -806,7 +808,7 @@ export default {
                         oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
                         oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
                         nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    }
+                    };
                 } else {
                     const apiData = await decisionPropagationFL(this.xml);
                     if (!apiData) {
@@ -839,7 +841,7 @@ export default {
                         oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
                         oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
                         nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    }
+                    };
                 }
             } else {
                 if (this.serviceIsFeatureIDE) {
@@ -874,7 +876,7 @@ export default {
                         oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
                         oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
                         nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    }
+                    };
                 } else {
                     const apiData = await decisionPropagationFL(this.xml, data.selection, data.deselection);
                     if (!apiData) {
@@ -907,7 +909,7 @@ export default {
                         oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
                         oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
                         nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    }
+                    };
                 }
             }
             return selectionData;
@@ -959,7 +961,7 @@ export default {
             }
 
             return this.featureModelSolo.constraints.some(c => c.evaluate() === false);
-        },
+        }
     }
 };
 </script>
