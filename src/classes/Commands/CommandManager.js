@@ -1,7 +1,8 @@
-import * as commandFactory from "@/classes/Commands/CommandFactory";
+import * as commandFactory from '@/classes/Commands/CommandFactory';
 import * as update from '@/services/FeatureModel/update.service.js';
 import { getColorsFromService } from '@/services/FeatureModel/colorsFromService.service';
 import { ReloadCommand } from '@/classes/Commands/ReloadCommand';
+import { useAppStore } from '@/store/app';
 
 export class CommandManager {
     constructor() {
@@ -14,8 +15,8 @@ export class CommandManager {
         this.d3Data = null;
     }
 
-    executeReload(){
-      this.fadeOut(this.d3Data, new ReloadCommand());
+    executeReload() {
+        this.fadeOut(this.d3Data, new ReloadCommand());
     }
 
     execute(command, initiator = true) {
@@ -116,58 +117,23 @@ export class CommandManager {
         }
     }
 
-    fadeOut(d3Data, command) {
-        if(command instanceof ReloadCommand){
-            if(d3Data.coloringIndex < 1) {
-                getColorsFromService(this.collaborationManager.featureModel.data, d3Data).then(
-                  value => {
-                    if (!value) {
-                      d3Data.coloringIndex = 0;
-                    } else {
-                      d3Data.coloringIndex = -1;
-                    }
-                  }
-                );
-            }
-            // Rerender for edits and fade them out
-            setTimeout(() => {
-                command.unmarkChanges();
-                update.updateSvg(d3Data);
-            }, 500);
-        } else if(this.type !== 'constraint') {
-            if(d3Data.coloringIndex < 1) {
-                getColorsFromService(this.collaborationManager.featureModel.data, d3Data).then(
-                  value => {
-                    if (!value) {
-                      d3Data.coloringIndex = 0;
-                    } else {
-                      d3Data.coloringIndex = -1;
-                    }
-                  }
-                );
-            }
-            // Rerender for edits and fade them out
-            setTimeout(() => {
-                command.unmarkChanges();
-                update.updateSvg(d3Data);
-            }, 3000);
-        } else {
-            if(this.collaborationManager.featureModelCommandManager.d3Data.coloringIndex < 1) {
-                getColorsFromService(this.collaborationManager.featureModel.data, this.collaborationManager.featureModelCommandManager.d3Data).then(
-                  value => {
-                    if (!value) {
-                      this.collaborationManager.featureModelCommandManager.d3Data.coloringIndex = 0;
-                    } else {
-                      this.collaborationManager.featureModelCommandManager.d3Data.coloringIndex = -1;
-                    }
-                  }
-                );
-            }
-            // Rerender for edits and fade them out
-            setTimeout(() => {
-                command.unmarkChanges();
-                update.updateSvg(this.collaborationManager.featureModelCommandManager.d3Data);
-            }, 500);
+    async fadeOut(d3Data, command) {
+        if (this.type === "constraint"){
+            d3Data = this.collaborationManager.featureModelCommandManager.d3Data;
         }
+        let done = await getColorsFromService(this.collaborationManager.featureModel.data, d3Data);
+        if (done) {
+            await new Promise(r => setTimeout(r, 500));
+        } else {
+            const appStore = useAppStore();
+            appStore.updateSnackbar(
+                'Could not detect any special cases, because Service is down.',
+                'error',
+                3000,
+                true);
+        }
+        // Rerender for edits and fade them out
+        command.unmarkChanges();
+        update.updateSvg(d3Data);
     }
 }

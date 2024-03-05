@@ -240,7 +240,7 @@ import { useAppStore } from '@/store/app';
 import axios from 'axios';
 import FMNavbar from '@/components/FMNavbar.vue';
 import * as view from '@/services/FeatureModel/view.service';
-import { changeFileFormat } from '@/classes/BackendAccess/FeatureIDEAccess';
+import { changeFileFormat, sliceFeatureModel } from '@/classes/BackendAccess/FeatureIDEAccess';
 
 const appStore = useAppStore();
 
@@ -518,32 +518,26 @@ export default {
             this.loadingData = true;
             await this.checkService();
             if (this.isServiceAvailable) {
-                try {
-                    const content = new TextEncoder().encode(jsonToXML(this.data));
-                    let response = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FEATUREIDESERVICE}slice`, {
-                        name: 'hello.xml',
-                        selection: [node.name],
-                        content: Array.from(content)
-                    });
-                    let contentAsString = new TextDecoder().decode(Uint8Array.from(response.data.content));
-                    const xml = beautify(contentAsString);
-                    const command = new SliceCommand(
-                        this,
-                        xml
-                    );
-                    this.featureModelCommandManager.execute(command);
-                    this.updateFeatureModel();
-                } catch (e) {
-                    this.loadingData = false;
-                    appStore.updateSnackbar(
+                    let preXml = jsonToXML(this.data);
+                    let data = await sliceFeatureModel(preXml, node.name);
+                    if (data === undefined) {
+                        appStore.updateSnackbar(
                         'Could not slice the Feature, because an unknown error occurred.',
                         'error',
                         3000,
                         true
                     );
-                }
+                    } else {
+                        let contentAsString = new TextDecoder().decode(Uint8Array.from(data.content));
+                        const xml = beautify(contentAsString);
+                        const command = new SliceCommand(
+                            this,
+                            xml
+                        );
+                        this.featureModelCommandManager.execute(command);
+                        this.updateFeatureModel();
+                    }
             } else {
-                this.loadingData = false;
                 appStore.updateSnackbar(
                     'Could not slice the Feature, because Service is down.',
                     'error',
