@@ -1,4 +1,4 @@
-export class PseudoNode {
+export class PseudoNode{
     constructor(parent, hiddenD3Nodes) {
         this.hiddenD3Nodes = hiddenD3Nodes;
         this.parent = parent;
@@ -15,5 +15,9 @@ export class PseudoNode {
         const leftD3Siblings = parentD3Children.slice(0, index);
         const rightD3Siblings = parentD3Children.slice(index + 1);
         this.parent.d3Node.children = [...leftD3Siblings, ...this.hiddenD3Nodes, ...rightD3Siblings];
+    }
+
+    level() {
+        return this.parent.level() + 1;
     }
 }

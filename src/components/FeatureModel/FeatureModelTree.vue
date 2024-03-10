@@ -41,7 +41,6 @@
                     single-line
                     @blur="search.showSearch = false"
                     @focus="search.showSearch = true"
-                    @input="onChangeSearchText"
                 ></v-text-field>
 
                 <v-badge
@@ -62,13 +61,29 @@
         </div>
 
         <div id="svg-container"></div>
-        <v-btn
-            v-show="showHideLegendBtn"
+         <v-btn
+            class='hidden-sm-and-down'
+            v-show="showLegend"
             elevation='2'
             icon
+            size='xs'
             position="absolute"
-            style='left: 500px; top: 230px; background-color: rgb(var(--v-theme-primary))'
-            theme='dark'
+            style='left: 483px; top: 250px;'
+            color='primary'
+            @click="$emit('hide-legend')"
+            >
+                <v-icon>mdi-close</v-icon>
+        </v-btn>
+
+        <v-btn
+            v-show="showLegend"
+            class='hidden-md-and-up'
+            elevation='2'
+            icon
+            size='xs'
+            position="absolute"
+            style='left: 238px; top: 103px;'
+            color='primary'
             @click="$emit('hide-legend')"
             >
                 <v-icon>mdi-close</v-icon>
@@ -183,54 +198,15 @@ export default {
         loadingData: Boolean,
         errorMessage: String,
         error: Boolean,
-        showLegend: Boolean
+        showLegend: Boolean,
+        d3Data: undefined
     },
 
     data: () => ({
-        d3Data: {
-            root: undefined,
-            flexLayout: undefined,
-            zoom: undefined,
-            nodeIdCounter: 0,
-            showLegend: true,
-            isShortenedName: false,
-            drag: {
-                listener: undefined,
-                hasStarted: false,
-                ghostNodes: [],
-                selectedD3Node: undefined,
-                selectedGhostNode: undefined,
-                selectedD3NodePosition: undefined,
-                mode: 'mouse', // touch or mouse
-            },
-            contextMenu: {
-                selectedD3Node: undefined,
-                event: undefined,
-            },
-            container: {
-                highlightedConstraintsContainer: undefined,
-                linksContainer: undefined,
-                segmentsContainer: undefined,
-                featureNodesContainer: undefined,
-                dragContainer: undefined,
-            },
-            spaceBetweenParentChild: 75,
-            spaceBetweenSiblings: 20,
-            d3ParentOfAddNode: undefined,
-            d3AddNodeIndex: 0,
-            coloringIndex: -1,
-            semanticEditing: false,
-            nonSemanticEditing: false,
-            quickEdit: false,
-            direction: 'v', // h = horizontally, v = vertically
-            maxHorizontallyLevelWidth: [],
-            featureModelTree: undefined,
-        },
         showAddDialog: false,
         showEditDialog: false,
         showRemoveDialog: false,
         editNode: undefined,
-        showHideLegendBtn:true,
         search: {
             showSearch: false,
             searchText: undefined,
@@ -279,36 +255,24 @@ export default {
             }
         },
 
-        onChangeSearchText(searchText) {
-            this.search.foundNodeDistances = search.search(
-                this.d3Data,
-                searchText
-            );
-            search.resetSearch(this.d3Data);
-            if (this.search.foundNodeDistances.length) {
-                this.onChangeFoundNodeIndex(0);
-            } else {
-                update.updateSvg(this.d3Data);
-            }
-        },
-
         updateSvg() {
             update.updateSvg(this.d3Data);
         },
+
         toggleLegend(){
             if(!this.showLegend){
-                // Legend shown until now=> hide  
-                update.hideLegend();
+                // Legend shown until now=> hide
                 this.d3Data.showLegend=false;
-                this.showHideLegendBtn=false;
+                update.hideLegend();
+
             }else{
                 // Legend not shown until now => re initialize
-                init.initLegend(this.d3Data);
                 this.d3Data.showLegend=true;
-                this.showHideLegendBtn=true;
+                init.initLegend(this.d3Data);
+
             }
             update_service.updateSvg(this.d3Data);
-            
+
         },
 
         fitToView() {
@@ -496,6 +460,19 @@ export default {
         showLegend(){
             this.toggleLegend();
         },
+        'search.searchText'(newValue) {
+            this.search.foundNodeDistances = search.search(
+                this.d3Data,
+                newValue
+            );
+            search.resetSearch(this.d3Data);
+            if (this.search.foundNodeDistances.length) {
+                this.onChangeFoundNodeIndex(0);
+            } else {
+                update.updateSvg(this.d3Data);
+                view.reset(this.d3Data);
+            }
+        }
     },
 };
 </script>

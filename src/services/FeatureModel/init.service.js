@@ -23,19 +23,38 @@ export function initialize(d3Data, data) {
         .on('zoom', (event) => svgContent.attr('transform', event.transform));
 
     // Create svg-container.
-    const svg = d3
-        .select('#svg-container')
-        .append('svg')
-        .classed("main-svg", true)
-        .attr('preserveAspectRatio', 'xMidYMid meet')
-        .call(d3Data.zoom) // Zooming and penning.
-        .on('dblclick.zoom', null);
+    let svg = undefined;
+    if (d3Data.isConf) {
+        svg = d3
+            .select('#svg-container')
+            .append('svg')
+            .classed('main-svg', true)
+            .attr('height', d3.select('#svg-container').style('height'))
+            .attr('preserveAspectRatio', 'xMidYMid meet')
+            .call(d3Data.zoom) // Zooming and penning.
+            .on('dblclick.zoom', null);
+    } else {
+        svg = d3
+            .select('#svg-container')
+            .append('svg')
+            .classed('main-svg', true)
+            .attr('preserveAspectRatio', 'xMidYMid meet')
+            .call(d3Data.zoom) // Zooming and penning.
+            .on('dblclick.zoom', null);
+    }
+
 
     const svgContent = svg.append('g');
 
     d3Data.container.highlightedConstraintsContainer = svgContent
         .append('g')
         .classed('highlighted-constraints-container', true);
+
+    if (d3Data.isConf) {
+        d3Data.container.selectedFeatureContainer = svgContent
+            .append('g')
+            .classed('selected-feature-container', true);
+    }
 
     d3Data.container.linksContainer = svgContent
         .append('g')
@@ -78,31 +97,58 @@ function calcNodeSize(d3Data, d3Node) {
 }
 
 
-export function initLegend(d3Data){
+export function initLegend(d3Data) {
+    if (!d3Data.showLegend) {
+        return;
+    }
+
     /**
      * Initialize Legend drawn in SVG by appending a svg to the main-svg
      */
-    let svg=  d3.select('.main-svg')
-    .append('svg')
-    .append('g')
-    .attr("transform", "translate(200,200)");
+    let smartphone = window.innerWidth < 960;
+    if (!smartphone) {
+        let svg = d3.select('.main-svg')
+            .append('svg')
+            .append('g')
+            .attr('transform', 'translate(200,200)');
 
-    let rect= svg.append('rect')
-        .attr("width", 300)
-        .attr("height", 100)
-        
-        .attr("fill", "white")
-        .attr("stroke", "black")
-        .attr("stroke-width", "2px")
-        .classed("legend-container", true);
+        let rect = svg.append('rect')
+            .attr('width', 300)
+            .attr('height', 100)
+            .attr('fill', 'white')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '2px')
+            .classed('legend-container', true);
 
-    let items= svg
-        .append('g')
-        .classed('legend-items', true)
-        .append('text')
-        .attr("transform", "translate(10,20)")
-        .text("Legend: ");
+        let items = svg
+            .append('g')
+            .classed('legend-items', true)
+            .append('text')
+            .attr('transform', 'translate(10,20)')
+            .text('Legend: ');
 
-    updateService.updateLegend(d3Data);
+        updateService.updateLegend(d3Data);
+    } else {
+        let svg = d3.select('.main-svg')
+            .append('svg')
+            .append('g')
+            .attr('transform', 'translate(50,50)');
 
+        let rect = svg.append('rect')
+            .attr('width', 200)
+            .attr('height', 100)
+            .attr('fill', 'white')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '1px')
+            .classed('legend-container', true);
+
+        let items = svg
+            .append('g')
+            .classed('legend-items', true)
+            .append('text')
+            .attr('transform', 'translate(10,20)')
+            .text('Legend: ');
+
+        updateService.updateLegend(d3Data);
+    }
 }

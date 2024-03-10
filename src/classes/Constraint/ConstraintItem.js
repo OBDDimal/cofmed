@@ -1,4 +1,6 @@
-import {operatorPrecedence} from "@/services/booleanExpressionParser.service";
+const operatorPrecedence = {};
+const operators = ['not', 'implies', 'and', 'or', 'equi'];
+operators.forEach((operator, i) => operatorPrecedence[operator] = i);
 
 export class ConstraintItem {
 
@@ -7,6 +9,14 @@ export class ConstraintItem {
             return `${item.toString()}`;
         } else {
             return `(${item.toString()})`;
+        }
+    }
+
+    addPossibleBracketsToList(item) {
+        if (item.count() === 1 || this.getPrecedence() >= item.getPrecedence()) {
+            return item.toList();
+        } else {
+            return ['(', ...item.toList(), ')'];
         }
     }
 
@@ -19,7 +29,9 @@ export class ConstraintItem {
     }
 
     getPrecedence() {
-        if (this.constructor.name === 'Disjunction') {
+        if (this.constructor.name === 'Equivalence') {
+            return operatorPrecedence['equi'];
+        } else if (this.constructor.name === 'Disjunction') {
             return operatorPrecedence['or'];
         } else if (this.constructor.name === 'Conjunction') {
             return operatorPrecedence['and'];

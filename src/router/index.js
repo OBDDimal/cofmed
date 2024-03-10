@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
     {
-        path: '/:id?',
+        path: '/editor/:id?',
         name: 'FeatureModel',
         props: true,
         component: () => import('@/views/FeatureModel.vue'),
@@ -18,6 +18,15 @@ const routes = [
         component: () => import('@/views/FeatureModel.vue'),
         meta: {
             title: 'Collaboration Mode',
+        },
+    },
+    {
+        path: '/configurator/:id?',
+        name: 'Configurator',
+        props: true,
+        component: () => import('@/views/FeatureModelSoloConfigurator.vue'),
+        meta: {
+            title: 'Configurator',
         },
     },
 ];
