@@ -7,6 +7,7 @@ export class FeatureNode {
     constructor(parent, name, groupType, mandatory, abstract, id) {
         this.parent = parent;
         this.name = name;
+        this.title = name;
         this.id = id;
         this.children = [];
 

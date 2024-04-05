@@ -1,14 +1,12 @@
 <template>
-  <div v-if='selectionItem'>
-    <v-layout row>
-
+  <div v-if='selectionItem' style='white-space: nowrap; display: inline-flex'>
        <v-tooltip location="bottom" >
         <template v-slot:activator="{ props }">
           <v-checkbox
               hide-details
               v-model="trueCheckBox"
               :style="BackgroundColor"
-              style="display: inline;"
+              style="float: left"
               :model-value="selectionItem.selectionState === SelectionState.ImplicitlySelected || selectionItem.selectionState === SelectionState.ExplicitlySelected"
               :disabled="selectionItem.selectionState !== SelectionState.Unselected && selectionItem.selectionState !== SelectionState.ExplicitlySelected"
               @input="selectFeature"
@@ -30,6 +28,7 @@
           <v-checkbox
               hide-details
               :style="BackgroundColor"
+              style="float: left"
               true-icon="mdi-close-box"
               v-model="falseCheckBox"
               :model-value="selectionItem.selectionState === SelectionState.ImplicitlyDeselected || selectionItem.selectionState === SelectionState.ExplicitlyDeselected"
@@ -47,7 +46,6 @@
         <span v-else-if="selectionItem.selectionState === SelectionState.ExplicitlySelected">Explicitly selected</span>
         <span v-else-if="selectionItem.selectionState === SelectionState.ExplicitlyDeselected">Explicitly deselected</span>
       </v-tooltip>
-    </v-layout>
   </div>
 </template>
 

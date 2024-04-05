@@ -72,10 +72,11 @@
 
             <template v-slot:item.formula="{ item }">
                 <v-chip
-                    :color="item.raw.constraint.color"
-                    @click="highlightConstraint(item.raw)"
+                    label
+                    :color="item.constraint.color"
+                    @click="highlightConstraint(item)"
                 >
-                {{ item.raw.formula }}
+                {{ item.formula }}
                 </v-chip>
             </template>
 
@@ -83,14 +84,14 @@
                 <v-btn
                     icon="mdi-pencil"
                     variant="text"
-                    @click="openAddEditDialog('Edit', item.raw.constraint)"
+                    @click="openAddEditDialog('Edit', item.constraint)"
                     :disabled="!editRights"
                 >
                 </v-btn>
                 <v-btn
                     icon="mdi-delete"
                     variant="text"
-                    @click="deleteConstraint(item.raw.constraint)"
+                    @click="deleteConstraint(item.constraint)"
                     :disabled="!editRights"
                 >
                 </v-btn>
@@ -123,8 +124,8 @@ export default {
 
     data: () => ({
         headers: [
-            { title: 'Constraint', key: 'formula', width: '50%' },
-            { title: 'Actions', key: 'actions', width: '50%' },
+            { title: 'Constraint', key: 'formula', width: '80%' },
+            { title: 'Actions', key: 'actions', width: '20%' },
         ],
         search: '',
         showAddEditDialog: false,
@@ -227,5 +228,10 @@ export default {
     min-height: 10%;
     max-height: 40%;
     overflow: hidden;
+}
+
+.v-chip {
+    height: auto !important;
+    white-space: normal;
 }
 </style>
