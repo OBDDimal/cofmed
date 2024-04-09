@@ -64,7 +64,7 @@ export default {
 
     data: () => ({
         name: '',
-        mandatory: false,
+        mandatory: 1,
         abstract: false,
     }),
 

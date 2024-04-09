@@ -149,11 +149,10 @@
                                     :headers='headersFeatures'
                                     :items='featuresTrimmed'
                                     :search='searchFeatures'
+                                    :items-per-page='pageTableSize'
                                     fixed-header
-                                    height='72vh'
-                                    hide-default-footer
+                                    :height="pageTableSize === -1 ? '72vh' : '66vh'"
                                     item-key='name'
-                                    items-per-page='-1'
                                     show-group-by
                                     single-select
                                 >
@@ -176,8 +175,9 @@
                                         </v-tooltip>
                                     </template>
 
+                                    <template v-if='pageTableSize === -1' v-slot:bottom>
+                                    </template>
 
-                                    <template v-slot:bottom></template>
 
                                 </v-data-table>
                             </v-window-item>
@@ -950,6 +950,10 @@ export default {
 
         SelectionState() {
             return SelectionState;
+        },
+
+        pageTableSize(){
+            return this.featuresTrimmed.length < 20 ? -1 : 15
         },
 
         missingFeaturesOfSelectedVersion() {
