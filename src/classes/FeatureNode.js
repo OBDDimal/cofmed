@@ -80,6 +80,14 @@ export class FeatureNode {
         }
     }
 
+    getRootNode() {
+        if (this.isRoot) {
+            return this
+        } else {
+            return this.parent.getRootNode()
+        }
+    }
+
     childrenCount() {
         if (this.isLeaf()) {
             return 0;

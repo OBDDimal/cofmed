@@ -61,6 +61,10 @@
         </div>
 
         <div id="svg-container"></div>
+        <feature-model-legend>
+
+        </feature-model-legend>
+        <!--
          <v-btn
             class='hidden-sm-and-down'
             v-show="showLegend"
@@ -88,6 +92,7 @@
             >
                 <v-icon>mdi-close</v-icon>
         </v-btn>
+        -->
         <feature-model-tree-context-menu
             :d3Node="d3Data.contextMenu.selectedD3Node"
             :d3NodeEvent="d3Data.contextMenu.event"
@@ -145,6 +150,7 @@
                     ? d3Data.d3ParentOfAddNode.data
                     : undefined
             "
+            :rootNode='rootNode'
             :show="showAddDialog"
             @add="(data) => add(data)"
             @close="showAddDialog = false"
@@ -172,12 +178,14 @@ import { EditCommand } from '@/classes/Commands/FeatureModel/EditCommand';
 import { RemoveCommand } from '@/classes/Commands/FeatureModel/RemoveCommand';
 import * as update_service from '@/services/FeatureModel/update.service';
 import { useDisplay } from 'vuetify';
+import FeatureModelLegend from '@/components/FeatureModel/FeatureModelLegend.vue';
 
 
 export default {
     name: 'FeatureModelTree',
 
     components: {
+        FeatureModelLegend,
       FeatureModelTreeErrorDialog,
       FeatureModelTreeLoadingDialog,
         FeatureModelTreeToolbar,

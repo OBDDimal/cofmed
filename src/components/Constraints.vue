@@ -1,9 +1,9 @@
 <template>
-    <v-bottom-sheet
-        v-model="isOpenDialog"
-        hide-overlay
-        @click:outside="$emit('close')"
-    >
+    <v-navigation-drawer
+            v-model='isOpenDialog'
+            location='bottom'
+            style='height: 30rem'
+        >
         <constraint-add-edit-dialog
             :all-nodes="rootNode ? rootNode.descendants() : undefined"
             :constraint="constraintAddEdit"
@@ -19,6 +19,7 @@
             :items="tableConstraints"
             :items-per-page="5"
             :search="search"
+            height='20rem'
             hide-default-header
             style="padding: 10px"
         >
@@ -97,7 +98,7 @@
                 </v-btn>
             </template>
         </v-data-table>
-    </v-bottom-sheet>
+    </v-navigation-drawer>
 </template>
 
 <script>
