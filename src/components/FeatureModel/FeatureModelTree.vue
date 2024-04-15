@@ -61,8 +61,10 @@
         </div>
 
         <div id="svg-container"></div>
-        <feature-model-legend>
-
+        <feature-model-legend
+            :d3Data="d3Data"
+            :legend-show='showLegend'
+        >
         </feature-model-legend>
         <!--
          <v-btn
