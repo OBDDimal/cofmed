@@ -44,7 +44,7 @@ export function initialize(d3Data, data) {
     }
 
 
-    const svgContent = svg.append('g');
+    const svgContent = svg.append('g').attr("id", "draggable");
 
     d3Data.container.highlightedConstraintsContainer = svgContent
         .append('g')
@@ -102,18 +102,18 @@ export function initLegend(d3Data) {
         return;
     }
 
+
     /**
      * Initialize Legend drawn in SVG by appending a svg to the main-svg
      */
     let smartphone = window.innerWidth < 960;
     if (!smartphone) {
-        let svg = d3.select('.main-svg')
-            .append('svg')
+        let svg = d3.select('#draggable')
             .append('g')
-            .attr('transform', 'translate(200,200)');
+            .attr('transform', 'translate(150,-200)');
 
         let rect = svg.append('rect')
-            .attr('width', 300)
+            .attr('width', 250)
             .attr('height', 100)
             .attr('fill', 'white')
             .attr('stroke', 'black')
@@ -129,8 +129,7 @@ export function initLegend(d3Data) {
 
         updateService.updateLegend(d3Data);
     } else {
-        let svg = d3.select('.main-svg')
-            .append('svg')
+        let svg = d3.select('#draggable')
             .append('g')
             .attr('transform', 'translate(50,50)');
 
@@ -151,4 +150,5 @@ export function initLegend(d3Data) {
 
         updateService.updateLegend(d3Data);
     }
+
 }

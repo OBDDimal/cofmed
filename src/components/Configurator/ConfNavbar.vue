@@ -140,13 +140,11 @@
 </template>
 
 <script setup>
-import {useDisplay, useTheme} from 'vuetify';
+import {useTheme} from 'vuetify';
 import {ref} from 'vue';
 
-const breakpoints = useDisplay();
 const theme = useTheme();
 const drawer = ref(false);
-const fileDrawer = ref(false)
 
 const emit = defineEmits(['localStorage', 'download', 'openFile', 'openConf', 'reset', 'theme', 'changeService', 'openEdit'])
 

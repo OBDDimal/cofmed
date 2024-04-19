@@ -1,6 +1,7 @@
 <template>
     <f-m-navbar
         :collaborationStatus='collaborationStatus'
+        :direction='d3Data.direction'
         :editRights='editRights'
         :is-file-loaded='data.rootNode !== undefined'
         :is-redo-available='
@@ -14,8 +15,7 @@
         :is-undo-available='
                 featureModelCommandManager && featureModelCommandManager.isUndoAvailable()
             '
-        :direction='d3Data.direction'
-        @download='exportToXML'
+        @download='(filetype) => downloadModel(filetype)'
         @fitToView='fitToView'
         @nonSemanticEditing='(value) => updateNonSemanticEdit(value)'
         @openConf='openConfigurator'
@@ -90,7 +90,6 @@
             :loadingData='loadingData'
             :rootNode='data.rootNode'
             :showLegend='showLegend'
-            @exportToXML='exportToXML'
             @reset='reset'
             @save='save'
             @slice='node => slice(node)'
@@ -302,7 +301,7 @@ export default {
                 flexLayout: undefined,
                 zoom: undefined,
                 nodeIdCounter: 0,
-                showLegend: true,
+                showLegend: false,
                 isShortenedName: false,
                 drag: {
                     listener: undefined,
@@ -518,25 +517,25 @@ export default {
             this.loadingData = true;
             await this.checkService();
             if (this.isServiceAvailable) {
-                    let preXml = jsonToXML(this.data);
-                    let data = await sliceFeatureModel(preXml, node.name);
-                    if (data === undefined) {
-                        appStore.updateSnackbar(
+                let preXml = jsonToXML(this.data);
+                let data = await sliceFeatureModel(preXml, node.name);
+                if (data === undefined) {
+                    appStore.updateSnackbar(
                         'Could not slice the Feature, because an unknown error occurred.',
                         'error',
                         3000,
                         true
                     );
-                    } else {
-                        let contentAsString = new TextDecoder().decode(Uint8Array.from(data.content));
-                        const xml = beautify(contentAsString);
-                        const command = new SliceCommand(
-                            this,
-                            xml
-                        );
-                        this.featureModelCommandManager.execute(command);
-                        this.updateFeatureModel();
-                    }
+                } else {
+                    let contentAsString = new TextDecoder().decode(Uint8Array.from(data.content));
+                    const xml = beautify(contentAsString);
+                    const command = new SliceCommand(
+                        this,
+                        xml
+                    );
+                    this.featureModelCommandManager.execute(command);
+                    this.updateFeatureModel();
+                }
             } else {
                 appStore.updateSnackbar(
                     'Could not slice the Feature, because Service is down.',
@@ -597,8 +596,29 @@ export default {
             this.$refs.constraints.update();
         },
 
-        exportToXML() {
-            xmlTranspiler.downloadXML(this.data);
+        async downloadModel(filetype) {
+            let fileData = jsonToXML(this.data);
+            let bb;
+
+            if(filetype !== "xml"){
+                fileData = await changeFileFormat(fileData, "xml", filetype);
+                console.log(fileData)
+                bb = new Blob([fileData]);
+            } else {
+                bb = new Blob([fileData], { type: 'application/xml' });
+            }
+
+            const filename = 'featureModel.' + filetype;
+            const pom = document.createElement('a');
+
+            pom.setAttribute('href', window.URL.createObjectURL(bb));
+            pom.setAttribute('download', filename);
+
+            pom.dataset.downloadurl = ['application/xml', pom.download, pom.href].join(
+                ':'
+            );
+
+            pom.click();
         },
 
         commandEvent() {

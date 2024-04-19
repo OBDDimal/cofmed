@@ -7,6 +7,7 @@ export class FeatureNode {
     constructor(parent, name, groupType, mandatory, abstract, id) {
         this.parent = parent;
         this.name = name;
+        this.title = name;
         this.id = id;
         this.children = [];
 
@@ -76,6 +77,14 @@ export class FeatureNode {
             return 0;
         } else {
             return this.parent.level() + 1;
+        }
+    }
+
+    getRootNode() {
+        if (this.isRoot) {
+            return this
+        } else {
+            return this.parent.getRootNode()
         }
     }
 

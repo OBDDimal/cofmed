@@ -7,9 +7,9 @@
         :service-is-working='serviceIsWorking'
         @download='downloadXML'
         @localStorage='save'
-        @openConf='openConfigFileDialog'
+        @openConf='openFilePickerConf'
         @openEdit='redirectToEditor'
-        @openFile='openFileDialog'
+        @openFile='openFilePicker'
         @reset='resetCommand'
         @theme='dark = !dark'
         @change-service='(boolean) => changeService(boolean)'
@@ -149,37 +149,50 @@
                                     :headers='headersFeatures'
                                     :items='featuresTrimmed'
                                     :search='searchFeatures'
-                                    disable-pagination
+                                    :items-per-page='pageTableSize'
                                     fixed-header
-                                    height='67.75vh'
-                                    hide-default-footer
+                                    :height="pageTableSize === -1 ? '72vh' : '66vh'"
                                     item-key='name'
                                     show-group-by
                                     single-select
                                 >
+                                    <!-- Customization of the column SELECTIONSTATE -->
+                                    <template v-slot:item.selectionState='{ item }'>
+                                        <DoubleCheckbox v-bind:selection-item='item'
+                                                        @select='(selection) => decisionPropagation(item, selection)'></DoubleCheckbox>
+                                    </template>
+
                                     <!-- Customization of the column NAME -->
                                     <template v-slot:item.name='{ item }'>
                                         <v-tooltip location='bottom'>
                                             <template v-slot:activator='{ props }'>
-                                                <span v-bind='props'>{{ item.selectable.name }}</span>
-                                                <template v-if='item.selectable.isAbstract'>
+                                                <span v-bind='props'>{{ item.name }}</span>
+                                                <template v-if='item.isAbstract'>
                                                     <i> Abstract</i>
                                                 </template>
                                             </template>
-                                            <span>Var ID: {{ item.selectable.id }}</span>
+                                            <span>Var ID: {{ item.id }}</span>
                                         </v-tooltip>
                                     </template>
 
-                                    <!-- Customization of the column SELECTIONSTATE -->
-                                    <template v-slot:item.selectionState='{ item }'>
-                                        <DoubleCheckbox v-bind:selection-item='item.selectable'
-                                                        @select='(selection) => decisionPropagation(item.selectable, selection)'></DoubleCheckbox>
+                                    <template v-if='pageTableSize === -1' v-slot:bottom>
                                     </template>
+
 
                                 </v-data-table>
                             </v-window-item>
                             <v-window-item key='treeView'>
-                                Not Implemented yet. Waiting for V-TreeView Component
+                                <v-treeview
+                                    :items='[featureModelSolo.root]'
+                                    height='72vh'
+                                >
+                                </v-treeview>
+                                <template v-slot:prepend='{ item }'>
+                                    <v-icon
+                                        v-if='item.children'
+                                        :icon="`mdi-${item.id === 1 ? 'home-variant' : 'folder-network'}`"
+                                    ></v-icon>
+                                </template>
                             </v-window-item>
                         </v-window>
 
@@ -207,8 +220,8 @@
 
                                     <feature-model-viewer-solo ref='featureModelViewerSolo'
                                                                :dark='dark'
-                                                               :fm-is-loaded='fmIsLoaded'
                                                                :feature-model='featureModelSolo'
+                                                               :fm-is-loaded='fmIsLoaded'
                                                                @select='(name) => searchFeatures = name'
                                     ></feature-model-viewer-solo>
                                 </v-window-item>
@@ -237,7 +250,7 @@
 
                                         <!-- Customization of the column FORMULA -->
                                         <template v-slot:item.formula='{ item }'>
-                                            <div v-for='(f, i) in item.selectable.formula' :key='i'
+                                            <div v-for='(f, i) in item.formula' :key='i'
                                                  style='display: inline;'>
                                                 <v-chip
                                                     v-if='f instanceof FeatureNodeConstraintItem'
@@ -253,7 +266,7 @@
 
                                         <!-- Customization of the column EVALUATION -->
                                         <template v-slot:item.evaluation='{ item }'>
-                                            <v-avatar :color='evaluateCTC(item.selectable)'
+                                            <v-avatar :color='evaluateCTC(item)'
                                                       size='30'></v-avatar>
                                         </template>
 
@@ -276,7 +289,7 @@
                                     >
 
                                         <template v-slot:item.valid='{ item }'>
-                                            {{ item.selectable.valid ? 'true' : 'false' }}
+                                            {{ item.valid ? 'true' : 'false' }}
                                         </template>
                                     </v-data-table>
                                 </v-window-item>
@@ -311,32 +324,25 @@
                         </v-btn>
                     </v-row>
                 </v-card-text>
-                <input
-                    ref='filePicker'
-                    accept='.xml, .uvl, .dimacs'
-                    class='d-none'
-                    type='file'
-                    @change='onFileInputChanged'
-                >
+
             </v-card>
         </template>
     </v-container>
-
-    <configurator-open-file-dialog
-        :show='showOpenDialog'
-        file-type='FeatureModel'
-        @close='showOpenDialog = false'
-        @open='(file) => openFile(file)'
+    <input
+        id='filePicker'
+        accept='.xml, .uvl, .dimacs'
+        class='d-none'
+        type='file'
+        @change='onFileInputChanged'
     >
-    </configurator-open-file-dialog>
-
-    <configurator-open-file-dialog
-        :show='showOpenConfigDialog'
-        file-type='Configuration'
-        @close='showOpenConfigDialog = false'
-        @open='(file) => openConfig(file)'
+    <input
+        id='filePickerConf'
+        accept='.xml'
+        class='d-none'
+        type='file'
+        @change='openConfig'
     >
-    </configurator-open-file-dialog>
+
 
 </template>
 
@@ -348,7 +354,6 @@ import { tr } from 'vuetify/locale';
 import api from '@/services/api.service';
 import { FeatureNodeConstraintItem } from '@/classes/Constraint/FeatureNodeConstraintItem';
 import { SelectionState } from '@/classes/SelectionState';
-import ConfiguratorOpenFileDialog from '@/components/Configurator/ConfiguratorOpenFileDialog.vue';
 import FeatureModelViewerSolo from '@/components/Configurator/FeatureModelViewerSolo.vue';
 import { FeatureModelSolo } from '@/classes/Configurator/FeatureModelSolo';
 import { useAppStore } from '@/store/app';
@@ -358,12 +363,11 @@ import { decisionPropagationFL, pingFL } from '@/classes/BackendAccess/FlaskAcce
 import { changeFileFormat, decisionPropagationFIDE, pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
 import beautify from 'xml-beautifier';
 import ConfNavbar from '@/components/Configurator/ConfNavbar.vue';
-import ViewMenu from '@/components/ViewMenu.vue';
 
 const appStore = useAppStore();
 export default {
     name: 'FeatureModelSoloConfigurator',
-    components: { ViewMenu, ConfNavbar, ConfiguratorOpenFileDialog, FeatureModelViewerSolo, DoubleCheckbox },
+    components: { ConfNavbar, FeatureModelViewerSolo, DoubleCheckbox },
 
     data: () => ({
         headersFeatures: [
@@ -533,16 +537,13 @@ export default {
             return evaluation ? 'green' : (evaluation === undefined ? '' : 'red');
         },
 
-        openFileDialog() {
-            this.showOpenDialog = true;
-        },
-
-        openConfigFileDialog() {
-            this.showOpenConfigDialog = true;
-        },
 
         openFilePicker() {
-            this.$refs.filePicker.click();
+            document.getElementById('filePicker').click();
+        },
+
+        openFilePickerConf() {
+            document.getElementById('filePickerConf').click();
         },
 
         onFileInputChanged(e) {
@@ -653,11 +654,19 @@ export default {
             }
         },
 
-        openConfig(file) {
-            let reader = new FileReader();
-            reader.addEventListener('load', (event) => {
+        async openConfig(e) {
+            if (e.target.files.length > 1) {
+                appStore.updateSnackbar(
+                    'Cannot load more than one feature model.',
+                    'error',
+                    5000,
+                    true
+                );
+            } else {
+                let file = e.target.files[0];
+                let data = await file.text();
                 try {
-                    const features = FeatureModelSolo.loadXmlDataFromConfig(event.target.result);
+                    const features = FeatureModelSolo.loadXmlDataFromConfig(data);
                     const command = new LoadConfigCommand(this.featureModelSolo, features);
                     this.commandManager.execute(command);
                     this.updateFeatures();
@@ -670,9 +679,7 @@ export default {
                         true
                     );
                 }
-            });
-            reader.readAsText(file[0]);
-            this.showOpenConfigDialog = false;
+            }
         },
 
         onFileDrop(event) {
@@ -943,6 +950,10 @@ export default {
 
         SelectionState() {
             return SelectionState;
+        },
+
+        pageTableSize(){
+            return this.featuresTrimmed.length < 20 ? -1 : 15
         },
 
         missingFeaturesOfSelectedVersion() {

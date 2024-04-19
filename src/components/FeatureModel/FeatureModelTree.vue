@@ -61,6 +61,12 @@
         </div>
 
         <div id="svg-container"></div>
+        <feature-model-legend
+            :d3Data="d3Data"
+            :legend-show='showLegend'
+        >
+        </feature-model-legend>
+        <!--
          <v-btn
             class='hidden-sm-and-down'
             v-show="showLegend"
@@ -88,6 +94,7 @@
             >
                 <v-icon>mdi-close</v-icon>
         </v-btn>
+        -->
         <feature-model-tree-context-menu
             :d3Node="d3Data.contextMenu.selectedD3Node"
             :d3NodeEvent="d3Data.contextMenu.event"
@@ -145,6 +152,7 @@
                     ? d3Data.d3ParentOfAddNode.data
                     : undefined
             "
+            :rootNode='rootNode'
             :show="showAddDialog"
             @add="(data) => add(data)"
             @close="showAddDialog = false"
@@ -172,12 +180,14 @@ import { EditCommand } from '@/classes/Commands/FeatureModel/EditCommand';
 import { RemoveCommand } from '@/classes/Commands/FeatureModel/RemoveCommand';
 import * as update_service from '@/services/FeatureModel/update.service';
 import { useDisplay } from 'vuetify';
+import FeatureModelLegend from '@/components/FeatureModel/FeatureModelLegend.vue';
 
 
 export default {
     name: 'FeatureModelTree',
 
     components: {
+        FeatureModelLegend,
       FeatureModelTreeErrorDialog,
       FeatureModelTreeLoadingDialog,
         FeatureModelTreeToolbar,
@@ -257,22 +267,6 @@ export default {
 
         updateSvg() {
             update.updateSvg(this.d3Data);
-        },
-
-        toggleLegend(){
-            if(!this.showLegend){
-                // Legend shown until now=> hide
-                this.d3Data.showLegend=false;
-                update.hideLegend();
-
-            }else{
-                // Legend not shown until now => re initialize
-                this.d3Data.showLegend=true;
-                init.initLegend(this.d3Data);
-
-            }
-            update_service.updateSvg(this.d3Data);
-
         },
 
         fitToView() {
@@ -456,9 +450,6 @@ export default {
             }
 
             this.updateSvg();
-        },
-        showLegend(){
-            this.toggleLegend();
         },
         'search.searchText'(newValue) {
             this.search.foundNodeDistances = search.search(

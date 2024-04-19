@@ -43,10 +43,26 @@
                                     : 'mdi-content-save-edit'"
                                  title='Save Model to Local Storage' @click='$emit("localStorage")'>
                     </v-list-item>
-                    <v-list-item v-if='isFileLoaded' prepend-icon='mdi-download'
-                                 title='Download Model'
-                                 @click='$emit("download")'>
-                    </v-list-item>
+
+                    <v-menu location='end'
+                    >
+                        <template v-slot:activator='{ props }'>
+                            <v-list-item v-if='isFileLoaded' prepend-icon='mdi-download' title='Download'
+                                         v-bind='props'>
+                            </v-list-item>
+                        </template>
+                        <v-list density='compact'>
+                            <v-list-item prepend-icon='mdi-download'
+                                         title='XML' @click='$emit("download", "xml")'>
+                            </v-list-item>
+                            <v-list-item prepend-icon='mdi-download'
+                                         title='UVL' @click='$emit("download", "uvl")'>
+                            </v-list-item>
+                            <v-list-item prepend-icon='mdi-download'
+                                         title='DIMACS' @click='$emit("download", "dimacs")'>
+                            </v-list-item>
+                        </v-list>
+                    </v-menu>
                     <v-list-item v-if='isFileLoaded' prepend-icon='mdi-download'
                                  title='Download Model as SVG' @click='$emit("download-svg")'>
                     </v-list-item>
@@ -54,9 +70,9 @@
             </v-menu>
             <view-menu
                 :direction='direction'
+                :editing='true'
                 :is-file-loaded='isFileLoaded'
                 :location='"end"'
-                :editing='true'
                 @fitToView='$emit("fitToView")'
                 @nonSemanticEditing='(value) => $emit("nonSemanticEditing", value)'
                 @quickEdit='(value) => $emit("quickEdit", value)'
@@ -187,9 +203,9 @@
                 </v-menu>
                 <view-menu
                     :direction='direction'
+                    :editing='true'
                     :is-file-loaded='isFileLoaded'
                     :location='""'
-                    :editing='true'
                     @fitToView='$emit("fitToView")'
                     @nonSemanticEditing='(value) => $emit("nonSemanticEditing", value)'
                     @quickEdit='(value) => $emit("quickEdit", value)'

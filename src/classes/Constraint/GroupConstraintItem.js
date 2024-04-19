@@ -41,7 +41,7 @@ export class GroupConstraintItem extends ConstraintItem {
     }
 
     getFeatureNodes() {
-        return this.items.map(i => i.getFeatureNodes()).flatten();
+        return this.items.map(i => i.getFeatureNodes()).flat();
     }
 
     setConstraint(constraint) {
