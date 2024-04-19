@@ -98,7 +98,7 @@ function calcNodeSize(d3Data, d3Node) {
 
 
 export function initLegend(d3Data) {
-    if (!d3Data.showLegend || true) {
+    if (!d3Data.showLegend) {
         return;
     }
 

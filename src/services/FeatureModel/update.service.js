@@ -626,7 +626,7 @@ export function updateSvg(d3Data) {
     updateFeatureNodes(d3Data, visibleD3Nodes);
     updatePseudoNodes(d3Data, visibleD3Nodes);
     updateLinks(d3Data, visibleD3Nodes);
-    updateLegend(d3Data);
+    //updateLegend(d3Data);
     /*console.log('Rendertime', performance.now() - start);*/
 }
 

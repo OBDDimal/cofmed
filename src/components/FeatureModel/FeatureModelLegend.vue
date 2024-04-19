@@ -1,23 +1,20 @@
 <template>
     <div>
-        <v-card v-if='legendShow' location='right center' position='fixed' width='180px'>
+        <v-card v-if='legendShow' location='right center' position='fixed' width='180px' elevation='3'>
             <v-card-title>
                 Legend:
             </v-card-title>
 
             <v-card-text>
-
-                <div v-for='item in legendItemsVue' class='ma-1'>
+                <div v-for='item in legendItemsVue' class='pa-1 border-t-sm' >
+                    <div class='pt-1'>{{ item.description }}</div>
                     <v-img
                         :height='CONSTANTS.LEGEND_IMG_HEIGHT'
                         :src='item.image'
                         :width='CONSTANTS.LEGEND_IMG_WIDTH'>
                     </v-img>
-
-                    <div class='mt-1'>{{item.description}}</div>
                 </div>
-
-
+                <div class='border-t-sm'></div>
             </v-card-text>
         </v-card>
     </div>
@@ -89,7 +86,6 @@ export default {
             if (alternativeGroupPresent) {
                 legendItemsList.push(legendItems.getAltGroup());
             }
-            console.log(legendItemsList);
             return legendItemsList;
         }
     }

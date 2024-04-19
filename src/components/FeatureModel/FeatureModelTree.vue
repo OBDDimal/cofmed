@@ -269,22 +269,6 @@ export default {
             update.updateSvg(this.d3Data);
         },
 
-        toggleLegend(){
-            if(!this.showLegend){
-                // Legend shown until now=> hide
-                this.d3Data.showLegend=false;
-                update.hideLegend();
-
-            }else{
-                // Legend not shown until now => re initialize
-                this.d3Data.showLegend=true;
-                init.initLegend(this.d3Data);
-
-            }
-            update_service.updateSvg(this.d3Data);
-
-        },
-
         fitToView() {
             view.zoomFit(this.d3Data);
         },
@@ -466,9 +450,6 @@ export default {
             }
 
             this.updateSvg();
-        },
-        showLegend(){
-            this.toggleLegend();
         },
         'search.searchText'(newValue) {
             this.search.foundNodeDistances = search.search(

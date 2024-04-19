@@ -5,7 +5,6 @@ import { Disjunction } from '@/classes/Constraint/Disjunction';
 import { Conjunction } from '@/classes/Constraint/Conjunction';
 import { Implication } from '@/classes/Constraint/Implication';
 import { Negation } from '@/classes/Constraint/Negation';
-import { SoloDisjunction } from '@/classes/Constraint/SoloDisjunction';
 import { Equivalence } from '@/classes/Constraint/Equivalence';
 
 export function xmlToJson(currentModel, data) {
@@ -182,22 +181,6 @@ export function jsonToXML(data) {
     return xml;
 }
 
-export function downloadXML(data) {
-    const xml = jsonToXML(data);
-
-    const filename = 'featureModel.xml';
-    const pom = document.createElement('a');
-    const bb = new Blob([xml], { type: 'application/xml' });
-
-    pom.setAttribute('href', window.URL.createObjectURL(bb));
-    pom.setAttribute('download', filename);
-
-    pom.dataset.downloadurl = ['application/xml', pom.download, pom.href].join(
-        ':'
-    );
-
-    pom.click();
-}
 
 function nodeToXML(node) {
     if (node.isLeaf()) {
