@@ -3,7 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 
 const routes = [
     {
-        path: '/editor/:id?',
+        path: '/:id?',
         name: 'FeatureModel',
         props: true,
         component: () => import('@/views/FeatureModel.vue'),
@@ -28,16 +28,7 @@ const routes = [
         meta: {
             title: 'Configurator',
         },
-    },
-    {
-        path: '/texteditor/:id?',
-        name: 'Text Editor',
-        props: true,
-        component: () => import('@/views/TextEditor.vue'),
-        meta: {
-            title: 'Text Editor',
-        },
-    },
+    }
 ];
 
 const router = createRouter({

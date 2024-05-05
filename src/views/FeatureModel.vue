@@ -75,76 +75,83 @@
         </v-container>
     </div>
     <div v-else>
-        <feature-model-tree
-            v-if='data.rootNode'
-            :key='reloadKey'
-            ref='featureModelTree'
-            :collaborationStatus='collaborationStatus'
-            :command-manager='featureModelCommandManager'
-            :constraints='data.constraints'
-            :d3-data='d3Data'
-            :editRights='editRights'
-            :error='error'
-            :error-message='errorMessage'
-            :is-service-available='isServiceAvailable'
-            :loadingData='loadingData'
-            :rootNode='data.rootNode'
-            :showLegend='showLegend'
-            @exportToXML='exportToXML'
-            @reset='reset'
-            @save='save'
-            @slice='node => slice(node)'
-            @update-constraints='updateConstraints'
-            @show-collaboration-dialog='
+        <div class='flex-container'>
+            <div class='flex-child'>
+                <feature-model-tree
+                    v-if='data.rootNode'
+                    :key='reloadKey'
+                    ref='featureModelTree'
+                    :collaborationStatus='collaborationStatus'
+                    :command-manager='featureModelCommandManager'
+                    :constraints='data.constraints'
+                    :d3-data='d3Data'
+                    :editRights='editRights'
+                    :error='error'
+                    :error-message='errorMessage'
+                    :is-service-available='isServiceAvailable'
+                    :loadingData='loadingData'
+                    :rootNode='data.rootNode'
+                    :showLegend='showLegend'
+                    @exportToXML='exportToXML'
+                    @reset='reset'
+                    @save='save'
+                    @slice='node => slice(node)'
+                    @update-constraints='updateConstraints'
+                    @show-collaboration-dialog='
                 showStartCollaborationSessionDialog = true
             '
-            @show-claim-dialog='showClaimDialog'
-            @new-empty-model='newEmptyModel'
-            @show-tutorial='showTutorial = true'
-            @error-closed='errorClosed'
-            @error-new='message => errorNew(message)'
-            @hide-legend='showLegend=false'
-        >
-        </feature-model-tree>
-        <v-row
-            class='mr-2 '
-            justify='end'
-        >
-            <v-btn
-                id='feature-model-legend'
-                class='mr-2'
-                color='primary'
-                elevation='2'
-                icon
-                @click='showLegend=!showLegend'
-            >
-                <v-icon>mdi-map-legend</v-icon>
-            </v-btn>
-            <v-btn
-                id='feature-model-information'
-                :x-large='$vuetify.display.mdAndUp'
-                class='mr-2'
-                color='primary'
-                elevation='2'
-                icon
-                @click='openInformation = !openInformation'
-            >
-                <v-icon>mdi-information</v-icon>
-            </v-btn>
-            <v-btn
-                id='feature-model-constraints'
-                :x-large='$vuetify.display.mdAndUp'
-                class='mr-2'
-                color='primary'
-                data-cy='feature-model-constraints-button'
-                elevation='2'
-                icon
-                @click='openConstraints = true'
-            >
-                <v-icon>mdi-format-list-checks</v-icon>
-            </v-btn>
-        </v-row>
-
+                    @show-claim-dialog='showClaimDialog'
+                    @new-empty-model='newEmptyModel'
+                    @show-tutorial='showTutorial = true'
+                    @error-closed='errorClosed'
+                    @error-new='message => errorNew(message)'
+                    @hide-legend='showLegend=false'
+                >
+                </feature-model-tree>
+                <v-row
+                    class='mr-2 '
+                    justify='end'
+                >
+                    <v-btn
+                        id='feature-model-legend'
+                        class='mr-2'
+                        color='primary'
+                        elevation='2'
+                        icon
+                        @click='showLegend=!showLegend'
+                    >
+                        <v-icon>mdi-map-legend</v-icon>
+                    </v-btn>
+                    <v-btn
+                        id='feature-model-information'
+                        :x-large='$vuetify.display.mdAndUp'
+                        class='mr-2'
+                        color='primary'
+                        elevation='2'
+                        icon
+                        @click='openInformation = !openInformation'
+                    >
+                        <v-icon>mdi-information</v-icon>
+                    </v-btn>
+                    <v-btn
+                        id='feature-model-constraints'
+                        :x-large='$vuetify.display.mdAndUp'
+                        class='mr-2'
+                        color='primary'
+                        data-cy='feature-model-constraints-button'
+                        elevation='2'
+                        icon
+                        @click='openConstraints = true'
+                    >
+                        <v-icon>mdi-format-list-checks</v-icon>
+                    </v-btn>
+                </v-row>
+            </div>
+            <div class='flex-child'>
+                <FMTextEditor class='text-editor' :key='componentKey'
+                ></FMTextEditor>
+            </div>
+        </div>
 
         <feature-model-fact-label-bar
             :analysis='facts.analysis'
@@ -243,6 +250,7 @@ import { useAppStore } from '@/store/app';
 import axios from 'axios';
 import FMNavbar from '@/components/FMNavbar.vue';
 import * as view from '@/services/FeatureModel/view.service';
+import FMTextEditor from '@/components/FeatureModelTextEditor/FMTextEditor.vue';
 
 const appStore = useAppStore();
 
@@ -256,6 +264,7 @@ export default {
         CollaborationContinueEditingDialog,
         CollaborationToolbar,
         FeatureModelTree,
+        FMTextEditor,
         Constraints,
         CollaborationNameDialog,
         FeatureModelFactLabelBar
@@ -335,7 +344,8 @@ export default {
                 quickEdit: false,
                 direction: 'v', // h = horizontally, v = vertically
                 maxHorizontallyLevelWidth: [],
-                featureModelTree: undefined
+                featureModelTree: undefined,
+                componentKey: 0,
             }
         };
     },
@@ -352,6 +362,7 @@ export default {
             const xml = beautify(localStorage.featureModelData);
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
+
         } else if (this.id === 'new') {
             this.loadInitialModel();
         } else if (this.id) {
@@ -378,7 +389,7 @@ export default {
             }
         }
         this.checkService();
-
+        this.updateTextEditor();
         // Start tutorial mode if it has not been completed before
         this.showTutorial = !localStorage.featureModelTutorialCompleted;
         this.updateFacts();
@@ -662,8 +673,14 @@ export default {
         changeSpaceBetweenSiblings(spacing) {
             this.d3Data.spaceBetweenSiblings = spacing;
             update.updateSvg(this.d3Data);
+        },
+
+        updateTextEditor() {
+            FMTextEditor.data().code = xmlTranspiler.jsonToXML(this.data);
+            this.componentKey += 1;
         }
-    }
+    },
+
 };
 </script>
 <style lang='scss'>
@@ -712,4 +729,22 @@ export default {
 .choice {
     border: 4px dotted #0058B3;
 }
+
+.flex-container{
+    display: flex;
+}
+
+.flex-child{
+    flex: 1;
+}
+
+.flex-child:first-child{
+    flex: 2;
+}
+
+.text-editor {
+    height: 100%;
+    overflow: hidden;
+}
+
 </style>

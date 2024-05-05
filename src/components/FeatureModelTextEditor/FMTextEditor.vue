@@ -10,23 +10,20 @@ export default {
             options: {
                 colorDecorators: true,
                 lineHeight: 24,
-                tabSize: 2,
+                tabSize: 4,
             },
-            test: '',
+            code: '',
         };
     },
 };
 </script>
 
 <template>
-    <h3>Monaco Editor Vue3</h3>
     <MonacoEditor
         theme="vs-dark"
         :options="options"
         language="javascript"
-        :width="800"
-        :height="600"
-        v-model:value="test"
+        v-model:value="code"
     ></MonacoEditor>
 </template>
 
