@@ -1,6 +1,5 @@
-import {SelectionState} from "@/classes/Configurator/SelectionState";
+import {SelectionState} from "@/classes/SelectionState";
 import beautify from "xml-beautifier";
-import {FeatureNodeConfigurator} from "@/classes/Configurator/FeatureNodeConfigurator";
 import {Version} from "@/classes/Configurator/Version";
 import {Feature} from "@/classes/Configurator/Feature";
 import {Constraint} from "@/classes/Constraint";
@@ -11,6 +10,7 @@ import {Implication} from "@/classes/Constraint/Implication";
 import {Negation} from "@/classes/Constraint/Negation";
 import api from "@/services/api.service";
 import { Equivalence } from '@/classes/Constraint/Equivalence';
+import { FeatureNode } from '@/classes/FeatureNode';
 
 export class FeatureModel {
     constructor(versions, featureDict, features) {
@@ -72,11 +72,10 @@ export class FeatureModel {
 
                 const feature = this.featureDict[featureName];
                 usedFeatures.push(feature);
-                let toAppend = new FeatureNodeConfigurator(
-                    feature,
+                let toAppend = new FeatureNode(
                     parent,
                     featureName,
-                    child.tagName,
+                    child.tagName === 'feature' ? 'and' : child.tagName,
                     child.getAttribute('mandatory') === 'true',
                     child.getAttribute('abstract') === 'true'
                 );

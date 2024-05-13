@@ -61,18 +61,40 @@
         </div>
 
         <div id="svg-container"></div>
-        <v-btn
-            v-show="d3Data.showLegend"
+        <feature-model-legend
+            :d3Data="d3Data"
+            :legend-show='showLegend'
+        >
+        </feature-model-legend>
+        <!--
+         <v-btn
+            class='hidden-sm-and-down'
+            v-show="showLegend"
             elevation='2'
             icon
             size='xs'
             position="absolute"
-            style='left: 480px; top: 250px;'
+            style='left: 483px; top: 250px;'
             color='primary'
             @click="$emit('hide-legend')"
             >
                 <v-icon>mdi-close</v-icon>
         </v-btn>
+
+        <v-btn
+            v-show="showLegend"
+            class='hidden-md-and-up'
+            elevation='2'
+            icon
+            size='xs'
+            position="absolute"
+            style='left: 238px; top: 103px;'
+            color='primary'
+            @click="$emit('hide-legend')"
+            >
+                <v-icon>mdi-close</v-icon>
+        </v-btn>
+        -->
         <feature-model-tree-context-menu
             :d3Node="d3Data.contextMenu.selectedD3Node"
             :d3NodeEvent="d3Data.contextMenu.event"
@@ -130,6 +152,7 @@
                     ? d3Data.d3ParentOfAddNode.data
                     : undefined
             "
+            :rootNode='rootNode'
             :show="showAddDialog"
             @add="(data) => add(data)"
             @close="showAddDialog = false"
@@ -157,12 +180,14 @@ import { EditCommand } from '@/classes/Commands/FeatureModel/EditCommand';
 import { RemoveCommand } from '@/classes/Commands/FeatureModel/RemoveCommand';
 import * as update_service from '@/services/FeatureModel/update.service';
 import { useDisplay } from 'vuetify';
+import FeatureModelLegend from '@/components/FeatureModel/FeatureModelLegend.vue';
 
 
 export default {
     name: 'FeatureModelTree',
 
     components: {
+        FeatureModelLegend,
       FeatureModelTreeErrorDialog,
       FeatureModelTreeLoadingDialog,
         FeatureModelTreeToolbar,
@@ -242,19 +267,6 @@ export default {
 
         updateSvg() {
             update.updateSvg(this.d3Data);
-        },
-        toggleLegend(){
-            if(!this.showLegend){
-                // Legend shown until now=> hide
-                update.hideLegend();
-                this.d3Data.showLegend=false;
-            }else{
-                // Legend not shown until now => re initialize
-                init.initLegend(this.d3Data);
-                this.d3Data.showLegend=true;
-            }
-            update_service.updateSvg(this.d3Data);
-
         },
 
         fitToView() {
@@ -438,9 +450,6 @@ export default {
             }
 
             this.updateSvg();
-        },
-        showLegend(){
-            this.toggleLegend();
         },
         'search.searchText'(newValue) {
             this.search.foundNodeDistances = search.search(

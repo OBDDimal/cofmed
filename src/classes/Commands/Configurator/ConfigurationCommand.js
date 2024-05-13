@@ -1,5 +1,5 @@
 import {Command} from "@/classes/Commands/Command";
-import {SelectionState} from "@/classes/Configurator/SelectionState";
+import {SelectionState} from "@/classes/SelectionState";
 import {updateSvg} from "@/services/FeatureModel/update.service.js";
 
 export class ConfigurationCommand extends Command {

@@ -28,6 +28,10 @@ export function zoomFit(d3Data, padding = 0.75) {
         height = bounds.height;
     let midX = bounds.x + width / 2,
         midY = bounds.y + height / 2;
+    if(d3Data.isConf){
+        midX = (bounds.x + width) / 2;
+        midY = (bounds.y + height) / 2;
+    }
 
     // nothing to fit
     if (width === 0 || height === 0) {

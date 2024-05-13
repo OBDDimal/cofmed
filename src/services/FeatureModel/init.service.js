@@ -44,7 +44,7 @@ export function initialize(d3Data, data) {
     }
 
 
-    const svgContent = svg.append('g');
+    const svgContent = svg.append('g').attr("id", "draggable");
 
     d3Data.container.highlightedConstraintsContainer = svgContent
         .append('g')
@@ -75,9 +75,7 @@ export function initialize(d3Data, data) {
     // Listen to window resize.
     window.onresize = () => windowResize.update(d3Data);
     windowResize.update(d3Data);
-    if (d3Data.showLegend) {
-        initLegend(d3Data);
-    }
+    initLegend(d3Data);
 }
 
 function calcNodeSize(d3Data, d3Node) {
@@ -100,30 +98,57 @@ function calcNodeSize(d3Data, d3Node) {
 
 
 export function initLegend(d3Data) {
+    if (!d3Data.showLegend) {
+        return;
+    }
+
+
     /**
      * Initialize Legend drawn in SVG by appending a svg to the main-svg
      */
-    let svg = d3.select('.main-svg')
-        .append('svg')
-        .append('g')
-        .attr('transform', 'translate(200,200)');
+    let smartphone = window.innerWidth < 960;
+    if (!smartphone) {
+        let svg = d3.select('#draggable')
+            .append('g')
+            .attr('transform', 'translate(150,-200)');
 
-    let rect = svg.append('rect')
-        .attr('width', 300)
-        .attr('height', 100)
+        let rect = svg.append('rect')
+            .attr('width', 250)
+            .attr('height', 100)
+            .attr('fill', 'white')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '2px')
+            .classed('legend-container', true);
 
-        .attr('fill', 'white')
-        .attr('stroke', 'black')
-        .attr('stroke-width', '2px')
-        .classed('legend-container', true);
+        let items = svg
+            .append('g')
+            .classed('legend-items', true)
+            .append('text')
+            .attr('transform', 'translate(10,20)')
+            .text('Legend: ');
 
-    let items = svg
-        .append('g')
-        .classed('legend-items', true)
-        .append('text')
-        .attr('transform', 'translate(10,20)')
-        .text('Legend: ');
+        updateService.updateLegend(d3Data);
+    } else {
+        let svg = d3.select('#draggable')
+            .append('g')
+            .attr('transform', 'translate(50,50)');
 
-    updateService.updateLegend(d3Data);
+        let rect = svg.append('rect')
+            .attr('width', 200)
+            .attr('height', 100)
+            .attr('fill', 'white')
+            .attr('stroke', 'black')
+            .attr('stroke-width', '1px')
+            .classed('legend-container', true);
+
+        let items = svg
+            .append('g')
+            .classed('legend-items', true)
+            .append('text')
+            .attr('transform', 'translate(10,20)')
+            .text('Legend: ');
+
+        updateService.updateLegend(d3Data);
+    }
 
 }

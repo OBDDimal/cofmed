@@ -1,4 +1,4 @@
-import {SelectionState} from "@/classes/Configurator/SelectionState";
+import {SelectionState} from "@/classes/SelectionState";
 
 export class Version {
     constructor(version, rootId) {

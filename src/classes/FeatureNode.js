@@ -1,19 +1,33 @@
 import * as CONSTANTS from './constants';
 import * as d3 from "d3";
 import {PseudoNode} from "@/classes/PseudoNode";
+import { SelectionState } from '@/classes/SelectionState';
 
 export class FeatureNode {
-    constructor(parent, name, groupType, mandatory, abstract) {
+    constructor(parent, name, groupType, mandatory, abstract, id) {
         this.parent = parent;
         this.name = name;
-        this.setDisplayName(name);
+        this.title = name;
+        this.id = id;
         this.children = [];
+
+        // FM syntax properties
         this.groupType = groupType;
         this.isRoot = parent === null;
         this.isMandatory = mandatory;
         this.isAbstract = abstract;
+
+        // Configuration States
+        this.selectionState = SelectionState.Unselected;
+        this.open = null;
+
         this.colorValue = CONSTANTS.NODE_COLOR;
+
+        // Cross tree constraint references
         this.constraints = [];
+
+        // D3 connection for drawing purposes
+        this.setDisplayName(name);
         this.isCollapsed = false;
         this.isHidden = false;
         this.d3Node = null;
@@ -22,6 +36,7 @@ export class FeatureNode {
         this.dead = false;
         this.falseOptional = false;
     }
+
     setDisplayName(newName ){
         ///Sets the Displayname of the Featurenode
         if(newName.length<= CONSTANTS.DISPLAY_NAME_LENGTH){
@@ -31,6 +46,22 @@ export class FeatureNode {
         }
 
     }
+
+    selectionType() {
+        if (this.open) {
+            return "choice"
+        } else if (this.selectionState === SelectionState.ExplicitlySelected) {
+            return "selected-expl"
+        } else if (this.selectionState === SelectionState.ImplicitlySelected) {
+            return "selected-impl";
+        } else if (this.selectionState === SelectionState.ExplicitlyDeselected) {
+            return "deselected-expl";
+        } else if (this.selectionState === SelectionState.ImplicitlyDeselected) {
+            return "deselected-impl";
+        }
+        return undefined;
+    }
+
     color() {
         if (this.markedAsEdited) {
             return CONSTANTS.NODE_EDITED_COLOR;
@@ -46,6 +77,14 @@ export class FeatureNode {
             return 0;
         } else {
             return this.parent.level() + 1;
+        }
+    }
+
+    getRootNode() {
+        if (this.isRoot) {
+            return this
+        } else {
+            return this.parent.getRootNode()
         }
     }
 
@@ -89,9 +128,6 @@ export class FeatureNode {
         this.groupType = groupType;
     }
 
-    setColor(color) {
-        this.colorValue = color;
-    }
 
     uncollapse(toRoot = true) {
         if (this.isCollapsed && !this.isLeaf()) {
@@ -365,6 +401,29 @@ export class FeatureNode {
 
     highlightConstraints() {
         this.constraints.forEach((constraint) => constraint.isHighlighted = true);
+    }
+
+    toConfigString(){
+      let configText = '';
+
+      switch (this.selectionState){
+        case SelectionState.ImplicitlySelected:
+          configText = "automatic=\"selected\"";
+          break;
+        case SelectionState.ExplicitlySelected:
+          configText = "manual=\"selected\"";
+          break;
+        case SelectionState.ImplicitlyDeselected:
+          configText = "automatic=\"deselected\"";
+          break;
+        case SelectionState.ExplicitlyDeselected:
+          configText = "manual=\"deselected\"";
+          break;
+        case 'Unselected':
+          break;
+      }
+
+      return `<feature ${configText} name="${this.name}"/>`
     }
 }
 

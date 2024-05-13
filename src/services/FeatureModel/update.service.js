@@ -9,15 +9,17 @@ import { RECT_HEIGHT } from '@/classes/constants';
 import * as d3 from 'd3';
 import * as legendItems from '@/classes/Legend/LegendItemFactory';
 import { SelectionState } from '@/classes/SelectionState';
-import { FeatureNodeConfigurator } from '@/classes/Configurator/FeatureNodeConfigurator';
+
 
 let d3DataSaved = undefined;
+const touchDevice = (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
+let smartphone = window.innerWidth < 960;
 function updateFeatureNodes(d3Data, visibleD3Nodes) {
     const featureNode = d3Data.container.featureNodesContainer
         .selectAll('g.node')
         .data(
             visibleD3Nodes.filter(
-                (d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator
+                (d3Node) => d3Node.data instanceof FeatureNode
             ),
             (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter)
         );
@@ -33,7 +35,7 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
                 d3Data.selectedD3Node = d3Node.data;
             } else {
                 // only use contextmenu on non-mobile devices
-                if (!('ontouchstart' in window)) {
+                if (!touchDevice) {
                     event.preventDefault();
                     d3Data.contextMenu.selectedD3Node = d3Node;
                     d3Data.contextMenu.event = event;
@@ -50,7 +52,7 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
                 collapse.collapseShortcut(d3Data, event, d3Node); // Collapse d3Node with Ctrl + left-click on d3Node.
             } else {
                 // Use click for contextmenu on mobile
-                if ('ontouchstart' in window) {
+                if (touchDevice) {
                     d3Data.contextMenu.selectedD3Node = d3Node;
                     d3Data.contextMenu.event = event;
                 }
@@ -325,7 +327,7 @@ function updatePseudoNodes(d3Data, visibleD3Nodes) {
 
 function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
     const highlightedNodes = visibleD3Nodes
-        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator)
+        .filter((d3Node) => d3Node.data instanceof FeatureNode)
         .map((d3Node) => ({
             d3Node: d3Node,
             highlightedConstraints: d3Node.data.getHighlightedConstraints()
@@ -409,7 +411,7 @@ function updateHighlightedConstraints(d3Data, visibleD3Nodes) {
 function updateSelectionHighlight(d3Data, visibleD3Nodes) {
 
     const selectedNodes = visibleD3Nodes
-        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator)
+        .filter((d3Node) => d3Node.data instanceof FeatureNode )
         .map((d3Node) => ({
             d3Node: d3Node,
             feature: d3Node.data,
@@ -493,7 +495,7 @@ function updateSelectionHighlight(d3Data, visibleD3Nodes) {
 function updateLinks(d3Data, visibleD3Nodes) {
     const links = visibleD3Nodes
         .slice(1)
-        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof PseudoNode || d3Node.data instanceof FeatureNodeConfigurator);
+        .filter((d3Node) => d3Node.data instanceof FeatureNode || d3Node.data instanceof PseudoNode );
     const link = d3Data.container.linksContainer
         .selectAll('path.link')
         .data(links, (d3Node) => d3Node.id);
@@ -534,7 +536,7 @@ function updateSegments(d3Data, visibleD3Nodes) {
         .data(
             visibleD3Nodes.filter(
                 (d3Node) =>
-                    (d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator) &&
+                    (d3Node.data instanceof FeatureNode ) &&
                     (d3Node.data.isAlt() || d3Node.data.isOr())
             ),
             (d3Node) => d3Node.id || (d3Node.id = ++d3Data.nodeIdCounter)
@@ -591,7 +593,7 @@ export function updateSvg(d3Data) {
     d3Data.root.descendants().forEach((d3Node) => {
         d3Node.width = calcRectWidth(d3Data, d3Node);
 
-        if (d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator) {
+        if (d3Node.data instanceof FeatureNode ) {
             const level = d3Node.data.level();
             if (d3Data.maxHorizontallyLevelWidth.length <= level) {
                 d3Data.maxHorizontallyLevelWidth.push(0);
@@ -624,13 +626,13 @@ export function updateSvg(d3Data) {
     updateFeatureNodes(d3Data, visibleD3Nodes);
     updatePseudoNodes(d3Data, visibleD3Nodes);
     updateLinks(d3Data, visibleD3Nodes);
-    updateLegend(d3Data);
+    //updateLegend(d3Data);
     /*console.log('Rendertime', performance.now() - start);*/
 }
 
 // Calculates rect-width dependent on font-size dynamically.
 export function calcRectWidth(d3Data, d3Node) {
-    if (d3Node.data instanceof FeatureNode || d3Node.data instanceof FeatureNodeConfigurator) {
+    if (d3Node.data instanceof FeatureNode ) {
         return (
             (d3Data.isShortenedName
                 ? d3Node.data.displayName.length
@@ -671,14 +673,22 @@ export function updateLegend(d3Data) {
         // Legend not shown so just return
         return;
     }
+
+    smartphone = window.innerWidth < 960;
     let legendItems = getDOMItems(d3Data);
-    d3
-        .selectAll('.legend-item')
+    d3.selectAll('.legend-item')
         .remove();
 
-    let container = d3.select('.legend-container');
-    let containerHeight = CONSTANTS.LEGEND_CONTAINER_OFFSET + legendItems.length * CONSTANTS.LEGEND_ITEM_HEIGHT;
-    container.attr('height', containerHeight); // dynamically adjust container height
+
+    if (!smartphone) {
+        let container = d3.select('.legend-container');
+        let containerHeight = CONSTANTS.LEGEND_CONTAINER_OFFSET + legendItems.length * CONSTANTS.LEGEND_ITEM_HEIGHT;
+        container.attr('height', containerHeight); // dynamically adjust container height
+    } else {
+        let container = d3.select('.legend-container');
+        let containerHeight = CONSTANTS.LEGEND_CONTAINER_OFFSET_PHONE + legendItems.length * CONSTANTS.LEGEND_ITEM_HEIGHT_PHONE;
+        container.attr('height', containerHeight); // dynamically adjust container height
+    }
 
     let join = d3
         .select('.legend-items')
@@ -785,23 +795,41 @@ function addColorItems(presentItems) {
  */
 function enterLegendItems(selection) {
 
-    let legendItem = selection
-        .append('g')
-        .attr('transform', (d, i) => 'translate(10,' + (CONSTANTS.LEGEND_CONTAINER_OFFSET + i * CONSTANTS.LEGEND_ITEM_HEIGHT) + ')')
-        .classed('legend-item', true);
+    if (!smartphone) {
+        let legendItem = selection
+            .append('g')
+            .attr('transform', (d, i) => 'translate(10,' + (CONSTANTS.LEGEND_CONTAINER_OFFSET + i * CONSTANTS.LEGEND_ITEM_HEIGHT) + ')')
+            .classed('legend-item', true);
 
-    let img = legendItem
-        .append('svg:image')
-        .attr('class', 'iconUserTotal')
-        .attr('width', CONSTANTS.LEGEND_IMG_WIDTH)
-        .attr('height', CONSTANTS.LEGEND_IMG_HEIGHT)
-        .attr('y', -CONSTANTS.LEGEND_IMG_HEIGHT)
-        .attr('href', item => item.image);
-    let text = legendItem
-        .append('text')
-        .text(item => item.description)
-        .attr('transform', 'translate(55,0)')
-        .classed('legend-item', true);
+        let img = legendItem.append('svg:image')
+            .attr('class', 'iconUserTotal')
+            .attr('width', CONSTANTS.LEGEND_IMG_WIDTH)
+            .attr('height', CONSTANTS.LEGEND_IMG_HEIGHT)
+            .attr('y', -CONSTANTS.LEGEND_IMG_HEIGHT)
+            .attr('href', item => item.image);
+
+        let text = legendItem.append('text')
+            .text(item => item.description)
+            .attr('transform', 'translate(55,0)')
+            .classed('legend-item', true);
+    } else {
+        let legendItem = selection
+            .append('g')
+            .attr('transform', (d, i) => 'translate(5,' + (10 + CONSTANTS.LEGEND_CONTAINER_OFFSET_PHONE + i * CONSTANTS.LEGEND_ITEM_HEIGHT_PHONE) + ')')
+            .classed('legend-item', true);
+
+        let img = legendItem.append('svg:image')
+            .attr('class', 'iconUserTotal')
+            .attr('width', CONSTANTS.LEGEND_IMG_WIDTH_PHONE)
+            .attr('height', CONSTANTS.LEGEND_IMG_HEIGHT_PHONE)
+            .attr('y', -CONSTANTS.LEGEND_IMG_HEIGHT_PHONE)
+            .attr('href', item => item.image);
+
+        let text = legendItem.append('text')
+            .text(item => item.description)
+            .attr('transform', 'translate(55,0)')
+            .classed('legend-item', true);
+    }
 
 
 }

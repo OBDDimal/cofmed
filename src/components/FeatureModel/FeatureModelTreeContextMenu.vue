@@ -135,24 +135,23 @@
                 <v-list-item-title>Remove</v-list-item-title>
             </v-list-item>
 
-            <v-list-group v-if="editRights" no-action prepend-icon="mdi-plus">
-                <template v-slot:activator="{ props }">
-                    <v-list-item v-bind="props">
-                        <v-list-item-title>Add</v-list-item-title>
-                    </v-list-item>
-                </template>
+            <v-list-item
+                  v-if="editRights"
+                  @click="$emit('addAsChild', d3Node)"
+                  prepend-icon="mdi-plus"
+            >
+                <v-list-item-title>Add as child</v-list-item-title>
+            </v-list-item>
 
-                <v-list-item @click="$emit('addAsChild', d3Node)">
-                    <v-list-item-title>Add as child</v-list-item-title>
-                </v-list-item>
-
-                <v-list-item
-                    :disabled="d3Node && d3Node.data.isRoot"
-                    @click="$emit('addAsSibling', d3Node)"
-                >
-                    <v-list-item-title>Add as sibling</v-list-item-title>
-                </v-list-item>
-            </v-list-group>
+            <v-list-item
+                  v-if="editRights"
+                  :disabled="d3Node && d3Node.data.isRoot"
+                  @click="$emit('addAsSibling', d3Node)"
+                  prepend-icon="mdi-plus"
+            >
+                <v-list-item-title>Add as sibling</v-list-item-title>
+            </v-list-item>
+            
         </v-list>
     </v-menu>
 </template>

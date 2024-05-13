@@ -1,28 +1,28 @@
 <template>
-    <div class="text-center">
-        <v-dialog v-model="showDialog" persistent width="500">
+    <div class='text-center'>
+        <v-dialog v-model='showDialog' persistent width='500'>
             <v-card>
-                <v-card-title class="text-h5"> Add Feature </v-card-title>
+                <v-card-title class='text-h5'> Add Feature</v-card-title>
 
                 <v-divider></v-divider>
 
-                <v-form @submit.prevent="add" ref="form">
+                <v-form ref='form' @submit.prevent='add'>
                     <v-card-text>
                         <div>
                             <v-text-field
-                                v-model="name"
+                                v-model='name'
                                 :rules="[(value) => !!value || 'Required.']"
-                                label="Name"
+                                label='Name'
                             ></v-text-field>
                         </div>
 
-                        <div v-if="showMandatorySelection" class="my-2">
+                        <div v-if='showMandatorySelection' class='my-2'>
                             <v-btn-toggle
-                                v-model="mandatory"
+                                v-model='mandatory'
+                                color='primary'
                                 dense
-                                color="primary"
-                                tile
                                 mandatory
+                                tile
                             >
                                 <v-btn text> mandatory</v-btn>
                                 <v-btn text> optional</v-btn>
@@ -30,9 +30,9 @@
                         </div>
 
                         <v-checkbox
-                            v-model="abstract"
+                            v-model='abstract'
                             hide-details
-                            label="Abstract"
+                            label='Abstract'
                         ></v-checkbox>
                     </v-card-text>
 
@@ -40,17 +40,26 @@
 
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                        <v-btn color="secondary" text @click="discard">
-                            Discard</v-btn
+                        <v-btn color='secondary' text @click='discard'>
+                            Discard
+                        </v-btn
                         >
-                        <v-btn
-                            :disabled="!name"
-                            color="primary"
-                            text
-                            type="submit"
-                        >
-                            Add</v-btn
-                        >
+                        <v-tooltip :disabled='!isNameAvailable' location='bottom'>
+                            <template v-slot:activator='{ props }'>
+                                <div class='d-inline-block' v-bind='props'>
+                                    <v-btn
+                                        :disabled='!name || isNameAvailable'
+                                        color='primary'
+                                        text
+                                        type='submit'
+                                    >
+                                        Add
+                                    </v-btn
+                                    >
+                                </div>
+                            </template>
+                            <span>You need to choose a name that is not used already.</span>
+                        </v-tooltip>
                     </v-card-actions>
                 </v-form>
             </v-card>
@@ -64,20 +73,20 @@ export default {
 
     data: () => ({
         name: '',
-        mandatory: false,
-        abstract: false,
+        mandatory: 1,
+        abstract: false
     }),
 
     props: {
         parent: Object,
-        show: Boolean,
+        show: Boolean
     },
 
     computed: {
         showDialog: {
             get() {
                 return this.show;
-            },
+            }
         },
 
         showMandatorySelection() {
@@ -86,6 +95,10 @@ export default {
             }
             return false;
         },
+
+        isNameAvailable() {
+            return this.parent.getRootNode().descendants().map(f => f.name).includes(this.name);
+        }
     },
 
     methods: {
@@ -105,7 +118,7 @@ export default {
                 name: this.name,
                 groupType: 'and',
                 mandatory: this.mandatory === 0,
-                abstract: this.abstract,
+                abstract: this.abstract
             };
             this.name = '';
             this.mandatory = false;
@@ -114,7 +127,7 @@ export default {
 
             // to reset form validation and error messages
             this.$refs.form.reset();
-        },
-    },
+        }
+    }
 };
 </script>

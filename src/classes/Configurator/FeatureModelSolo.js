@@ -1,13 +1,13 @@
 import beautify from "xml-beautifier";
 import {Constraint} from "@/classes/Constraint";
-import {FeatureNodeConstraintItem} from "@/classes/Configurator/Constraint/FeatureNodeConstraintItem";
-import {Disjunction} from "@/classes/Configurator/Constraint/Disjunction";
-import {Conjunction} from "@/classes/Configurator/Constraint/Conjunction";
-import {Implication} from "@/classes/Configurator/Constraint/Implication";
-import {Negation} from "@/classes/Configurator/Constraint/Negation";
-import {Equivalence} from '@/classes/Configurator/Constraint/Equivalence';
-import {SelectionState, SelectionStateValidator} from '@/classes/Configurator/SelectionState';
-import { FeatureNodeConfigurator } from '@/classes/Configurator/FeatureNodeConfigurator';
+import {FeatureNodeConstraintItem} from "@/classes/Constraint/FeatureNodeConstraintItem";
+import {Disjunction} from "@/classes/Constraint/Disjunction";
+import {Conjunction} from "@/classes/Constraint/Conjunction";
+import {Implication} from "@/classes/Constraint/Implication";
+import {Negation} from "@/classes/Constraint/Negation";
+import {Equivalence} from '@/classes/Constraint/Equivalence';
+import {SelectionState, SelectionStateValidator} from '@/classes/SelectionState';
+import { FeatureNode } from '@/classes/FeatureNode';
 
 export class FeatureModelSolo {
     constructor(features, constraints, root, featureDict) {
@@ -64,13 +64,13 @@ export class FeatureModelSolo {
             // To remove #text nodes, as they don't have a tagName
             if (child.tagName) {
                 const featureName = child.getAttribute('name');
-                let toAppend = new FeatureNodeConfigurator(
+                let toAppend = new FeatureNode(
                     parent,
                     featureName,
-                    count,
                     child.tagName === 'feature' ? 'and' : child.tagName,
                     child.getAttribute('mandatory') === 'true',
-                    child.getAttribute('abstract') === 'true'
+                    child.getAttribute('abstract') === 'true',
+                    count,
                 );
                 count++;
                 usedFeatures.push(toAppend);

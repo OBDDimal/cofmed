@@ -14,7 +14,7 @@
         :is-undo-available='
                 featureModelCommandManager && featureModelCommandManager.isUndoAvailable()
             '
-        @download='exportToXML'
+        @download='(filetype) => downloadModel(filetype)'
         @fitToView='fitToView'
         @nonSemanticEditing='(value) => updateNonSemanticEdit(value)'
         @openConf='openConfigurator'
@@ -30,17 +30,16 @@
         @spaceBetweenSiblings='(value) =>changeSpaceBetweenSiblings(value)'
         @toggleDirection='toggleDirection'
         @undo='undo'
-        @open-constraints='openConstraints = true'
         @show-collaboration-dialog='showStartCollaborationSessionDialog = true'
         @show-tutorial='showTutorial = true'
-        @new-empty-model='newEmptyModel'
+        @new-empty-model='(value) => newEmptyModel(value)'
         @download-svg='downloadSVG'
 
 
     ></f-m-navbar>
     <input
         id='filePicker'
-        accept='.xml'
+        accept='.xml, .uvl, .dimacs'
         class='d-none'
         type='file'
         @change='onFileInputChanged'
@@ -77,82 +76,79 @@
     <div v-else>
         <div class='flex-container'>
             <div class='flex-child'>
-                <feature-model-tree
-                    v-if='data.rootNode'
-                    :key='reloadKey'
-                    ref='featureModelTree'
-                    :collaborationStatus='collaborationStatus'
-                    :command-manager='featureModelCommandManager'
-                    :constraints='data.constraints'
-                    :d3-data='d3Data'
-                    :editRights='editRights'
-                    :error='error'
-                    :error-message='errorMessage'
-                    :is-service-available='isServiceAvailable'
-                    :loadingData='loadingData'
-                    :rootNode='data.rootNode'
-                    :showLegend='showLegend'
-                    @exportToXML='exportToXML'
-                    @reset='reset'
-                    @save='save'
-                    @slice='node => slice(node)'
-                    @update-constraints='updateConstraints'
-                    @show-collaboration-dialog='
+        <feature-model-tree
+            v-if='data.rootNode'
+            :key='reloadKey'
+            ref='featureModelTree'
+            :collaborationStatus='collaborationStatus'
+            :command-manager='featureModelCommandManager'
+            :constraints='data.constraints'
+            :d3-data='d3Data'
+            :editRights='editRights'
+            :error='error'
+            :error-message='errorMessage'
+            :is-service-available='isServiceAvailable'
+            :loadingData='loadingData'
+            :rootNode='data.rootNode'
+            :showLegend='showLegend'
+            @reset='reset'
+            @save='save'
+            @slice='node => slice(node)'
+            @update-constraints='updateConstraints'
+            @show-collaboration-dialog='
                 showStartCollaborationSessionDialog = true
             '
-                    @show-claim-dialog='showClaimDialog'
-                    @new-empty-model='newEmptyModel'
-                    @show-tutorial='showTutorial = true'
-                    @error-closed='errorClosed'
-                    @error-new='message => errorNew(message)'
-                    @hide-legend='showLegend=false'
-                >
-                </feature-model-tree>
-                <v-row
-                    class='mr-2 '
-                    justify='end'
-                >
-                    <v-btn
-                        id='feature-model-legend'
-                        class='mr-2'
-                        color='primary'
-                        elevation='2'
-                        icon
-                        @click='showLegend=!showLegend'
-                    >
-                        <v-icon>mdi-map-legend</v-icon>
-                    </v-btn>
-                    <v-btn
-                        id='feature-model-information'
-                        :x-large='$vuetify.display.mdAndUp'
-                        class='mr-2'
-                        color='primary'
-                        elevation='2'
-                        icon
-                        @click='openInformation = !openInformation'
-                    >
-                        <v-icon>mdi-information</v-icon>
-                    </v-btn>
-                    <v-btn
-                        id='feature-model-constraints'
-                        :x-large='$vuetify.display.mdAndUp'
-                        class='mr-2'
-                        color='primary'
-                        data-cy='feature-model-constraints-button'
-                        elevation='2'
-                        icon
-                        @click='openConstraints = true'
-                    >
-                        <v-icon>mdi-format-list-checks</v-icon>
-                    </v-btn>
-                </v-row>
-            </div>
+            @show-claim-dialog='showClaimDialog'
+            @new-empty-model='newEmptyModel'
+            @show-tutorial='showTutorial = true'
+            @error-closed='errorClosed'
+            @error-new='message => errorNew(message)'
+            @hide-legend='showLegend=false'
+        >
+        </feature-model-tree>
+        <v-card location='right bottom'
+                position='fixed' variant='text'>
+            <v-btn
+                id='feature-model-legend'
+                class='mr-2'
+                color='primary'
+                elevation='2'
+                icon
+
+                @click='showLegendChange'
+            >
+                <v-icon>mdi-map-legend</v-icon>
+            </v-btn>
+            <v-btn
+                id='feature-model-information'
+                :x-large='$vuetify.display.mdAndUp'
+                class='mr-2'
+                color='primary'
+                elevation='2'
+                icon
+                @click='openInformation = !openInformation'
+            >
+                <v-icon>mdi-information</v-icon>
+            </v-btn>
+            <v-btn
+                id='feature-model-constraints'
+                :x-large='$vuetify.display.mdAndUp'
+                class='mr-2'
+                color='primary'
+                data-cy='feature-model-constraints-button'
+                elevation='2'
+                icon
+                @click='openConstraints = true'
+            >
+                <v-icon>mdi-format-list-checks</v-icon>
+            </v-btn>
+        </v-card>
+                </div>
             <div class='flex-child'>
                 <FMTextEditor class='text-editor' :code='code'
                 ></FMTextEditor>
             </div>
         </div>
-
         <feature-model-fact-label-bar
             :analysis='facts.analysis'
             :isOpen='openInformation'
@@ -250,6 +246,7 @@ import { useAppStore } from '@/store/app';
 import axios from 'axios';
 import FMNavbar from '@/components/FMNavbar.vue';
 import * as view from '@/services/FeatureModel/view.service';
+import { changeFileFormat, sliceFeatureModel } from '@/classes/BackendAccess/FeatureIDEAccess';
 import FMTextEditor from '@/components/FeatureModelTextEditor/FMTextEditor.vue';
 
 const appStore = useAppStore();
@@ -307,13 +304,14 @@ export default {
             openInformation: false,
             showTutorial: false,
             showLegend: true,
+            widthForLegend: true,
             facts: FactLabelFactory.getEmptyFactLabel(),
             d3Data: {
                 root: undefined,
                 flexLayout: undefined,
                 zoom: undefined,
                 nodeIdCounter: 0,
-                showLegend: true,
+                showLegend: false,
                 isShortenedName: false,
                 drag: {
                     listener: undefined,
@@ -363,7 +361,6 @@ export default {
             const xml = beautify(localStorage.featureModelData);
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
-
         } else if (this.id === 'new') {
             this.loadInitialModel();
         } else if (this.id) {
@@ -390,6 +387,7 @@ export default {
             }
         }
         this.checkService();
+
         // Start tutorial mode if it has not been completed before
         this.showTutorial = !localStorage.featureModelTutorialCompleted;
         this.updateFacts();
@@ -450,16 +448,44 @@ export default {
 
         openConfigurator() {
             localStorage.featureModelData = jsonToXML(this.data);
-            this.$router.push({path: '/configurator/local'});
+            this.$router.push({ path: '/configurator/local' });
         },
 
         async openFile(files) {
             this.xml = undefined;
-            const data = await files[0].text();
-            const xml = beautify(data);
-            xmlTranspiler.xmlToJson(xml, this.data);
-            this.xml = xml;
-            this.updateTextEditor();
+            let data = await files[0].text();
+            const fileExtension = files[0].name.split('.').pop();
+            if (fileExtension === 'uvl' || fileExtension === 'dimacs') {
+                data = await changeFileFormat(data, fileExtension, 'featureIde');
+            } else if (fileExtension !== 'xml') {
+                appStore.updateSnackbar(
+                    'Could not load the feature model, because filetype is not supported.',
+                    'error',
+                    3000,
+                    true
+                );
+                return;
+            }
+            if (data === 'bad') {
+                appStore.updateSnackbar(
+                    'Could not convert the feature model, because feature model is not supported by FeatureIDE.',
+                    'error',
+                    3000,
+                    true
+                );
+            } else if (data === '') {
+                appStore.updateSnackbar(
+                    'Cannot open non-XML feature model as the FeatureIDE Service is down.',
+                    'error',
+                    3000,
+                    true
+                );
+            } else {
+                const xml = beautify(data);
+                xmlTranspiler.xmlToJson(xml, this.data);
+                this.xml = xml;
+                this.updateTextEditor();
+            }
         },
 
         onFileInputChanged(e) {
@@ -472,6 +498,15 @@ export default {
                 );
             } else {
                 this.openFile(e.target.files);
+            }
+        },
+
+        showLegendChange() {
+            this.widthForLegend = window.innerWidth > 700;
+            if (!this.widthForLegend) {
+                this.showLegend = false;
+            } else {
+                this.showLegend = !this.showLegend;
             }
         },
 
@@ -493,14 +528,17 @@ export default {
             this.loadingData = true;
             await this.checkService();
             if (this.isServiceAvailable) {
-                try {
-                    const content = new TextEncoder().encode(jsonToXML(this.data));
-                    let response = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FEATUREIDESERVICE}slice`, {
-                        name: 'hello.xml',
-                        selection: [node.name],
-                        content: Array.from(content)
-                    });
-                    let contentAsString = new TextDecoder().decode(Uint8Array.from(response.data.content));
+                let preXml = jsonToXML(this.data);
+                let data = await sliceFeatureModel(preXml, node.name);
+                if (data === undefined) {
+                    appStore.updateSnackbar(
+                        'Could not slice the Feature, because an unknown error occurred.',
+                        'error',
+                        3000,
+                        true
+                    );
+                } else {
+                    let contentAsString = new TextDecoder().decode(Uint8Array.from(data.content));
                     const xml = beautify(contentAsString);
                     const command = new SliceCommand(
                         this,
@@ -508,17 +546,8 @@ export default {
                     );
                     this.featureModelCommandManager.execute(command);
                     this.updateFeatureModel();
-                } catch (e) {
-                    this.loadingData = false;
-                    appStore.updateSnackbar(
-                        'Could not slice the Feature, because an unknown error occurred.',
-                        'error',
-                        3000,
-                        true
-                    );
                 }
             } else {
-                this.loadingData = false;
                 appStore.updateSnackbar(
                     'Could not slice the Feature, because Service is down.',
                     'error',
@@ -538,13 +567,17 @@ export default {
             }
         },
 
-        newEmptyModel() {
-            const command = new NewEmptyModelCommand(
-                this,
-                this.d3Data
-            );
-            this.featureModelCommandManager.execute(command);
-            this.updateFeatureModel();
+        newEmptyModel(value) {
+            if (value) {
+                this.loadInitialModel();
+            } else {
+                const command = new NewEmptyModelCommand(
+                    this,
+                    this.d3Data
+                );
+                this.featureModelCommandManager.execute(command);
+                this.updateFeatureModel();
+            }
         },
 
         initData() {
@@ -575,8 +608,29 @@ export default {
             this.$refs.constraints.update();
         },
 
-        exportToXML() {
-            xmlTranspiler.downloadXML(this.data);
+        async downloadModel(filetype) {
+            let fileData = jsonToXML(this.data);
+            let bb;
+
+            if(filetype !== "xml"){
+                fileData = await changeFileFormat(fileData, "xml", filetype);
+                console.log(fileData)
+                bb = new Blob([fileData]);
+            } else {
+                bb = new Blob([fileData], { type: 'application/xml' });
+            }
+
+            const filename = 'featureModel.' + filetype;
+            const pom = document.createElement('a');
+
+            pom.setAttribute('href', window.URL.createObjectURL(bb));
+            pom.setAttribute('download', filename);
+
+            pom.dataset.downloadurl = ['application/xml', pom.download, pom.href].join(
+                ':'
+            );
+
+            pom.click();
         },
 
         commandEvent() {

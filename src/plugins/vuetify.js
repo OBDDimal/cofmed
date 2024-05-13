@@ -1,8 +1,7 @@
 import '@mdi/font/css/materialdesignicons.css';
 import 'vuetify/styles';
 import { createVuetify } from 'vuetify';
-import { VDataTable } from 'vuetify/labs/VDataTable';
-import { VBottomSheet} from 'vuetify/labs/VBottomSheet';
+import { VTreeview } from 'vuetify/labs/VTreeview';
 
 export const variabilityLightTheme = {
     dark: false,
@@ -23,8 +22,8 @@ export const variabilityLightTheme = {
         'imp-deselected': '#c50000',
         'should-select': '#cca000',
         'should-select-parent': '#c46300'
-    },
-}
+    }
+};
 
 export const variabilityDarkTheme = {
     dark: true,
@@ -43,10 +42,9 @@ export const variabilityDarkTheme = {
         deselected: '#fe0058',
         'imp-deselected': '#9d004d',
         'should-select': '#ff5d1b',
-        'should-select-parent': '#cc3a00',
-    },
-}
-
+        'should-select-parent': '#cc3a00'
+    }
+};
 
 
 export default createVuetify({
@@ -58,9 +56,8 @@ export default createVuetify({
         }
     },
     components: {
-        VDataTable,
-        VBottomSheet
-    },
+        VTreeview
+    }
 });
 /*{
   theme: {
