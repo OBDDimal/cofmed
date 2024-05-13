@@ -5,6 +5,14 @@ export default {
     components: {
         MonacoEditor,
     },
+    props: {
+        code: undefined,
+    },
+
+    created() {
+        this.textCode = this.code
+    },
+
     data() {
         return {
             options: {
@@ -12,7 +20,7 @@ export default {
                 lineHeight: 24,
                 tabSize: 4,
             },
-            code: '',
+            textCode: '',
         };
     },
 };

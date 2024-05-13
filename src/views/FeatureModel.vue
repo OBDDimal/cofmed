@@ -148,7 +148,7 @@
                 </v-row>
             </div>
             <div class='flex-child'>
-                <FMTextEditor class='text-editor' :key='componentKey'
+                <FMTextEditor class='text-editor' :code='code'
                 ></FMTextEditor>
             </div>
         </div>
@@ -286,6 +286,7 @@ export default {
                 featureOrder: undefined,
                 rootNode: undefined
             },
+            code: '',
             loadingData: false,
             error: false,
             errorMessage: '',
@@ -389,7 +390,6 @@ export default {
             }
         }
         this.checkService();
-        this.updateTextEditor();
         // Start tutorial mode if it has not been completed before
         this.showTutorial = !localStorage.featureModelTutorialCompleted;
         this.updateFacts();
@@ -459,6 +459,7 @@ export default {
             const xml = beautify(data);
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
+            this.updateTextEditor();
         },
 
         onFileInputChanged(e) {
@@ -563,6 +564,7 @@ export default {
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
             this.updateFacts();
+            this.updateTextEditor();
         },
 
         updateFeatureModel() {
@@ -676,8 +678,7 @@ export default {
         },
 
         updateTextEditor() {
-            FMTextEditor.data().code = xmlTranspiler.jsonToXML(this.data);
-            this.componentKey += 1;
+            this.code = beautify(xmlTranspiler.jsonToXML(this.data));
         }
     },
 
