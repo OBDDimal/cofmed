@@ -23,6 +23,11 @@ export default {
             textCode: '',
         };
     },
+    watch: {
+        code() {
+            this.textCode = this.code
+        },
+    },
 };
 </script>
 
@@ -30,8 +35,8 @@ export default {
     <MonacoEditor
         theme="vs-dark"
         :options="options"
-        language="javascript"
-        v-model:value="code"
+        language="xml"
+        v-model:value="textCode"
     ></MonacoEditor>
 </template>
 
