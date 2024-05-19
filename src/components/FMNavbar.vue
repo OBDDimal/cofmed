@@ -192,6 +192,15 @@
                         <v-list-item v-if='isFileLoaded' prepend-icon='mdi-content-save'
                                      title='Save Model to Local Storage' @click='$emit("localStorage")'>
                         </v-list-item>
+                        <!-- TODO make visible? -->
+                        <v-list-item v-if='isFileLoaded' prepend-icon='mdi-xml'
+                                     title='Display as XML'
+                                     @click='$emit("updateTextEditorXML")'>
+                        </v-list-item>
+                        <v-list-item v-if='isFileLoaded' prepend-icon='mdi-code-tags'
+                                     title='Display as UVL'
+                                     @click='$emit("updateTextEditorUVL")'>
+                        </v-list-item>
                         <v-list-item v-if='isFileLoaded' prepend-icon='mdi-download'
                                      title='Download Model'
                                      @click='$emit("download")'>

@@ -34,6 +34,8 @@
         @show-tutorial='showTutorial = true'
         @new-empty-model='(value) => newEmptyModel(value)'
         @download-svg='downloadSVG'
+        @updateTextEditorXML='updateTextEditorXML'
+        @updateTextEditorUVL='updateTextEditorUVL'
 
 
     ></f-m-navbar>
@@ -76,76 +78,104 @@
     <div v-else>
         <div class='flex-container'>
             <div class='flex-child'>
-        <feature-model-tree
-            v-if='data.rootNode'
-            :key='reloadKey'
-            ref='featureModelTree'
-            :collaborationStatus='collaborationStatus'
-            :command-manager='featureModelCommandManager'
-            :constraints='data.constraints'
-            :d3-data='d3Data'
-            :editRights='editRights'
-            :error='error'
-            :error-message='errorMessage'
-            :is-service-available='isServiceAvailable'
-            :loadingData='loadingData'
-            :rootNode='data.rootNode'
-            :showLegend='showLegend'
-            @reset='reset'
-            @save='save'
-            @slice='node => slice(node)'
-            @update-constraints='updateConstraints'
-            @show-collaboration-dialog='
+                <feature-model-tree
+                    v-if='data.rootNode'
+                    :key='reloadKey'
+                    ref='featureModelTree'
+                    :collaborationStatus='collaborationStatus'
+                    :command-manager='featureModelCommandManager'
+                    :constraints='data.constraints'
+                    :d3-data='d3Data'
+                    :editRights='editRights'
+                    :error='error'
+                    :error-message='errorMessage'
+                    :is-service-available='isServiceAvailable'
+                    :loadingData='loadingData'
+                    :rootNode='data.rootNode'
+                    :showLegend='showLegend'
+                    @reset='reset'
+                    @save='save'
+                    @slice='node => slice(node)'
+                    @update-constraints='updateConstraints'
+                    @show-collaboration-dialog='
                 showStartCollaborationSessionDialog = true
             '
-            @show-claim-dialog='showClaimDialog'
-            @new-empty-model='newEmptyModel'
-            @show-tutorial='showTutorial = true'
-            @error-closed='errorClosed'
-            @error-new='message => errorNew(message)'
-            @hide-legend='showLegend=false'
-        >
-        </feature-model-tree>
-        <v-card location='right bottom'
-                position='fixed' variant='text'>
-            <v-btn
-                id='feature-model-legend'
-                class='mr-2'
-                color='primary'
-                elevation='2'
-                icon
+                    @show-claim-dialog='showClaimDialog'
+                    @new-empty-model='newEmptyModel'
+                    @show-tutorial='showTutorial = true'
+                    @error-closed='errorClosed'
+                    @error-new='message => errorNew(message)'
+                    @hide-legend='showLegend=false'
 
-                @click='showLegendChange'
-            >
-                <v-icon>mdi-map-legend</v-icon>
-            </v-btn>
-            <v-btn
-                id='feature-model-information'
-                :x-large='$vuetify.display.mdAndUp'
-                class='mr-2'
-                color='primary'
-                elevation='2'
-                icon
-                @click='openInformation = !openInformation'
-            >
-                <v-icon>mdi-information</v-icon>
-            </v-btn>
-            <v-btn
-                id='feature-model-constraints'
-                :x-large='$vuetify.display.mdAndUp'
-                class='mr-2'
-                color='primary'
-                data-cy='feature-model-constraints-button'
-                elevation='2'
-                icon
-                @click='openConstraints = true'
-            >
-                <v-icon>mdi-format-list-checks</v-icon>
-            </v-btn>
-        </v-card>
-                </div>
+                >
+                </feature-model-tree>
+                <v-card location='left bottom' position='fixed' variant='text'>
+                    <!-- https://github.com/ricardoaponte/vue3-spinner -->
+                    <!-- TODO correct size -->
+                    <ClipLoader :loading='true' :color='indigo' :size='500'/>
+                </v-card>
+                <v-card location='right bottom'
+                        position='fixed' variant='text'>
+                    <v-btn
+                        id='feature-model-legend'
+                        class='mr-2'
+                        color='primary'
+                        elevation='2'
+                        icon
+
+                        @click='showLegendChange'
+                    >
+                        <v-icon>mdi-map-legend</v-icon>
+                    </v-btn>
+                    <v-btn
+                        id='feature-model-information'
+                        :x-large='$vuetify.display.mdAndUp'
+                        class='mr-2'
+                        color='primary'
+                        elevation='2'
+                        icon
+                        @click='openInformation = !openInformation'
+                    >
+                        <v-icon>mdi-information</v-icon>
+                    </v-btn>
+                    <v-btn
+                        id='feature-model-constraints'
+                        :x-large='$vuetify.display.mdAndUp'
+                        class='mr-2'
+                        color='primary'
+                        data-cy='feature-model-constraints-button'
+                        elevation='2'
+                        icon
+                        @click='openConstraints = true'
+                    >
+                        <v-icon>mdi-format-list-checks</v-icon>
+                    </v-btn>
+                    <v-btn v-if='textEditor'
+                        id='convert-text-to-model'
+                        :x-large='$vuetify.display.mdAndUp'
+                        class='mr-2'
+                        color='primary'
+                        elevation='2'
+                        icon
+                        @click='convertTextToModel'
+                    >
+                        <v-icon>mdi-repeat</v-icon>
+                    </v-btn>
+                    <v-btn v-if='textEditor'
+                           id='collapse-textEditor'
+                           :x-large='$vuetify.display.mdAndUp'
+                           class='mr-2'
+                           color='primary'
+                           elevation='2'
+                           icon
+                           @click='toggleTextEditor(false)'
+                    >
+                        <v-icon>mdi-arrow-collapse-right</v-icon>
+                    </v-btn>
+                </v-card>
+            </div>
             <div class='flex-child'>
-                <FMTextEditor class='text-editor' :code='code'
+                <FMTextEditor v-if='textEditor' class='text-editor' :code='code'
                 ></FMTextEditor>
             </div>
         </div>
@@ -232,7 +262,7 @@ import beautify from 'xml-beautifier';
 import CollaborationManager from '@/classes/CollaborationManager';
 import { CommandManager } from '@/classes/Commands/CommandManager';
 import * as xmlTranspiler from '@/services/xmlTranspiler.service';
-import { jsonToXML } from '@/services/xmlTranspiler.service';
+import { jsonToXML, xmlToJson } from '@/services/xmlTranspiler.service';
 import CollaborationToolbar from '@/components/CollaborationToolbar';
 import CollaborationNameDialog from '@/components/CollaborationNameDialog';
 import CollaborationContinueEditingDialog from '@/components/CollaborationContinueEditingDialog';
@@ -248,11 +278,18 @@ import FMNavbar from '@/components/FMNavbar.vue';
 import * as view from '@/services/FeatureModel/view.service';
 import { changeFileFormat, sliceFeatureModel } from '@/classes/BackendAccess/FeatureIDEAccess';
 import FMTextEditor from '@/components/FeatureModelTextEditor/FMTextEditor.vue';
+import {ClipLoader} from 'vue3-spinner';
+import { indigo } from 'vuetify/util/colors';
 
 const appStore = useAppStore();
 
 export default {
     name: 'FeatureModel',
+    computed: {
+        indigo() {
+            return indigo
+        }
+    },
 
     components: {
         FMNavbar,
@@ -264,7 +301,8 @@ export default {
         FMTextEditor,
         Constraints,
         CollaborationNameDialog,
-        FeatureModelFactLabelBar
+        FeatureModelFactLabelBar,
+        ClipLoader
     },
 
     props: {
@@ -305,6 +343,8 @@ export default {
             showTutorial: false,
             showLegend: true,
             widthForLegend: true,
+            textEditor: true,
+            usingUVL: false,
             facts: FactLabelFactory.getEmptyFactLabel(),
             d3Data: {
                 root: undefined,
@@ -732,10 +772,43 @@ export default {
         },
 
         updateTextEditor() {
-            this.code = beautify(xmlTranspiler.jsonToXML(this.data));
-        }
-    },
+            this.code = beautify(jsonToXML(this.data));
+        },
 
+        async convertTextToModel() {
+            //TODO throbber
+            let fmData
+            if (this.usingUVL) {
+                fmData = await changeFileFormat(this.code, 'uvl', 'xml');
+            } else {
+                fmData = this.code;
+            }
+            xmlToJson(fmData, this.data);
+        },
+
+        updateTextEditorXML() {
+            //TODO throbber
+            this.code = beautify(jsonToXML(this.data));
+
+            this.usingUVL = false;
+            this.toggleTextEditor(true);
+        },
+
+        async updateTextEditorUVL() {
+            //TODO throbber
+            let fileData = jsonToXML(this.data);
+            fileData = await changeFileFormat(fileData, 'xml', 'uvl');
+            this.code = fileData;
+
+            this.usingUVL = true;
+            this.toggleTextEditor(true);
+        },
+
+        toggleTextEditor(value) {
+            this.textEditor = value;
+        }
+    }
+    //TODO implement watcher for synchronizing model changes with text change
 };
 </script>
 <style lang='scss'>
@@ -785,15 +858,15 @@ export default {
     border: 4px dotted #0058B3;
 }
 
-.flex-container{
+.flex-container {
     display: flex;
 }
 
-.flex-child{
+.flex-child {
     flex: 1;
 }
 
-.flex-child:first-child{
+.flex-child:first-child {
     flex: 2;
 }
 
