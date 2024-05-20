@@ -38,6 +38,14 @@
                                  title='Start Configurator' @click='$emit("openConf")'
                     >
                     </v-list-item>
+                    <v-list-item v-if='isFileLoaded' prepend-icon='mdi-xml'
+                                 title='Display as XML'
+                                 @click='$emit("updateTextEditorXML")'>
+                    </v-list-item>
+                    <v-list-item v-if='isFileLoaded' prepend-icon='mdi-code-tags'
+                                 title='Display as UVL'
+                                 @click='$emit("updateTextEditorUVL")'>
+                    </v-list-item>
                     <v-list-item v-if='isFileLoaded' :prepend-icon="!isSaveAvailable
                                     ? 'mdi-content-save'
                                     : 'mdi-content-save-edit'"

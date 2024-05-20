@@ -110,9 +110,12 @@
                 >
                 </feature-model-tree>
                 <v-card location='left bottom' position='fixed' variant='text'>
-                    <!-- https://github.com/ricardoaponte/vue3-spinner -->
-                    <!-- TODO correct size -->
-                    <ClipLoader :loading='true' :color='indigo' :size='500'/>
+                    <v-progress-circular v-if='throbbing'
+                        color="primary"
+                        indeterminate
+                        :size="43"
+                        :width="6"
+                    ></v-progress-circular>
                 </v-card>
                 <v-card location='right bottom'
                         position='fixed' variant='text'>
@@ -343,8 +346,9 @@ export default {
             showTutorial: false,
             showLegend: true,
             widthForLegend: true,
-            textEditor: true,
+            textEditor: false,
             usingUVL: false,
+            throbbing: false,
             facts: FactLabelFactory.getEmptyFactLabel(),
             d3Data: {
                 root: undefined,
@@ -524,7 +528,7 @@ export default {
                 const xml = beautify(data);
                 xmlTranspiler.xmlToJson(xml, this.data);
                 this.xml = xml;
-                this.updateTextEditor();
+                // this.updateTextEditor();
             }
         },
 
@@ -637,7 +641,7 @@ export default {
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
             this.updateFacts();
-            this.updateTextEditor();
+            // this.updateTextEditor();
         },
 
         updateFeatureModel() {
@@ -776,32 +780,41 @@ export default {
         },
 
         async convertTextToModel() {
-            //TODO throbber
+            this.throbbing = true;
+
             let fmData
             if (this.usingUVL) {
                 fmData = await changeFileFormat(this.code, 'uvl', 'xml');
             } else {
                 fmData = this.code;
             }
+            //TODO replace with update based on slice method
             xmlToJson(fmData, this.data);
+
+            this.throbbing = false;
         },
 
         updateTextEditorXML() {
-            //TODO throbber
+            this.throbbing = true;
+
             this.code = beautify(jsonToXML(this.data));
 
             this.usingUVL = false;
             this.toggleTextEditor(true);
+
+            this.throbbing = false;
         },
 
         async updateTextEditorUVL() {
-            //TODO throbber
+            this.throbbing = true;
             let fileData = jsonToXML(this.data);
             fileData = await changeFileFormat(fileData, 'xml', 'uvl');
             this.code = fileData;
 
             this.usingUVL = true;
             this.toggleTextEditor(true);
+
+            this.throbbing = false;
         },
 
         toggleTextEditor(value) {
