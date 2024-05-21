@@ -20,7 +20,7 @@
                 <v-timeline-item
                     v-for='(item, i) in models'
                     :key='i'
-                    dot-color='primary'
+                    :dot-color='item.hovered ? "secondary" : "primary"'
                     height='5vh'
                 >
                     <div class='text-center'>
@@ -32,7 +32,7 @@
             </v-timeline>
             <v-row>
                 <v-col cols='4'>
-                    <v-card height='80vh'>
+                    <v-card height='77.5vh'>
                         <v-card-title>
                             <v-layout class='align-center' row>
                                 <!-- Heading features -->
@@ -159,7 +159,7 @@
                                 <!-- Table with all features that are currently fitlered and searched -->
                                 <v-data-table
                                     :headers='headersFeatures'
-                                    :height="pageTableSize === -1 ? '62.5vh' : '56vh'"
+                                    :height="pageTableSize === -1 ? '60vh' : '54.5vh'"
                                     :items='featuresTrimmed'
                                     :items-per-page='pageTableSize'
                                     :search='searchFeatures'
@@ -175,7 +175,8 @@
                                     </template>
 
                                     <!-- Customization of the column NAME -->
-                                    <template v-slot:item.name='{ item }'>
+                                    <template v-slot:item.name='{ item }' >
+                                        <div @mouseover='getVersions(item)' @mouseleave='removeVersionsHover'>
                                         <v-tooltip location='bottom'>
                                             <template v-slot:activator='{ props }'>
                                                 <span v-bind='props'>{{ item.name }}</span>
@@ -183,14 +184,12 @@
                                                     <i> Abstract</i>
                                                 </template>
                                             </template>
-                                            <span>Var ID: {{ item.id }}</span>
                                         </v-tooltip>
+                                        </div>
                                     </template>
 
                                     <template v-if='pageTableSize === -1' v-slot:bottom>
                                     </template>
-
-
                                 </v-data-table>
                             </v-window-item>
                             <v-window-item key='treeView'>
@@ -214,7 +213,7 @@
                 <v-col cols='8'>
 
                     <!-- Details of the selected version -->
-                    <v-card height='80vh'>
+                    <v-card height='77.5vh'>
                         <v-card-title>Details for {{ featureModelName }}:</v-card-title>
 
                         <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints -->
@@ -256,7 +255,7 @@
                                         :headers='headersCTC'
                                         :items='filteredConstraints'
                                         fixed-header
-                                        height='62vh'
+                                        height='59.5vh'
                                         show-group-by
                                     >
 
@@ -294,7 +293,7 @@
                                         disable-pagination
                                         disable-sort
                                         fixed-header
-                                        height='72vh'
+                                        height='59.75vh'
                                         hide-default-footer
                                         single-select
                                         @click:row='redoCommand'
@@ -407,11 +406,11 @@ export default {
         },
         sortByCTC: [{ key: 'evaluation', order: 'desc' }],
         models: [
-            { title: 'Model V1', version: '1', features: '150' },
-            { title: 'Model V2', version: '2', features: '160' },
-            { title: 'Model V3', version: '3', features: '180' },
-            { title: 'Model V4', version: '4', features: '190' },
-            { title: 'Model V5', version: '5', features: '200' }
+            { title: 'Model V1', version: '1', features: '150', hovered:false },
+            { title: 'Model V2', version: '2', features: '160', hovered:false },
+            { title: 'Model V3', version: '3', features: '180', hovered:false },
+            { title: 'Model V4', version: '4', features: '190', hovered:false },
+            { title: 'Model V5', version: '5', features: '200', hovered:false }
         ],
         commandManager: new ConfiguratorManager(),
         initialResetCommand: undefined,
@@ -609,6 +608,17 @@ export default {
                 );
                 this.fmIsLoaded = false;
             }
+        },
+
+        getVersions(item, element) {
+            console.log(item)
+            console.log(element)
+            this.removeVersionsHover()
+            this.models.filter(model => model.features % 30 === 0 ).forEach(model => model.hovered = true)
+        },
+
+        removeVersionsHover(){
+            this.models.forEach(model => model.hovered = false)
         },
 
         async openFile(files) {
