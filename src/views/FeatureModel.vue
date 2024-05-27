@@ -121,11 +121,10 @@
                         position='fixed' variant='text'>
                     <v-btn
                         id='feature-model-legend'
-                        class='mr-2'
+                        class='ma-1'
                         color='primary'
                         elevation='2'
                         icon
-
                         @click='showLegendChange'
                     >
                         <v-icon>mdi-map-legend</v-icon>
@@ -133,7 +132,7 @@
                     <v-btn
                         id='feature-model-information'
                         :x-large='$vuetify.display.mdAndUp'
-                        class='mr-2'
+                        class='ma-1'
                         color='primary'
                         elevation='2'
                         icon
@@ -144,7 +143,7 @@
                     <v-btn
                         id='feature-model-constraints'
                         :x-large='$vuetify.display.mdAndUp'
-                        class='mr-2'
+                        class='ma-1'
                         color='primary'
                         data-cy='feature-model-constraints-button'
                         elevation='2'
@@ -154,20 +153,9 @@
                         <v-icon>mdi-format-list-checks</v-icon>
                     </v-btn>
                     <v-btn v-if='textEditor'
-                        id='convert-text-to-model'
-                        :x-large='$vuetify.display.mdAndUp'
-                        class='mr-2'
-                        color='primary'
-                        elevation='2'
-                        icon
-                        @click='convertTextToModel'
-                    >
-                        <v-icon>mdi-repeat</v-icon>
-                    </v-btn>
-                    <v-btn v-if='textEditor'
                            id='collapse-textEditor'
                            :x-large='$vuetify.display.mdAndUp'
-                           class='mr-2'
+                           class='ma-1'
                            color='primary'
                            elevation='2'
                            icon
@@ -178,7 +166,7 @@
                 </v-card>
             </div>
             <div class='flex-child'>
-                <FMTextEditor v-if='textEditor' class='text-editor' :code='code'
+                <FMTextEditor v-if='textEditor' class='text-editor' :code='code' @convertTextToModel='value => convertTextToModel(value)' @convertModelToText='convertModelToText'
                 ></FMTextEditor>
             </div>
         </div>
@@ -283,6 +271,7 @@ import { changeFileFormat, sliceFeatureModel } from '@/classes/BackendAccess/Fea
 import FMTextEditor from '@/components/FeatureModelTextEditor/FMTextEditor.vue';
 import {ClipLoader} from 'vue3-spinner';
 import { indigo } from 'vuetify/util/colors';
+import { UpdateModelFromTextCommand } from '@/classes/Commands/TextEditor/UpdateModelFromTextCommand';
 
 const appStore = useAppStore();
 
@@ -528,7 +517,6 @@ export default {
                 const xml = beautify(data);
                 xmlTranspiler.xmlToJson(xml, this.data);
                 this.xml = xml;
-                // this.updateTextEditor();
             }
         },
 
@@ -641,7 +629,6 @@ export default {
             xmlTranspiler.xmlToJson(xml, this.data);
             this.xml = xml;
             this.updateFacts();
-            // this.updateTextEditor();
         },
 
         updateFeatureModel() {
@@ -775,23 +762,32 @@ export default {
             update.updateSvg(this.d3Data);
         },
 
-        updateTextEditor() {
-            this.code = beautify(jsonToXML(this.data));
-        },
-
-        async convertTextToModel() {
+        async convertTextToModel(code) {
             this.throbbing = true;
 
             let fmData
             if (this.usingUVL) {
-                fmData = await changeFileFormat(this.code, 'uvl', 'xml');
+                fmData = await changeFileFormat(code, 'uvl', 'xml');
             } else {
-                fmData = this.code;
+                fmData = code;
             }
-            //TODO replace with update based on slice method
-            xmlToJson(fmData, this.data);
+            //TODO fix
+            const command = new UpdateModelFromTextCommand(
+                this,
+                fmData
+            );
+            this.featureModelCommandManager.execute(command);
+            this.updateFeatureModel();
 
             this.throbbing = false;
+        },
+
+        convertModelToText(){
+            if (this.usingUVL) {
+                this.updateTextEditorUVL();
+            } else {
+                this.updateTextEditorXML();
+            }
         },
 
         updateTextEditorXML() {
@@ -821,7 +817,6 @@ export default {
             this.textEditor = value;
         }
     }
-    //TODO implement watcher for synchronizing model changes with text change
 };
 </script>
 <style lang='scss'>
