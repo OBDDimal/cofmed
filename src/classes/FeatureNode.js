@@ -34,6 +34,9 @@ export class FeatureNode {
         this.core = false;
         this.dead = false;
         this.falseOptional = false;
+
+
+        //this.isHovered = false;
     }
 
     setDisplayName(newName ){

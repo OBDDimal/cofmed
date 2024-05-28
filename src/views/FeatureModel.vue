@@ -144,6 +144,8 @@
             </v-btn>
         </v-card>
         <feature-model-fact-label-bar
+            :data="data"
+            :d3-data="d3Data"
             :analysis='facts.analysis'
             :isOpen='openInformation'
             :metadata='facts.metadata'
@@ -256,7 +258,7 @@ export default {
         FeatureModelTree,
         Constraints,
         CollaborationNameDialog,
-        FeatureModelFactLabelBar
+        FeatureModelFactLabelBar,
     },
 
     props: {
@@ -747,4 +749,9 @@ export default {
 .choice {
     border: 4px dotted #0058B3;
 }
+
+/*
+.redText{
+    color: #FF4500;
+}*/
 </style>

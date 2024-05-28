@@ -120,6 +120,15 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
             return rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 <= 186;
         })
         .text((d3Node) => d3Data.isShortenedName ? d3Node.data.displayName : d3Node.data.name);
+    
+
+    //console.log(d3Data.root.data.isHovered);
+    //console.log(d3Node.root.data.isHovered);
+    //console.log(rectAndTextUpdate.select('text'));
+    /*console.log(rectAndTextUpdate.select('text').style("color"));
+    rectAndTextUpdate.select('text').style("color", "rgba(245, 40, 145, 0.87)");
+    console.log(rectAndTextUpdate.select('text').style("color"));*/
+
 
     // Remove old/invisible nodes.
     featureNode.exit().remove();
