@@ -12,6 +12,9 @@
         @toggleDirection='toggleDirection'
     >
     </view-menu>
+    <div>
+        {{featureModel.name}}
+    </div>
     <div id='svg-container'></div>
 </template>
 
@@ -41,7 +44,7 @@ export default {
     name: 'FeatureModelViewer',
 
     props: {
-        featureModel: FeatureModelSolo,
+        featureModel: undefined,
         fmIsLoaded: Boolean,
         dark: Boolean
     },

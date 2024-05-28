@@ -16,18 +16,20 @@
     ></conf-navbar>
     <v-container :fluid='true'>
         <template v-if='fmIsLoaded'>
-            <v-timeline direction='horizontal' side='start' density='comfortable'>
+            <v-timeline density='comfortable' direction='horizontal' side='start'>
                 <v-timeline-item
                     v-for='(item, i) in models'
                     :key='i'
                     :dot-color='item.hovered ? "secondary" : "primary"'
+                    :size='models.size > 20 ? "5" : "small"'
                     height='5vh'
                 >
+                    <template v-slot:icon>
+                        <v-btn density='comfortable' height='2vh' :color='item.hovered ? "secondary" : "primary"' @click='changeFeatureModel(item)' rounded='xl'></v-btn>
+                    </template>
                     <div class='text-center'>
-                        {{ item.title }} <br>
-                        {{ item.version }}
+                        {{ item.title }}
                     </div>
-
                 </v-timeline-item>
             </v-timeline>
             <v-row>
@@ -37,7 +39,7 @@
                             <v-layout class='align-center' row>
                                 <!-- Heading features -->
                                 <div class='mr-2'>
-                                    <span>Features ({{ featureModelSolo.features?.length }}) </span>
+                                    <span>Features ({{ featureModelMulti.features?.length }}) </span>
                                 </div>
 
                                 <!-- Statistics about the features as tooltip-->
@@ -52,40 +54,40 @@
                                         </tr>
                                         <tr>
                                             <td>All</td>
-                                            <td>{{ featureModelSolo.features?.length }}</td>
+                                            <td>{{ featureModelMulti.features?.length }}</td>
                                         </tr>
                                         <tr>
                                             <td>Unselected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.Unselected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.Unselected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Explicitly selected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ExplicitlySelected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.ExplicitlySelected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Explicitly deselected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ExplicitlyDeselected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.ExplicitlyDeselected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Implicitly selected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ImplicitlySelected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.ImplicitlySelected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Implicitly deselected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ImplicitlyDeselected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.ImplicitlyDeselected)
                                                 }}
                                             </td>
                                         </tr>
@@ -175,16 +177,16 @@
                                     </template>
 
                                     <!-- Customization of the column NAME -->
-                                    <template v-slot:item.name='{ item }' >
-                                        <div @mouseover='getVersions(item)' @mouseleave='removeVersionsHover'>
-                                        <v-tooltip location='bottom'>
-                                            <template v-slot:activator='{ props }'>
-                                                <span v-bind='props'>{{ item.name }}</span>
-                                                <template v-if='item.isAbstract'>
-                                                    <i> Abstract</i>
+                                    <template v-slot:item.name='{ item }'>
+                                        <div @mouseleave='removeVersionsHover' @mouseover='getVersions(item)'>
+                                            <v-tooltip location='bottom'>
+                                                <template v-slot:activator='{ props }'>
+                                                    <span v-bind='props'>{{ item.name }}</span>
+                                                    <template v-if='item.isAbstract'>
+                                                        <i> Abstract</i>
+                                                    </template>
                                                 </template>
-                                            </template>
-                                        </v-tooltip>
+                                            </v-tooltip>
                                         </div>
                                     </template>
 
@@ -194,7 +196,7 @@
                             </v-window-item>
                             <v-window-item key='treeView'>
                                 <v-treeview
-                                    :items='[featureModelSolo.root]'
+                                    :items='[featureModelMulti.root]'
                                     height='72vh'
                                 >
                                 </v-treeview>
@@ -223,7 +225,7 @@
                             <v-tab key='conf'>Configuration History</v-tab>
                         </v-tabs>
 
-                        <v-card-text v-if='featureModelSolo?.root'>
+                        <v-card-text v-if='featureModelMulti?.root'>
                             <v-window v-model='tabsSecondColumn'>
 
                                 <!-- Feature Model Viewer -->
@@ -231,7 +233,7 @@
 
                                     <feature-model-viewer-solo ref='featureModelViewerSolo'
                                                                :dark='dark'
-                                                               :feature-model='featureModelSolo'
+                                                               :feature-model='featureModelMulti'
                                                                :fm-is-loaded='fmIsLoaded'
                                                                @select='(name) => searchFeatures = name'
                                     ></feature-model-viewer-solo>
@@ -343,6 +345,7 @@
         id='filePicker'
         accept='.xml, .uvl, .dimacs'
         class='d-none'
+        multiple
         type='file'
         @change='onFileInputChanged'
     >
@@ -350,6 +353,7 @@
         id='filePickerConf'
         accept='.xml'
         class='d-none'
+        multiple
         type='file'
         @change='openConfig'
     >
@@ -374,6 +378,7 @@ import { decisionPropagationFL, pingFL } from '@/classes/BackendAccess/FlaskAcce
 import { changeFileFormat, decisionPropagationFIDE, pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
 import beautify from 'xml-beautifier';
 import ConfNavbar from '@/components/Configurator/ConfNavbar.vue';
+import { FeatureModelMulti } from '@/classes/Configurator/FeatureModelMulti';
 
 const appStore = useAppStore();
 export default {
@@ -405,16 +410,10 @@ export default {
             }
         },
         sortByCTC: [{ key: 'evaluation', order: 'desc' }],
-        models: [
-            { title: 'Model V1', version: '1', features: '150', hovered:false },
-            { title: 'Model V2', version: '2', features: '160', hovered:false },
-            { title: 'Model V3', version: '3', features: '180', hovered:false },
-            { title: 'Model V4', version: '4', features: '190', hovered:false },
-            { title: 'Model V5', version: '5', features: '200', hovered:false }
-        ],
+        models: undefined,
         commandManager: new ConfiguratorManager(),
         initialResetCommand: undefined,
-        featureModelSolo: FeatureModelSolo,
+        featureModelMulti: FeatureModelMulti,
         fmIsLoaded: false,
         dragover: false,
         featureModelName: '',
@@ -565,16 +564,7 @@ export default {
         },
 
         onFileInputChanged(e) {
-            if (e.target.files.length > 1) {
-                appStore.updateSnackbar(
-                    'Cannot load more than one feature model.',
-                    'error',
-                    5000,
-                    true
-                );
-            } else {
-                this.openFile(e.target.files);
-            }
+            this.openFile(e.target.files);
         },
 
         async openFromLocalStorage() {
@@ -610,77 +600,46 @@ export default {
             }
         },
 
-        getVersions(item, element) {
-            console.log(item)
-            console.log(element)
-            this.removeVersionsHover()
-            this.models.filter(model => model.features % 30 === 0 ).forEach(model => model.hovered = true)
+        getVersions(item) {
+            this.removeVersionsHover();
+            this.models.filter(model => model.features.map(feature => feature.name).includes(item.name)).forEach(model => model.hovered = true);
         },
 
-        removeVersionsHover(){
-            this.models.forEach(model => model.hovered = false)
+        removeVersionsHover() {
+            this.models.forEach(model => model.hovered = false);
         },
 
         async openFile(files) {
             this.fmIsLoaded = true;
-            let data = await files[0].text();
-            const fileExtension = files[0].name.split('.').pop();
-            if (fileExtension === 'uvl' || fileExtension === 'dimacs') {
-                data = await changeFileFormat(data, fileExtension, 'featureIde');
-            } else if (fileExtension !== 'xml') {
-                appStore.updateSnackbar(
-                    'Could not load the feature model, because filetype is not supported.',
-                    'error',
-                    3000,
-                    true
-                );
-                return;
-            }
-            if (data === 'bad') {
-                appStore.updateSnackbar(
-                    'Could not convert the feature model, because feature model is not supported by FeatureIDE.',
-                    'error',
-                    3000,
-                    true
-                );
-            } else if (data === '') {
-                appStore.updateSnackbar(
-                    'Cannot open non-XML feature model as the FeatureIDE Service is down.',
-                    'error',
-                    3000,
-                    true
-                );
-            } else {
-                try {
-                    this.xml = data;
-                    const featureModelSolo = FeatureModelSolo.loadXmlDataFromFile(this.xml);
-                    this.commandManager = new ConfiguratorManager();
-                    this.features = featureModelSolo.features;
-                    this.updateFeatures();
-                    this.featureModelName = files[0].name.slice(0, files[0].name.length - 4);
-                    featureModelSolo.name = this.featureModelName;
-                    this.allConstraints = featureModelSolo.constraints.map((e) => ({
-                        constraint: e,
-                        formula: e.toList(),
-                        evaluation: e.evaluate()
-                    }));
-                    this.filteredConstraints = this.allConstraints;
-                    this.featureModelSolo = featureModelSolo;
-                    const selectionData = await this.getSelectionDataFromAPI();
-                    this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
-                    this.initialResetCommand.execute();
-                } catch (e) {
-                    console.log(e);
-                    appStore.updateSnackbar(
-                        'Could not load the feature model.',
-                        'error',
-                        5000,
-                        true
-                    );
-                    this.fmIsLoaded = false;
+            this.models = [];
+            try {
+                for (let i = 0; i < files.length; i++) {
+                    let text = await files[i].text();
+                    let featureModelMulti = FeatureModelMulti.loadXmlDataFromFile(text, files[i].name.slice(0, files[i].name.length - 4));
+                    this.models.push(featureModelMulti);
                 }
-                this.showOpenDialog = false;
+                this.xml = this.models[0].xml;
+                this.commandManager = new ConfiguratorManager();
+                this.features = this.models.map(model => model.features);
+                this.updateFeatures();
+                this.allConstraints = this.models[0].constraints.map((e) => ({
+                    constraint: e,
+                    formula: e.toList(),
+                    evaluation: e.evaluate()
+                }));
+                this.filteredConstraints = this.allConstraints;
+                this.featureModelMulti = this.models[0];
+            } catch (e) {
+                console.log(e);
+                appStore.updateSnackbar(
+                    'Could not load the feature model.',
+                    'error',
+                    5000,
+                    true
+                );
+                this.fmIsLoaded = false;
             }
+            this.showOpenDialog = false;
         },
 
         async openConfig(e) {
@@ -726,14 +685,16 @@ export default {
         },
 
         updateFeatures() {
-            let returnFeatures = this.features;
-            if (!this.showAbstractFeatures) {
+            let returnFeatures = new Set(this.features.flat());
+
+            /*if (!this.showAbstractFeatures) {
                 returnFeatures = returnFeatures.filter((f) => !f.isAbstract);
             }
             if (this.showOpenFeatures) {
                 returnFeatures = returnFeatures.filter((f) => f.open != null);
-            }
-            this.featuresTrimmed = returnFeatures;
+            }*/
+
+            this.featuresTrimmed = Array.from(returnFeatures);
         },
 
         async changeService(boolean) {
@@ -764,6 +725,18 @@ export default {
                     this.serviceIsWorking = true;
                 }
             }
+        },
+
+        changeFeatureModel(item) {
+
+            this.xml = item.xml;
+            this.allConstraints = item.constraints.map((e) => ({
+                constraint: e,
+                formula: e.toList(),
+                evaluation: e.evaluate()
+            }));
+            this.filteredConstraints = this.allConstraints;
+            this.featureModelMulti = item;
         },
 
         getSelection() {
@@ -970,7 +943,7 @@ export default {
 
     computed: {
         it() {
-            return it
+            return it;
         },
         tr() {
             return tr;
@@ -985,6 +958,9 @@ export default {
         },
 
         pageTableSize() {
+            if (this.featuresTrimmed === undefined) {
+                return 15;
+            }
             return this.featuresTrimmed.length < 20 ? -1 : 15;
         },
 
