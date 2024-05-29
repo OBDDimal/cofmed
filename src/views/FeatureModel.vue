@@ -78,6 +78,14 @@
     <div v-else>
         <div class='flex-container'>
             <div class='flex-child'>
+                <FMTextEditor v-if='textEditor'
+                              class='text-editor'
+                              :code='code'
+                              @convertTextToModel='value => convertTextToModel(value)'
+                              @convertModelToText='convertModelToText'
+                ></FMTextEditor>
+            </div>
+            <div class='flex-child'>
                 <feature-model-tree
                     v-if='data.rootNode'
                     :key='reloadKey'
@@ -111,10 +119,11 @@
                 </feature-model-tree>
                 <v-card location='left bottom' position='fixed' variant='text'>
                     <v-progress-circular v-if='throbbing'
-                        color="primary"
-                        indeterminate
-                        :size="43"
-                        :width="6"
+                                         color="primary"
+                                         class="ma-1"
+                                         indeterminate
+                                         :size="43"
+                                         :width="6"
                     ></v-progress-circular>
                 </v-card>
                 <v-card location='right bottom'
@@ -164,10 +173,6 @@
                         <v-icon>mdi-arrow-collapse-right</v-icon>
                     </v-btn>
                 </v-card>
-            </div>
-            <div class='flex-child'>
-                <FMTextEditor v-if='textEditor' class='text-editor' :code='code' @convertTextToModel='value => convertTextToModel(value)' @convertModelToText='convertModelToText'
-                ></FMTextEditor>
             </div>
         </div>
         <feature-model-fact-label-bar
@@ -269,7 +274,7 @@ import FMNavbar from '@/components/FMNavbar.vue';
 import * as view from '@/services/FeatureModel/view.service';
 import { changeFileFormat, sliceFeatureModel } from '@/classes/BackendAccess/FeatureIDEAccess';
 import FMTextEditor from '@/components/FeatureModelTextEditor/FMTextEditor.vue';
-import {ClipLoader} from 'vue3-spinner';
+import { ClipLoader } from 'vue3-spinner';
 import { indigo } from 'vuetify/util/colors';
 import { UpdateModelFromTextCommand } from '@/classes/Commands/TextEditor/UpdateModelFromTextCommand';
 
@@ -279,7 +284,7 @@ export default {
     name: 'FeatureModel',
     computed: {
         indigo() {
-            return indigo
+            return indigo;
         }
     },
 
@@ -377,7 +382,7 @@ export default {
                 direction: 'v', // h = horizontally, v = vertically
                 maxHorizontallyLevelWidth: [],
                 featureModelTree: undefined,
-                componentKey: 0,
+                componentKey: 0
             }
         };
     },
@@ -422,7 +427,7 @@ export default {
         this.checkService();
 
         // Start tutorial mode if it has not been completed before
-        this.showTutorial = !localStorage.featureModelTutorialCompleted;
+        //this.showTutorial = !localStorage.featureModelTutorialCompleted;
         this.updateFacts();
     },
 
@@ -643,9 +648,9 @@ export default {
             let fileData = jsonToXML(this.data);
             let bb;
 
-            if(filetype !== "xml"){
-                fileData = await changeFileFormat(fileData, "xml", filetype);
-                console.log(fileData)
+            if (filetype !== 'xml') {
+                fileData = await changeFileFormat(fileData, 'xml', filetype);
+                console.log(fileData);
                 bb = new Blob([fileData]);
             } else {
                 bb = new Blob([fileData], { type: 'application/xml' });
@@ -765,24 +770,29 @@ export default {
         async convertTextToModel(code) {
             this.throbbing = true;
 
-            let fmData
-            if (this.usingUVL) {
-                fmData = await changeFileFormat(code, 'uvl', 'xml');
-            } else {
-                fmData = code;
+            try {
+                let fmData;
+                if (this.usingUVL) {
+                    fmData = await changeFileFormat(code, 'uvl', 'xml');
+                } else {
+                    fmData = code;
+                }
+                const command = new UpdateModelFromTextCommand(
+                    this,
+                    fmData
+                );
+                this.featureModelCommandManager.execute(command);
+                this.updateFeatureModel();
+            } catch (e) {
+                //TODO get xmltranspiler error to this point instead of catching it on the way
+                console.error(e);
+                appStore.updateSnackbar('Could not parse text', 'error', 5000, true);
             }
-            //TODO fix
-            const command = new UpdateModelFromTextCommand(
-                this,
-                fmData
-            );
-            this.featureModelCommandManager.execute(command);
-            this.updateFeatureModel();
 
             this.throbbing = false;
         },
 
-        convertModelToText(){
+        convertModelToText() {
             if (this.usingUVL) {
                 this.updateTextEditorUVL();
             } else {
@@ -871,11 +881,11 @@ export default {
 }
 
 .flex-child {
-    flex: 1;
+    flex: 2;
 }
 
 .flex-child:first-child {
-    flex: 2;
+    flex: 1;
 }
 
 .text-editor {
