@@ -1,4 +1,7 @@
 <template>
+    <div>
+        {{featureModel.name}}
+    </div>
     <view-menu
         :direction='d3Data.direction'
         :is-file-loaded='fmIsLoaded'
@@ -12,9 +15,6 @@
         @toggleDirection='toggleDirection'
     >
     </view-menu>
-    <div>
-        {{featureModel.name}}
-    </div>
     <div id='svg-container'></div>
 </template>
 

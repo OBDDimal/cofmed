@@ -2,9 +2,11 @@
     <conf-navbar
         :command-manager='commandManager'
         :file-is-loaded='fmIsLoaded'
+        :models='models'
         :service-is-feature-i-d-e='serviceIsFeatureIDE'
         :service-is-flask='!serviceIsFeatureIDE'
         :service-is-working='serviceIsWorking'
+        :timelineBias='timelineBias'
         @download='downloadXML'
         @localStorage='save'
         @openConf='openFilePickerConf'
@@ -13,19 +15,40 @@
         @reset='resetCommand'
         @theme='dark = !dark'
         @change-service='(boolean) => changeService(boolean)'
+        @timeline='(side) => changeTimeline(side)'
     ></conf-navbar>
     <v-container :fluid='true'>
         <template v-if='fmIsLoaded'>
-            <v-timeline density='comfortable' direction='horizontal' side='start'>
+            <v-timeline v-if='models.length > 15' density='comfortable' direction='horizontal' side='start'>
                 <v-timeline-item
-                    v-for='(item, i) in models'
+                    v-for='(item, i) in TrimmedModels'
                     :key='i'
-                    :dot-color='item.hovered ? "secondary" : "primary"'
-                    :size='models.size > 20 ? "5" : "small"'
+                    :dot-color='item.hovered ? "selected" : "primary"'
+                    :size='i % 5 !== 0  ? "" : "small"'
                     height='5vh'
                 >
                     <template v-slot:icon>
-                        <v-btn density='comfortable' height='2vh' :color='item.hovered ? "secondary" : "primary"' @click='changeFeatureModel(item)' rounded='xl'></v-btn>
+                        <v-btn v-if='i % 5 === 0' :color='item.hovered ? "selected" : "primary"' :icon='true'
+                               height='2.2vh' @click='changeFeatureModel(item)'></v-btn>
+                        <v-btn v-else :color='item.hovered ? "selected" : "primary"' :icon='true' height='2.2vh'
+                               width='0.01vh' @click='changeFeatureModel(item)'></v-btn>
+                    </template>
+                    <div v-if='i % 5 === 0' class='text-center'>
+                        {{ item.title }}
+                    </div>
+                </v-timeline-item>
+            </v-timeline>
+            <v-timeline v-else density='comfortable' direction='horizontal' side='start'>
+                <v-timeline-item
+                    v-for='(item, i) in models'
+                    :key='i'
+                    :dot-color='item.hovered ? "selected" : "primary"'
+                    height='5vh'
+                    size='small'
+                >
+                    <template v-slot:icon>
+                        <v-btn :color='item.hovered ? "selected" : "primary"' :icon='true' height='2.2vh'
+                               @click='changeFeatureModel(item)'></v-btn>
                     </template>
                     <div class='text-center'>
                         {{ item.title }}
@@ -39,7 +62,7 @@
                             <v-layout class='align-center' row>
                                 <!-- Heading features -->
                                 <div class='mr-2'>
-                                    <span>Features ({{ featureModelMulti.features?.length }}) </span>
+                                    <span>Features ({{ featuresTrimmed?.length }}) </span>
                                 </div>
 
                                 <!-- Statistics about the features as tooltip-->
@@ -93,7 +116,7 @@
                                         </tr>
                                     </table>
                                 </v-tooltip>
-                                <div style='width: 20rem'></div>
+                                <div style='width: 18rem'></div>
                                 <v-checkbox
                                     v-model='validCheckbox'
                                     density='compact'
@@ -433,7 +456,8 @@ export default {
         serviceIsWorking: false,
         serviceIsFeatureIDE: false,
         validCheckbox: true,
-        xml: undefined
+        xml: undefined,
+        timelineBias: 0,
     }),
 
     props: {
@@ -938,7 +962,15 @@ export default {
                 this.serviceIsWorking = true;
             }
             return result;
-        }
+        },
+
+        changeTimeline(side) {
+            if (side){
+                this.timelineBias += 20;
+            } else {
+                this.timelineBias -= 20;
+            }
+        },
     },
 
     computed: {
@@ -951,6 +983,11 @@ export default {
 
         FeatureNodeConstraintItem() {
             return FeatureNodeConstraintItem;
+        },
+
+        TrimmedModels() {
+            let trimmed = this.models.slice(this.timelineBias);
+            return trimmed;
         },
 
         SelectionState() {

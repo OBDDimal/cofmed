@@ -70,6 +70,25 @@
             >
                 Redo
             </v-btn>
+
+            <v-btn
+                    class="mx-1"
+                    prepend-icon="mdi-arrow-left-thin"
+                    v-if='(properties.models?.length > 20)'
+                    :disabled="properties.timelineBias === 0"
+                    @click='$emit("timeline", false)'
+            >
+                Timeline Left
+            </v-btn>
+            <v-btn
+                    class="mx-1"
+                    append-icon="mdi-arrow-right-thin"
+                    v-if='(properties.models?.length > 20)'
+                    :disabled="(properties.timelineBias+20) > properties.models?.length"
+                    @click='$emit("timeline", true)'
+            >
+                Timeline Right
+            </v-btn>
             <v-menu
                     open-on-hover
             >
@@ -115,7 +134,7 @@
                     @click="toggleTheme"
             >
             </v-btn>
-            <v-btn v-fullscreen icon>
+            <v-btn >
                 <v-icon> mdi-fullscreen</v-icon>
             </v-btn>
             <v-btn
@@ -146,7 +165,7 @@ import {ref} from 'vue';
 const theme = useTheme();
 const drawer = ref(false);
 
-const emit = defineEmits(['localStorage', 'download', 'openFile', 'openConf', 'reset', 'theme', 'changeService', 'openEdit'])
+const emit = defineEmits(['localStorage', 'download', 'openFile', 'openConf', 'reset', 'theme', 'changeService', 'openEdit', 'timeline'])
 
 const properties = defineProps({
     fileIsLoaded: Boolean,
@@ -154,6 +173,8 @@ const properties = defineProps({
     serviceIsFeatureIDE: Boolean,
     serviceIsFlask: Boolean,
     commandManager: undefined,
+    models: undefined,
+    timelineBias: Number,
 })
 
 function toggleTheme() {
