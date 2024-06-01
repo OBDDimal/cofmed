@@ -84,7 +84,7 @@
                     class="mx-1"
                     append-icon="mdi-arrow-right-thin"
                     v-if='(properties.models?.length > 20)'
-                    :disabled="(properties.timelineBias+20) > properties.models?.length"
+                    :disabled="(properties.timelineBias+30) > properties.models?.length"
                     @click='$emit("timeline", true)'
             >
                 Timeline Right
