@@ -1,5 +1,6 @@
 <script>
 import MonacoEditor from 'monaco-editor-vue3';
+import { configureMonacoWorkers, runClient } from '@/services/monacoEditorLanguageService';
 
 export default {
     components: {
@@ -11,6 +12,10 @@ export default {
 
     created() {
         this.textCode = this.code
+
+
+        configureMonacoWorkers()
+        runClient()
     },
 
     data() {
@@ -62,12 +67,11 @@ export default {
             >Convert Text to Model</v-tooltip>
         </v-btn>
     </v-col>
-    <MonacoEditor
-        theme="vs-dark"
-        :options="options"
-        language="xml"
-        v-model:value="textCode"
-    ></MonacoEditor>
+    <div id='monaco-editor-root' style="width:800px;height:600px;border:1px solid grey">
+
+    </div>
+
+
 </template>
 
 <style scoped></style>
