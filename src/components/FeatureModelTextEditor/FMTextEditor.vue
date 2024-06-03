@@ -1,11 +1,9 @@
 <script>
-import MonacoEditor from 'monaco-editor-vue3';
 import { configureMonacoWorkers, runClient } from '@/services/monacoEditorLanguageService';
+import { editor } from 'monaco-editor';
 
 export default {
-    components: {
-        MonacoEditor,
-    },
+
     props: {
         code: undefined,
     },
@@ -16,6 +14,8 @@ export default {
 
         configureMonacoWorkers()
         runClient()
+        // editor.getModels()[0].getValue()
+        // editor.getModels()[0].setValue()
     },
 
     data() {
