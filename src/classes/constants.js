@@ -1,3 +1,5 @@
+import * as monaco from 'monaco-editor';
+
 export const SVG_MARGIN = {top: 20, right: 90, bottom: 20, left: 90};
 
 export const RECT_MARGIN = {right: 8, left: 8};
@@ -95,3 +97,25 @@ export const LEGEND_ITEM_HEIGHT_PHONE=25;
 export const LEGEND_ITEM_TEXT_OFFSET_PHONE=55;
 export const LEGEND_IMG_WIDTH_PHONE=32;
 export const LEGEND_IMG_HEIGHT_PHONE=10;
+
+
+export const HELLO_LANG_ID = "uvl";
+export const HELLO_LANG_EXTENSION = ".uvl";
+export const MONACO_OPTIONS = {
+    autoIndent: "full",
+    automaticLayout: true,
+    contextmenu: true,
+    fontFamily: "monospace",
+    fontSize: 13,
+    lineHeight: 24,
+    hideCursorInOverviewRuler: true,
+    matchBrackets: "always",
+    minimap: {
+        enabled: false,
+    },
+    readOnly: false,
+    scrollbar: {
+        horizontalSliderSize: 4,
+        verticalSliderSize: 18,
+    },
+};

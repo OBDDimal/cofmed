@@ -29,8 +29,11 @@
     "webfontloader": "^1.0.0",
     "xml-beautifier": "^0.5.0",
     "monaco-editor-vue3": "^0.1.8",
-    "monaco-editor": "^0.46.0",
-    "vue3-spinner": "^0.0.17"
+    "monaco-editor": "0.36.1",
+    "vue3-spinner": "^0.0.17",
+    "monaco-languageclient": "5.0.1",
+    "vscode-ws-jsonrpc":"^3.3.1",
+    "vscode-languageclient": "8.0.2"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^3.0.3",
