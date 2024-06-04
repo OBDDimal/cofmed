@@ -950,6 +950,7 @@ export default {
 
         async setStartService() {
             let result = await pingFL();
+            console.log(result)
             if (result) {
                 this.serviceIsFeatureIDE = false;
                 this.serviceIsWorking = true;

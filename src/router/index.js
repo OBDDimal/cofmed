@@ -31,11 +31,11 @@ const routes = [
     },
     {
         path: '/configuratorMulti/:id?',
-        name: 'Configurator',
+        name: 'ConfiguratorMulti',
         props: true,
         component: () => import('@/views/FeatureModelMultiConfigurator.vue'),
         meta: {
-            title: 'Configurator',
+            title: 'ConfiguratorMulti',
         },
     },
 ];
