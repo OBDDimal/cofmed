@@ -1,6 +1,13 @@
 import os
 from os import path
 from flask import Flask, flash, request, Response, jsonify
+from flask_cors import CORS, cross_origin
+
+app = Flask(__name__)
+
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
 from flask_caching import Cache
 
 from werkzeug.utils import secure_filename
@@ -35,6 +42,7 @@ solvers = dict()
 def index():
     return Response("Flask Analysis Backend Running", status = 200)
 
+
 def get_variable_mapping(formula):
 
     mapping = dict()
@@ -50,6 +58,7 @@ def get_variable_mapping(formula):
             raise ValueError(f"malformed comment: \"{comment}\"")
 
     return mapping, backmap
+
 
 def ids2names(self, ls):
 
@@ -93,6 +102,7 @@ def names2ids(self, ls):
 
 
 @app.route('/register_formula', methods = ["POST"])
+@cross_origin()
 def register_file():
     if "file" not in request.files:
         flash("no file supplied")
@@ -134,6 +144,7 @@ def register_file():
 
 
 @app.route('/view_formula/<ident>', methods = ["GET", "POST"])
+@cross_origin()
 def view_formula(ident):
 
     with open(path.join(UPLOAD_FOLDER, ident)) as file:
@@ -144,6 +155,7 @@ def view_formula(ident):
 
 @app.route('/analysis/sat/<ident>', defaults = dict(raw = False), methods = ["POST"])
 @app.route('/analysis/sat/<ident>/raw', defaults = dict(raw = True), methods = ["POST"])
+@cross_origin()
 def verify_config(ident, raw = True):
 
     data = assure_json(request)
@@ -179,8 +191,10 @@ def temp_config(config, x):
 
     return config
 
+
 @app.route('/analysis/dp/<ident>', defaults = dict(raw = False), methods = ["POST"])
 @app.route('/analysis/dp/<ident>/raw', defaults = dict(raw = True), methods = ["POST"])
+@cross_origin()
 def dp(ident, raw = True):
 
     data = assure_json(request)
@@ -222,6 +236,7 @@ def dp(ident, raw = True):
 
 @app.route('/analysis/deadcore/<ident>', defaults = dict(raw = False), methods = ["POST"])
 @app.route('/analysis/deadcore/<ident>/raw', defaults = dict(raw = True), methods = ["POST"])
+@cross_origin()
 @cache.cached()
 def deadcore(ident, raw = True):
     
@@ -273,6 +288,7 @@ def deadcore(ident, raw = True):
     }
 
     return jsonify(data), 200
+
 
 @app.route('/analysis/count_approx/<ident>', defaults = dict(raw = False), methods = ["POST"])
 @app.route('/analysis/count_approx/<ident>/raw', defaults = dict(raw = True), methods = ["POST"])

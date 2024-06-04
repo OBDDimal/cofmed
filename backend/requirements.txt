@@ -12,6 +12,7 @@ flamapy-fm==1.1.3
 flamapy-sat==1.1.7
 Flask==3.0.0
 Flask-Caching==2.1.0
+Flask-Cors==4.0.1
 hug==2.6.1
 idna==3.4
 itsdangerous==2.1.2
