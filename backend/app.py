@@ -39,6 +39,7 @@ solvers = dict()
 
 
 @app.route('/', methods = ["GET", "POST"])
+@cross_origin()
 def index():
     return Response("Flask Analysis Backend Running", status = 200)
 

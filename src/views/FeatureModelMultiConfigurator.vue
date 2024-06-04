@@ -954,7 +954,7 @@ export default {
             if (result) {
                 this.serviceIsFeatureIDE = false;
                 this.serviceIsWorking = true;
-                return;
+                return result;
             }
 
             result = await pingFIDE();
