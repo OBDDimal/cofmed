@@ -8,8 +8,6 @@ app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-from flask_caching import Cache
-
 from werkzeug.utils import secure_filename
 
 from pysat.formula import CNF
@@ -17,26 +15,34 @@ from pysat.solvers import Solver
 
 from pysat.allies.approxmc import Counter
 
+import tempfile
 from tempfile import NamedTemporaryFile
 
 from copy import copy
 import re
 
-from flamapy.metamodels.fm_metamodel.transformations import FeatureIDEReader
-from flamapy.metamodels.pysat_metamodel.transformations import FmToPysat, DimacsWriter
+import single_model
+from single_model import Model
+from multi_model import History
+
+from redislite import Redis
+redis_connection = Redis('/tmp/redis.db')
+
+import random
+
+### Preliminaries ---------------------------------------------------------------------------------
 
 UPLOAD_FOLDER = '/tmp/'
-
-cache = Cache(config={'CACHE_TYPE': 'SimpleCache'})
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.secret_key = os.urandom(32)
 
-cache.init_app(app)
-
 solvers = dict()
+histories = dict()
 
+
+### Default Routes  -------------------------------------------------------------------------------
 
 @app.route('/', methods = ["GET", "POST"])
 @cross_origin()
@@ -44,63 +50,7 @@ def index():
     return Response("Flask Analysis Backend Running", status = 200)
 
 
-def get_variable_mapping(formula):
-
-    mapping = dict()
-    backmap = dict()
-    p = re.compile(r"c\s+(?P<id>\d+)\s+(?P<name>.+)")
-
-    for comment in formula.comments:
-        comment = comment.strip()
-        if m := p.match(comment):
-            mapping[int(m["id"])] = m["name"]
-            backmap[m["name"]] = int(m["id"])
-        else:
-            raise ValueError(f"malformed comment: \"{comment}\"")
-
-    return mapping, backmap
-
-
-def ids2names(self, ls):
-
-    mapping = self.mapping
-
-    if len(ls) == 0:
-        return ls
-
-    if type(ls[0]) == list:
-        return [ids2names(l) for l in ls]
-    elif type(ls[0]) == int:
-        return [mapping[abs(i)] for i in ls]
-    else:
-        raise ValueError(f"expected [int] or [[int]] but {ls}")
-
-
-def names2ids(self, ls):
-
-    mapping = self.backmap
-
-    if len(ls) == 0:
-        return ls
-
-    if type(ls[0]) == list:
-        return [names2ids(l) for l in ls]
-    elif type(ls[0]) == str:
-
-        xs = []
-
-        for feat in ls:
-            if feat.startswith("!"):
-                x = -mapping[feat[1:]]
-            else:
-                x = mapping[feat]
-
-            xs.append(x)
-
-        return xs
-    else:
-        raise ValueError(f"expected [str] or [[str]] but {ls}")
-
+### Single Model Routes ---------------------------------------------------------------------------
 
 @app.route('/register_formula', methods = ["POST"])
 @cross_origin()
@@ -116,35 +66,23 @@ def register_file():
         return Response("no file supplied", status = 422)
 
     filename = secure_filename(file.filename)
-    _, ext = path.splitext(filename)
 
-    persname = NamedTemporaryFile(dir = UPLOAD_FOLDER).name
+    if app.debug:
+        persname = "/tmp/test"
+    else:
+        persname = NamedTemporaryFile(dir = UPLOAD_FOLDER).name
+    
     file.save(persname)
 
-    if ext == ".xml":
-        model = FeatureIDEReader(persname).transform()
-        model = FmToPysat(model).transform()
-        DimacsWriter(persname, model).transform()
+    try:        
+        model = Model(persname)
 
-    ident = path.basename(persname)
-
-    try:
-        formula = CNF(from_file = persname)
-        solvers[ident] = Solver(bootstrap_with = formula)
-
-        m, b = get_variable_mapping(formula)
-
-        formula.mapping = m
-        formula.backmap = b
-        
-        cache.set(f"{ident}", formula)
-
-        return Response(ident, status = 200)
+        return Response(model.ident, status = 200)
     except ValueError:
-        return Response("invalid CNF", status = 417)
+        return Response("Invalid CNF", status = 417)
 
 
-@app.route('/view_formula/<ident>', methods = ["GET", "POST"])
+@app.route('/formula/<ident>', methods = ["GET", "POST"])
 @cross_origin()
 def view_formula(ident):
 
@@ -154,34 +92,34 @@ def view_formula(ident):
     return Response(data, status = 200)
 
 
-@app.route('/analysis/sat/<ident>', defaults = dict(raw = False), methods = ["POST"])
-@app.route('/analysis/sat/<ident>/raw', defaults = dict(raw = True), methods = ["POST"])
+@app.route('/formula/<ident>/verify', defaults = dict(raw = False), methods = ["POST"])
+@app.route('/formula/<ident>/verify/raw', defaults = dict(raw = True), methods = ["POST"])
 @cross_origin()
 def verify_config(ident, raw = True):
 
     data = assure_json(request)
 
-    formula, r = assure_formula(ident)
-    if formula is None:
+    model, r = assure_formula(ident)
+    if model is None:
         return r
 
-    config, r = assure_config(config, formula, raw)
+    config = data.get("config", None)
+    config, r = assure_config(config, model, raw)
     if config is None:
         return r
 
-    if (solver := solvers.get(ident)) is None:
-        solver = Solver(bootstrap_with = formula)
+    solver = model.solver
 
     if solver.solve(config):
         if raw:
             data = dict(valid = True, solution = solver.get_model())
         else:
-            data = dict(valid = True, solution = formula.ids2names(solver.get_model()))
+            data = dict(valid = True, solution = model.convert_ids2names(solver.get_model()))
     else:        
         if raw:
             data = dict(valid = False, refutation = solver.get_core())
         else:
-            data = dict(valid = False, refutation = formula.ids2names(solver.get_core()))
+            data = dict(valid = False, refutation = model.convert_ids2names(solver.get_core()))
 
     return jsonify(data), 200
 
@@ -193,120 +131,66 @@ def temp_config(config, x):
     return config
 
 
-@app.route('/analysis/dp/<ident>', defaults = dict(raw = False), methods = ["POST"])
-@app.route('/analysis/dp/<ident>/raw', defaults = dict(raw = True), methods = ["POST"])
+@app.route('/formula/<ident>/dp', defaults = dict(raw = False), methods = ["POST"])
+@app.route('/formula/<ident>/dp/raw', defaults = dict(raw = True), methods = ["POST"])
 @cross_origin()
 def dp(ident, raw = True):
 
     data = assure_json(request)
     config = data.get("config", None)
 
-    formula, r = assure_formula(ident)
-    if formula is None:
+    model, r = assure_formula(ident)
+    if model is None:
         return r
     
-    config, r = assure_config(config, formula, raw)
+    config, r = assure_config(config, model, raw)
     if config is None:
         return r
+  
+    valid, config, simp, dimp, free = model.dp(config)
 
-    if (solver := solvers.get(ident)) is None:
-        solver = Solver(bootstrap_with = formula)
+    if not valid:
+        return jsonify(dict(valid = False)), 200
 
-    simp = {x for x in range(1, formula.nv + 1) if not solver.solve(temp_config(config, -x))}.difference(config)
-    dimp = {x for x in range(1, formula.nv + 1) if not solver.solve(temp_config(config, x))}.difference(config)
-
-    if not simp.isdisjoint(dimp):
-        data = dict(valid = False)
-        return jsonify(data), 200
-
-    free = set(range(1, formula.nv + 1)).difference(simp).difference(dimp)
-
-    simp = sorted(simp)
-    dimp = sorted(dimp)
-    free = sorted(free)
-
-    if not raw:
-        simp = formula.ids2names(simp)
-        dimp = formula.ids2names(dimp)
-        free = formula.ids2names(free)
-
-    data = dict(valid = True, implicit_selected = simp, implicit_deselected = dimp, free = free)
+    data = dict(valid = True, config = config, implicit_selected = simp, implicit_deselected = dimp, free = free)
 
     return jsonify(data), 200
 
 
-@app.route('/analysis/deadcore/<ident>', defaults = dict(raw = False), methods = ["POST"])
-@app.route('/analysis/deadcore/<ident>/raw', defaults = dict(raw = True), methods = ["POST"])
+@app.route('/formula/<ident>/deadcore', defaults = dict(raw = False), methods = ["POST"])
+@app.route('/formula/<ident>/deadcore/raw', defaults = dict(raw = True), methods = ["POST"])
 @cross_origin()
-@cache.cached()
 def deadcore(ident, raw = True):
     
-    formula, r = assure_formula(ident)
-    if formula is None:
+    model, r = assure_formula(ident)
+    if model is None:
         return r
 
-    if (solver := solvers.get(ident)) is None:
-        solver = Solver(bootstrap_with = formula)
-
-    found = set()
-
-    deads = set()
-    cores = set()
-    
-    for x in range(1, formula.nv + 1):
-        x_found = x in found
-        nx_found = -x in found
-
-        if x_found and nx_found:
-            continue
-
-        if not x_found:
-            if solver.solve([x]):
-                for y in solver.get_model():
-                    found.add(y)
-            else:
-                solver.add_clause([-x])
-                deads.add(x)
-
-        if not nx_found:
-            if solver.solve([-x]):
-                for y in solver.get_model():
-                    found.add(y)
-            else:
-                solver.add_clause([x])
-                cores.add(x)
-
-    cores = sorted(cores)
-    deads = sorted(deads)
-
-    if not raw:
-        cores = formula.ids2names(cores)
-        deads = formula.ids2names(deads)
-
     data = {
-        "cores": cores,
-        "deads": deads
+        "cores": sorted(model.cores),
+        "deads": sorted(model.deads)
     }
 
     return jsonify(data), 200
 
 
-@app.route('/analysis/count_approx/<ident>', defaults = dict(raw = False), methods = ["POST"])
-@app.route('/analysis/count_approx/<ident>/raw', defaults = dict(raw = True), methods = ["POST"])
+@app.route('/formula/<ident>/count_approx', defaults = dict(raw = False), methods = ["POST"])
+@app.route('/formula/<ident>/count_approx/raw', defaults = dict(raw = True), methods = ["POST"])
 def count_approx(ident, raw):
 
     data = assure_json(request)
     config = data.get("config", None)
 
-    formula, r = assure_formula(ident)
-    if formula is None:
+    model, r = assure_formula(ident)
+    if model is None:
         return r
 
-    config, r = assure_config(config, formula, raw)
-    if config is None:
-        return r
+    if config:
+        config, r = assure_config(config, model, raw)
+        if config is None:
+            return r
 
-    with Counter(formula) as counter:
+    with Counter(model.formula) as counter:
         if config:
             counter.add_clause(config)
 
@@ -316,18 +200,16 @@ def count_approx(ident, raw):
 
 
 def assure_formula(ident):
-    formula = cache.get(ident)
 
-    if formula is None:
-        return None, Response(f"key {ident} unknown", status = 404)
+    model = single_model.get_model_by_ident(ident)
 
-    formula.ids2names = ids2names.__get__(formula)
-    formula.names2ids = names2ids.__get__(formula)
+    if model is None:
+        return None, Response(f"Key {ident} unknown", status = 404)
 
-    return formula, None
+    return model, None
 
 
-def assure_config(config, formula, raw):
+def assure_config(config, model, raw):
 
     if config is None:
         return [], None
@@ -343,12 +225,14 @@ def assure_config(config, formula, raw):
             if (t := type(config[0])) != str:
                 return None, Response(f"{config} not of type [str] but [{t}] and not /raw", status = 417)
 
-            config = formula.names2ids(config)
+            config = model.convert_names2ids(config)
 
     return config, None
 
 
-def assure_variables(variables, formula, raw, none_to_all = False):
+def assure_variables(variables, model, raw, none_to_all = False):
+
+    formula = model.formula
 
     if variables is None:
         if none_to_all:
@@ -367,7 +251,7 @@ def assure_variables(variables, formula, raw, none_to_all = False):
             if (t := type(variables[0])) != str:
                 return None, Response(f"{variables} not of type [str] but [{t}] and not /raw", status = 417)
 
-            variables = formula.names2ids(variables)
+            variables = model.convert_names2ids(variables)
 
     return variables, None
 
@@ -380,8 +264,8 @@ def assure_json(request):
     return dict()
 
 
-@app.route('/analysis/commonality_approx/<ident>', defaults = dict(raw = False), methods = ["POST"])
-@app.route('/analysis/commonality_approx/<ident>/raw', defaults = dict(raw = True), methods = ["POST"])
+@app.route('/formula/<ident>/comm_approx', defaults = dict(raw = False), methods = ["POST"])
+@app.route('/formula/<ident>/comm_approx/raw', defaults = dict(raw = True), methods = ["POST"])
 def commonality_approx(ident, raw = True):
 
     data = assure_json(request)
@@ -389,22 +273,23 @@ def commonality_approx(ident, raw = True):
     config = data.get("config", None)
     variables = data.get("variables", None)
 
-    formula, r = assure_formula(ident)
-    if formula is None:
+    model, r = assure_formula(ident)
+    if model is None:
         return r
 
-    config, r = assure_config(config, formula, raw)
-    if config is None:
-        return r
+    if config:
+        config, r = assure_config(config, model, raw)
+        if config is None:
+            return r
 
-    variables, r = assure_variables(variables, formula, raw, none_to_all = True)
+    variables, r = assure_variables(variables, model, raw, none_to_all = True)
     if variables is None:
         return r
 
     data = dict()
 
     for x in variables:
-        with Counter(formula) as counter:
+        with Counter(model.formula) as counter:
             if config:
                 counter.add_clause(config)
             
@@ -414,6 +299,47 @@ def commonality_approx(ident, raw = True):
         if raw:
             data[x] = count
         else:
-            data[formula.mapping[x]] = count
+            data[model.ids2names[x]] = count
 
     return jsonify(data, 200)
+
+
+### Multi Model Routes ---------------------------------------------------------------------------
+
+@app.route('/register_history/<history_name>', methods = ["POST"])
+@cross_origin()
+def register_history(history_name):
+
+    tempdir = tempfile.mkdtemp()
+
+    files = []
+
+    for file in request.files.getlist("files"):
+
+        filename = path.basename(file.filename)
+        filename = secure_filename(filename)
+        
+        pathname = path.join(tempdir, filename)
+
+        file.save(pathname)
+        files.append(pathname)
+
+    history = History(history_name, *sorted(files))
+
+    ident = f'{history_name}-{"".join([str(random.randint(0, 9)) for _ in range(16)])}'
+
+    histories[ident] = history
+
+    return Response(ident, status = 200)
+
+
+@app.route('/history/<ident>', methods = ["POST"])
+@cross_origin()
+def view_history(ident):
+
+    history = histories.get(ident)
+
+    if history is None:
+        return Response(f"History {ident} unknown", status = 404)
+
+    return jsonify(history.info())

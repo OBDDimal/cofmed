@@ -3,7 +3,8 @@
 Simple analysis backend built with [Flask](https://flask.palletsprojects.com) and [Flask-Caching](https://flask-caching.readthedocs.io).
 
 ## Routes
-### Registering and Lookup
+### Single Model
+#### Registering and Lookup
 
 * `/register_formula`: Register a formula in DIMACS or FeatureIDE XML format
     * Returns `417` when the file is neither a valid DIMACS nor a valid FeatureIDE XML
@@ -15,16 +16,16 @@ Simple analysis backend built with [Flask](https://flask.palletsprojects.com) an
    > 
    > tmpa6nz31px
 
-* `/view_formula/<ident>`: View the DIMACS of a registered formula
+* `/formula/<ident>`: View the DIMACS of a registered formula
     * Returns `404` if `ident` is invalid
     * Returns `200` and raw content of the DIMACS file
 
-### Analysis
+#### Analysis
 
 > Feature names can be used instead of variable ids by omitting `/raw`, returns will then use feature names as well
 
 
-* `/analysis/sat/<ident>/raw`: Verify a (partial) configuration
+* `/formula/<ident>/verify/raw`: Verify a (partial) configuration
 
     **In**: (partial) configuration in JSON
 
@@ -36,13 +37,13 @@ Simple analysis backend built with [Flask](https://flask.palletsprojects.com) an
 
     **Example**:
     ```
-    > curl -X POST localhost:5000/verify/<ident> -H 'Content-Type: application/json' -d '{"config":[1, 2, 3]}'
+    > curl -X POST localhost:5000/formula/<ident>/verify -H 'Content-Type: application/json' -d '{"config":[1, 2, 3]}'
 
     {"valid": True, "solution": [1,2,3,...]}  # if config is valid
     {"valid": False, "refutation": [1,2,3]}   # if config is invalid
     ```
 
-* `/analysis/dp/<ident>/raw`: Compute decision propagation for a (partial) configuration
+* `/formula/<ident>/dp/raw`: Compute decision propagation for a (partial) configuration
 
     **In**: (partial) configuration in JSON
 
@@ -54,13 +55,13 @@ Simple analysis backend built with [Flask](https://flask.palletsprojects.com) an
 
     **Example**:
     ```
-    > curl -X POST localhost:5000/verify/<ident> -H 'Content-Type: application/json' -d '{"config":[1, 2, 3]}
+    > curl -X POST localhost:5000/formula/<ident>/dp -H 'Content-Type: application/json' -d '{"config":[1, 2, 3]}
 
     {"valid": True, free": [..], "implicit_selected": [..], "implicit_deselected": [..]}  # if config is valid
     {"valid": False}                                                                      # if config is invalid
     ```
 
-* `/analysis/deadcore/<ident>/raw`: Compute dead and core variables of the formula
+* `/formula/<ident>/deadcore/raw`: Compute dead and core variables of the formula
     
     **Returns**:
     
@@ -69,12 +70,12 @@ Simple analysis backend built with [Flask](https://flask.palletsprojects.com) an
 
     **Example**:
     ```
-    > curl -X POST localhost:5000/analysis/deadcore/<ident>
+    > curl -X POST localhost:5000/formula/<ident>/deadcore
 
     {"deads": [..], "cores": [..]}
     ```
 
-* `/analysis/count_approx/<ident>/raw`: Count the approximate number of configurations
+* `/formula/<ident>/count_approx/raw`: Count the approximate number of configurations
 
     **In**:
 
@@ -88,12 +89,12 @@ Simple analysis backend built with [Flask](https://flask.palletsprojects.com) an
 
     **Example**:
     ```
-    > curl -i -X POST localhost:5000/analysis/count_approx/<ident>/raw -H 'Content-Type: application/json' -d '{"config":[42]}
+    > curl -i -X POST localhost:5000/formula/<ident>/count_approx/raw -H 'Content-Type: application/json' -d '{"config":[42]}
 
     {"ssat": <count>}
     ```
 
-* `/analysis/commonality_approx/<ident>/raw`: Count the approximate commonality of variables
+* `/formula/<ident>/comm_approx/raw`: Count the approximate commonality of variables
 
     **In**:
 
@@ -108,7 +109,37 @@ Simple analysis backend built with [Flask](https://flask.palletsprojects.com) an
 
     **Example**:
     ```
-    > curl -i -X POST localhost:5000/analysis/commonality_approx/<ident>/raw -H 'Content-Type: application/json' -d '{"config":[42], "variables":[1, 2]}
+    > curl -i -X POST localhost:5000/formula/<ident>/comm_approx/raw -H 'Content-Type: application/json' -d '{"config":[42], "variables":[1, 2]}
 
     {"1": <commonality of variable 1>, "2": <commonality of variable 2>}
     ```
+
+
+### Multi Model
+
+#### Registering and Lookup
+
+* `/register_history/<name>`: Registers a history with name `<name>`, accepts multiple DIMACS files as once
+    * Returns `200` and key `ident` for further actions on the history
+   > Example: (from `api_tests.py`)
+    ```python
+       def register_history(client):
+
+        files = glob.glob("testdata/*fiasco*.dimacs")
+        files = [open(filename, "rb") for filename in files]
+
+        response = client.post("/register_history/fiasco", data={
+            "files": files,
+        })
+
+        for file in files:
+            file.close()
+    ```
+
+   > HTTP/1.1 200 OK
+   > 
+   > fiasco-1234567891234567
+
+* `/history/<ident>`: View the DIMACS of a registered formula
+    * Returns `404` if `ident` is invalid
+    * Returns `200` and information on the history (WIP: currently variables and versions)
