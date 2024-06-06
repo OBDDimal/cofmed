@@ -397,7 +397,7 @@ import { FeatureModelSolo } from '@/classes/Configurator/FeatureModelSolo';
 import { useAppStore } from '@/store/app';
 import { ResetCommand } from '@/classes/Commands/Configurator/ResetCommand';
 import { LoadConfigCommand } from '@/classes/Commands/Configurator/LoadConfigCommand';
-import { decisionPropagationFL, pingFL } from '@/classes/BackendAccess/FlaskAccess';
+import { decisionPropagationFL, pingFL, registerHistory } from '@/classes/BackendAccess/FlaskAccess';
 import { changeFileFormat, decisionPropagationFIDE, pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
 import beautify from 'xml-beautifier';
 import ConfNavbar from '@/components/Configurator/ConfNavbar.vue';
@@ -637,6 +637,7 @@ export default {
             this.fmIsLoaded = true;
             this.models = [];
             try {
+                await registerHistory(files, files[0].name.slice(0, files[0].name.indexOf("-")));
                 for (let i = 0; i < files.length; i++) {
                     let text = await files[i].text();
                     let featureModelMulti = FeatureModelMulti.loadXmlDataFromFile(text, files[i].name.slice(0, files[i].name.length - 4));

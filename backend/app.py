@@ -314,7 +314,7 @@ def register_history(history_name):
 
     files = []
 
-    for file in request.files.getlist("files"):
+    for file in request.files.getlist("files[]"):
 
         filename = path.basename(file.filename)
         filename = secure_filename(filename)
