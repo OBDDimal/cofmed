@@ -2,6 +2,18 @@
 
 Simple analysis backend built with [Flask](https://flask.palletsprojects.com) and [Flask-Caching](https://flask-caching.readthedocs.io).
 
+## Setup and Testing
+
+```bash
+# Create and setup VENV
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+
+# Run test suite
+pytest api_tests.py -v -W ignore::DeprecationWarning
+```
+
 ## Routes
 ### Single Model
 #### Registering and Lookup
