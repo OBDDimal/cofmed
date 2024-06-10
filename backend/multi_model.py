@@ -258,8 +258,7 @@ class History():
 
 
     def info(self):
-        print(self.name2var.keys())
-        return dict(variables = sorted(self.name2var.keys()), versions = self.versions())
+        return dict(variables = sorted(self.name2var.keys()), versions = self.versions(), mapping = self.name2var)
 
 
     def versions(self):

@@ -194,7 +194,8 @@ def test_history(client):
     response = client.post(f"/history/{ident}")
     data = response.json
 
-    print(data["variables"])
+    # print(data["variables"])
+    # print(data["mapping"])
 
     assert response.status_code == 200
     assert "CONFIG_SPARC" in data["variables"]
