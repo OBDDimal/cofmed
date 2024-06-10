@@ -248,7 +248,7 @@
                             <v-tab key='conf'>Configuration History</v-tab>
                         </v-tabs> -->
 
-                        <v-card-text v-if='featureModelMulti?.root'>
+                        <v-card-text>
                             <v-data-table
                                 :headers="[{title: 'Description', key: 'description'}, {title: '# Possible configs', key: 'newSatCount'}, {title: 'Validation', key: 'valid'}]"
                                 :item-class="command => command.marked ? 'active-command clickable' : 'clickable'"
@@ -258,7 +258,7 @@
                                 disable-pagination
                                 disable-sort
                                 fixed-header
-                                height='59.75vh'
+                                height='66.75vh'
                                 hide-default-footer
                                 single-select
                                 @click:row='redoCommand'
@@ -423,6 +423,8 @@ import beautify from 'xml-beautifier';
 import ConfNavbar from '@/components/Configurator/ConfNavbar.vue';
 import { FeatureModelMulti } from '@/classes/Configurator/FeatureModelMulti';
 import { variabilityDarkTheme, variabilityLightTheme } from '@/plugins/vuetify';
+import { ResetCommandMulti } from '@/classes/Commands/MultiConfigurator/ResetCommandMulti';
+import { DecisionPropagationCommandMulti } from '@/classes/Commands/MultiConfigurator/DecisionPropagationCommandMulti';
 
 const appStore = useAppStore();
 export default {
@@ -555,18 +557,18 @@ export default {
         async decisionPropagation(item, selectionState) {
             const data = this.getSelection();
             if (selectionState === SelectionState.ExplicitlySelected) {
-                data.selection.push(item.name);
+                data.selection.push(item);
             } else if (selectionState === SelectionState.ExplicitlyDeselected) {
-                data.deselection.push(item.name);
+                data.deselection.push(item);
             } else if (selectionState === SelectionState.Unselected) {
                 if (item.selectionState === SelectionState.ExplicitlySelected) {
-                    data.selection.pop(item.name);
+                    data.selection.pop(item);
                 } else if (item.selectionState === SelectionState.ExplicitlyDeselected) {
-                    data.deselection.pop(item.name);
+                    data.deselection.pop(item);
                 }
             }
             const selectionData = await this.getSelectionDataFromAPI(data);
-            let command = new DecisionPropagationCommand(this.featureModelSolo, selectionData, item, selectionState, this.validCheckbox);
+            let command = new DecisionPropagationCommandMulti(this.featureModelMulti, selectionData, item, selectionState, this.validCheckbox);
             this.commandManager.execute(command);
         },
 
@@ -670,7 +672,7 @@ export default {
                 this.updateFeatures();
                 this.models = this.featureModelMulti.versions;
                 const selectionData = await this.getSelectionDataFromAPI();
-                this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
+                this.initialResetCommand = new ResetCommandMulti(this.featureModelMulti, selectionData, 0);
                 this.initialResetCommand.execute();
             } catch (e) {
                 console.log(e);
@@ -784,12 +786,14 @@ export default {
 
         getSelection() {
 
-            const selection = this.featureModelSolo.features.filter(f => f.selectionState === SelectionState.ExplicitlySelected).map(f => f.name);
-            const deselection = this.featureModelSolo.features.filter(f => f.selectionState === SelectionState.ExplicitlyDeselected).map(f => f.name);
+            const selection = this.featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlySelected);
+            const deselection = this.featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlyDeselected);
 
             return {
                 selection: selection,
-                deselection: deselection
+                deselection: deselection,
+                selectionVersion: [],
+                deselectionVersion: []
             };
         },
 
@@ -852,15 +856,23 @@ export default {
                 }
                 selectionData = {
                     valid: apiData.valid,
-                    eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                    iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                    eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                    iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                    uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
+                    eSF: [],
+                    iSF: this.featureModelMulti.features.filter(f => apiData.config.includes(f.id)),
+                    eDF: [],
+                    iDF: this.featureModelMulti.features.filter(f => apiData.config.includes(f.id * -1)),
+                    uF: this.featureModelMulti.features.filter(f => apiData.features_free.includes(f.id)),
+                    eSV: [],
+                    iSV: this.featureModelMulti.versions.filter(f => apiData.versions.includes(f.id)),
+                    eDV: [],
+                    iDV: this.featureModelMulti.versions.filter(f => apiData.versions_disabled.includes(f.id)),
+                    uV: this.featureModelMulti.versions.filter(f => !apiData.versions.includes(f.id) && !apiData.versions_disabled.includes(f.id)),
                 };
 
             } else {
-                const apiData = await decisionPropagationMulti(this.xml, data.selection, data.deselection);
+                const mappedFeatures = data.selection.map(f => f.id).concat(data.deselection.map(f => f.id*(-1)));
+                const mappedVersions = data.selectionVersion.map(f => f.id).concat(data.deselectionVersion.map(f => f.id*(-1)));
+                const apiData = await decisionPropagationMulti(this.ident, mappedFeatures, mappedVersions);
+                console.log(apiData)
                 if (!apiData) {
                     this.serviceIsWorking = false;
                     appStore.updateSnackbar(
@@ -883,11 +895,16 @@ export default {
                 }
                 selectionData = {
                     valid: apiData.valid,
-                    eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                    iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                    eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                    iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                    uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
+                    eSF: data.selection,
+                    iSF: this.featureModelMulti.features.filter(f => !data.selection.includes(f) && apiData.config.includes(f.id)),
+                    eDF: data.deselection,
+                    iDF: this.featureModelMulti.features.filter(f => !data.deselection.includes(f) && apiData.config.includes(f.id * (-1))),
+                    uF: this.featureModelMulti.features.filter(f => apiData.features_free.includes(f.id)),
+                    eSV: data.selectionVersion,
+                    iSV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && apiData.versions.includes(f.name)),
+                    eDV: data.deselectionVersion,
+                    iDV: this.featureModelMulti.versions.filter(f => !data.deselectionVersion.includes(f) && apiData.versions_disabled.includes(f.name)),
+                    uV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && !apiData.versions.includes(f.name) && !data.deselectionVersion.includes(f) && apiData.versions_disabled.includes(f.name)),
                 };
             }
 
