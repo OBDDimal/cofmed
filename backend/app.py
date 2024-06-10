@@ -30,7 +30,7 @@ redis_connection = Redis('/tmp/redis.db')
 
 import random
 
-### Preliminaries ---------------------------------------------------------------------------------
+# Preliminaries -----------------------------------------------------------------------------------
 
 UPLOAD_FOLDER = '/tmp/'
 
@@ -42,7 +42,7 @@ solvers = dict()
 histories = dict()
 
 
-### Default Routes  -------------------------------------------------------------------------------
+# Default Routes  ---------------------------------------------------------------------------------
 
 @app.route('/', methods = ["GET", "POST"])
 @cross_origin()
@@ -50,7 +50,7 @@ def index():
     return Response("Flask Analysis Backend Running", status = 200)
 
 
-### Single Model Routes ---------------------------------------------------------------------------
+# Single Model Routes -----------------------------------------------------------------------------
 
 @app.route('/register_formula', methods = ["POST"])
 @cross_origin()
@@ -304,7 +304,7 @@ def commonality_approx(ident, raw = True):
     return jsonify(data, 200)
 
 
-### Multi Model Routes ---------------------------------------------------------------------------
+# Multi Model Routes ------------------------------------------------------------------------------
 
 @app.route('/register_history/<history_name>', methods = ["POST"])
 @cross_origin()
@@ -343,3 +343,27 @@ def view_history(ident):
         return Response(f"History {ident} unknown", status = 404)
 
     return jsonify(history.info())
+
+
+@app.route('/history/<ident>/configure', methods = ["POST"])
+@cross_origin()
+def configure(ident):
+
+    data = assure_json(request)
+    config = data.get("config", None)
+    versions = data.get("versions", None)
+    
+    history = histories.get(ident)    
+    
+    if history is None:
+        return Response(f"History {ident} unknown", status = 404)
+
+
+    configuration = history.configure()
+
+    ret = configuration.configure(config = config, versions = versions)
+
+    if ret is False:
+        return jsonify(dict(valid = False))
+
+    return jsonify(configuration.answer())

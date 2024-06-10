@@ -152,6 +152,25 @@ pytest api_tests.py -v -W ignore::DeprecationWarning
    > 
    > fiasco-1234567891234567
 
-* `/history/<ident>`: View the DIMACS of a registered formula
+* `/history/<ident>`: View a history
     * Returns `404` if `ident` is invalid
     * Returns `200` and information on the history (WIP: currently variables and versions)
+
+* `/history/<ident>/configure`: Configure a history
+
+    **In**:
+
+    * [optional] Partial configuration as JSON (`config`)
+    * [optional] Selected versions as JSON (`versions`) (Versions start at 0)
+
+    **Returns**:
+
+    * `404` if `ident` is invalid
+    * `200` and a JSON containing a bunch of information
+        * `valid` if the combination of `config` and `versions` is valid
+        * `config` the configuration after VDP and DP
+        * `feature_free` list of freely configurable features
+        * `versions` the versions after VDP and DP
+        * `versions_disabled` disabled versions after VDP
+
+        

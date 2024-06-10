@@ -9,6 +9,7 @@ from os import path
 
 import glob
 
+
 @pytest.fixture
 def client():
     app.config.update({'TESTING': True})
@@ -32,11 +33,11 @@ def register_formula(client, filename):
 
 def register_history(client):
 
-    files = glob.glob("testdata/*fiasco*.dimacs")
+    files = sorted(glob.glob("testdata/fiasco*.dimacs"))
     files = [open(filename, "rb") for filename in files]
 
     response = client.post("/register_history/fiasco", data={
-        "files": files,
+        "files[]": files,
     })
 
     for file in files:
@@ -189,11 +190,47 @@ def get_verify_ident_history(client):
 def test_history(client):
 
     ident = get_verify_ident_history(client)
-    print(ident)
 
     response = client.post(f"/history/{ident}")
     data = response.json
 
+    print(data["variables"])
+
     assert response.status_code == 200
     assert "CONFIG_SPARC" in data["variables"]
     assert len(data["versions"]) == 18
+
+
+def test_history_configure(client):
+
+    ident = get_verify_ident_history(client)
+
+    response = client.post(f"/history/{ident}/configure", json = dict(config = [2], versions = []))
+
+    assert response.status_code == 200
+
+    data = response.json
+
+    assert data.get("valid") is True
+    assert data.get("versions_disabled") == [13, 14, 15, 16, 17]
+
+
+    response = client.post(f"/history/{ident}/configure", json = dict(config = [2], versions = [15]))
+
+
+    assert response.status_code == 200
+
+    data = response.json
+
+    assert data.get("valid") is False
+
+
+    response = client.post(f"/history/{ident}/configure", json = dict(config = [-2, 20], versions = [15]))
+
+
+    assert response.status_code == 200
+
+    data = response.json
+
+    assert data.get("valid") is True
+    assert len(data.get("features_free")) == 117

@@ -20,6 +20,7 @@ def hash_file(filepath):
 
     return hash_is.hexdigest()
 
+
 class MultiConfiguration():
     
     def __init__(self, history):
@@ -32,22 +33,69 @@ class MultiConfiguration():
         self.features_free = set(history.name2var.values())
         self.versions = set()
         self.versions_available = set(self.id2versions.keys())
+        self.versions_disabled = set()
+
+
+    def configure(self, config = None, versions = None):
+
+        if versions is not None:
+
+            config_old = copy(self.config)
+            versions = set(versions).difference(self.versions)
+
+            for version in versions:
+                ret = self.select_version(version)
+
+                if ret is False:
+                    return False
+
+        if config is not None:
+
+            config = set(config).difference(self.config)
+
+            for lit in config:
+                ret = self.configure_features(lit)
+
+                if ret is False:
+                    return False
+
+
+        # history = self.history
+        # for i, version in enumerate(history.versions()):
+        #     cnf = history.it2unified[version]
+
+        #     with Solver(bootstrap_with = cnf) as solver:
+
+        #         if i in self.versions or i in self.versions_available:
+        #             if not solver.solve(assumptions = self.config):
+        #                 print(f"Failed {i}")
+        #                 return False
+        #         else:
+        #             if solver.solve(assumptions = self.config):
+        #                 print(f"Success {i}")
+        #                 return False
+
+        return True
 
 
     def select_version(self, version):        
-        if version in self.versions_available:
-            self.versions.add(version)
-            self.version_dp(version)
-        else:
+        if version not in self.versions_available:
             print(f"Version {version} cannot be selected")
             return False
+
+        self.versions.add(version)
+        return self.version_dp(version)
 
 
     def configure_features(self, feature):
         if abs(feature) in self.features_free:
             self.config.add(feature)
-            self.version_dp()
-            self.feature_dp(feature)
+            ret = self.version_dp()
+
+            if ret is False:
+                return False
+
+            return self.feature_dp(feature)
         else:
             print(f"Feature {feature} cannot be selected")
             return False
@@ -69,6 +117,8 @@ class MultiConfiguration():
         else:
             bootstrap_clauses.extend(self.formula.clauses)
 
+        versions_disabled = copy(self.versions_disabled)
+
         # Deselect dead configurations
         for version in self.versions_available:
 
@@ -80,17 +130,27 @@ class MultiConfiguration():
 
             with Solver(bootstrap_with = clauses) as solver:
                 if not solver.solve(assumptions = self.config):
-                    self.versions.add(-version)
+                    versions_disabled.add(version)
 
-        self.versions_available = self.versions_available.difference({abs(x) for x in self.versions})
 
-        # Enforce cores and deads
+        if len(self.versions) == 0 and len(versions_disabled) == len(self.versions_available):
+            return False
+
+        self.versions_disabled = versions_disabled
+        self.versions_available = self.versions_available.difference({abs(x) for x in self.versions}).difference(self.versions_disabled)
+
+
         cnf_temp = CNF(from_clauses = bootstrap_clauses)
         self.formula, cores, deads = preprocessing.simplify_yield_unit_clauses(cnf_temp)
 
-        self.config.update(cores)
-        self.config.update({-x for x in deads})
+        decided = cores.union({-x for x in deads}).difference(self.config)
+        self.config.update(decided)
+
+        for feature in decided:
+            self.feature_dp(feature)
+
         self.features_free = self.features_free.difference({abs(x) for x in self.config})
+        return True
 
 
     def feature_dp(self, feature):
@@ -172,11 +232,13 @@ class MultiConfiguration():
     def get_cnf(self, version):
         return self.history.get_cnf(self.id2versions[version])
 
-    def configure_feature(self, feature):
-        print(feature)
 
     def __str__(self):
         return f'MC<{self.history.name}>: {self.config} {self.versions}'
+
+
+    def answer(self):
+        return dict(valid = True, config = sorted(self.config, key = abs), features_free = sorted(self.features_free), versions = sorted(self.versions), versions_disabled = sorted(self.versions_disabled))
 
 
 class History():
@@ -196,6 +258,7 @@ class History():
 
 
     def info(self):
+        print(self.name2var.keys())
         return dict(variables = sorted(self.name2var.keys()), versions = self.versions())
 
 
@@ -211,7 +274,8 @@ class History():
 
         files_set = set(self.files)
         files_set.update(files)
-        self.files = list(files_set)
+
+        print(self.files)
 
         new_variable = False
 
