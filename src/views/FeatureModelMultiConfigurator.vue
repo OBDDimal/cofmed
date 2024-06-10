@@ -14,8 +14,8 @@
         @openFile='openFilePicker'
         @reset='resetCommand'
         @theme='dark = !dark'
-        @change-service='(boolean) => changeService(boolean)'
         @timeline='(side) => changeTimeline(side)'
+        @change-service='(boolean) => changeService(boolean)'
     ></conf-navbar>
     <v-container :fluid='true'>
         <template v-if='fmIsLoaded'>
@@ -23,14 +23,14 @@
                 <v-timeline-item
                     v-for='(item, i) in TrimmedModels'
                     :key='i'
-                    :dot-color='item.hovered ? "selected" : "primary"'
+                    :dot-color='colorVersion(item)'
                     :size='i % 5 !== 0  ? "" : "small"'
                     height='5vh'
                 >
                     <template v-slot:icon>
-                        <v-btn v-if='i % 5 === 0' :color='item.hovered ? "selected" : "primary"' :icon='true'
+                        <v-btn v-if='i % 5 === 0' :color='colorVersion(item)' :icon='true'
                                height='2.2vh' @click='changeFeatureModel(item)'></v-btn>
-                        <v-btn v-else :color='item.hovered ? "selected" : "primary"' :icon='true' height='2.2vh'
+                        <v-btn v-else :color='colorVersion(item)' :icon='true' height='2.2vh'
                                width='0.01vh' @click='changeFeatureModel(item)'></v-btn>
                     </template>
                     <div v-if='i % 5 === 0' class='text-center'>
@@ -47,7 +47,7 @@
                     size='small'
                 >
                     <template v-slot:icon>
-                        <v-btn :color='item.hovered ? "selected" : "primary"' :icon='true' height='2.2vh'
+                        <v-btn :color='colorVersion(item)' :icon='true' height='2.2vh'
                                @click='changeFeatureModel(item)'></v-btn>
                     </template>
                     <div class='text-center'>
@@ -241,17 +241,36 @@
                     <v-card height='77.5vh'>
                         <v-card-title>Details for {{ featureModelName }}:</v-card-title>
 
-                        <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints -->
+                        <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints
                         <v-tabs v-model='tabsSecondColumn'>
                             <v-tab key='featureModelViewer'>Feature Model Viewer</v-tab>
                             <v-tab key='ctc'>Cross Tree Constraints</v-tab>
                             <v-tab key='conf'>Configuration History</v-tab>
-                        </v-tabs>
+                        </v-tabs> -->
 
                         <v-card-text v-if='featureModelMulti?.root'>
+                            <v-data-table
+                                :headers="[{title: 'Description', key: 'description'}, {title: '# Possible configs', key: 'newSatCount'}, {title: 'Validation', key: 'valid'}]"
+                                :item-class="command => command.marked ? 'active-command clickable' : 'clickable'"
+                                :items='commandManager.commands'
+                                class='elevation-1'
+                                disable-filtering
+                                disable-pagination
+                                disable-sort
+                                fixed-header
+                                height='59.75vh'
+                                hide-default-footer
+                                single-select
+                                @click:row='redoCommand'
+                            >
+
+                                <template v-slot:item.valid='{ item }'>
+                                    {{ item.valid ? 'true' : 'false' }}
+                                </template>
+                            </v-data-table>
+                            <!-- Remove Feature Model Viewer until important
                             <v-window v-model='tabsSecondColumn'>
 
-                                <!-- Feature Model Viewer -->
                                 <v-window-item key='featureModelViewer'>
 
                                     <feature-model-viewer-solo ref='featureModelViewerSolo'
@@ -262,17 +281,14 @@
                                     ></feature-model-viewer-solo>
                                 </v-window-item>
 
-                                <!-- Cross-Tree Constraint Viewer -->
                                 <v-window-item key='ctc'>
 
-                                    <!-- Filter only the invalid ctcs and reset them to default -->
-                                    <!--                <v-btn class='mx-2' outlined
+                                    <v-btn class='mx-2' outlined
                                                            rounded @click='filteredConstraints = allConstraints.filter(c => c.evaluation === false)'>
                                                       Only invalid
                                                     </v-btn>
-                                                    <v-btn outlined rounded @click='filteredConstraints = allConstraints'>Reset</v-btn>-->
+                                                    <v-btn outlined rounded @click='filteredConstraints = allConstraints'>Reset</v-btn>
 
-                                    <!-- Table with all ctcs -->
                                     <v-data-table
                                         v-model:sort-by='sortByCTC'
                                         :custom-key-sort='sortByCTCEval'
@@ -284,7 +300,6 @@
                                         show-group-by
                                     >
 
-                                        <!-- Customization of the column FORMULA -->
                                         <template v-slot:item.formula='{ item }'>
                                             <div v-for='(f, i) in item.formula' :key='i'
                                                  style='display: inline;'>
@@ -300,7 +315,6 @@
                                             </div>
                                         </template>
 
-                                        <!-- Customization of the column EVALUATION -->
                                         <template v-slot:item.evaluation='{ item }'>
                                             <v-avatar :color='evaluateCTC(item)'
                                                       size='30'></v-avatar>
@@ -329,7 +343,8 @@
                                         </template>
                                     </v-data-table>
                                 </v-window-item>
-                            </v-window>
+                            </v-window> -->
+
                         </v-card-text>
                     </v-card>
                 </v-col>
@@ -397,11 +412,17 @@ import { FeatureModelSolo } from '@/classes/Configurator/FeatureModelSolo';
 import { useAppStore } from '@/store/app';
 import { ResetCommand } from '@/classes/Commands/Configurator/ResetCommand';
 import { LoadConfigCommand } from '@/classes/Commands/Configurator/LoadConfigCommand';
-import { decisionPropagationFL, pingFL, registerHistory } from '@/classes/BackendAccess/FlaskAccess';
+import {
+    decisionPropagationFL, decisionPropagationMulti,
+    getFeaturesAndVersionFromHistory,
+    pingFL,
+    registerHistory
+} from '@/classes/BackendAccess/FlaskAccess';
 import { changeFileFormat, decisionPropagationFIDE, pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
 import beautify from 'xml-beautifier';
 import ConfNavbar from '@/components/Configurator/ConfNavbar.vue';
 import { FeatureModelMulti } from '@/classes/Configurator/FeatureModelMulti';
+import { variabilityDarkTheme, variabilityLightTheme } from '@/plugins/vuetify';
 
 const appStore = useAppStore();
 export default {
@@ -458,6 +479,7 @@ export default {
         validCheckbox: true,
         xml: undefined,
         timelineBias: 0,
+        ident: undefined
     }),
 
     props: {
@@ -625,35 +647,31 @@ export default {
         },
 
         getVersions(item) {
-            this.removeVersionsHover();
-            this.models.filter(model => model.features.map(feature => feature.name).includes(item.name)).forEach(model => model.hovered = true);
+            /*this.removeVersionsHover();
+            this.models.filter(model => model.features.map(feature => feature.name).includes(item.name)).forEach(model => model.hovered = true);*/
         },
 
         removeVersionsHover() {
-            this.models.forEach(model => model.hovered = false);
+            /*this.models.forEach(model => model.hovered = false);*/
         },
 
         async openFile(files) {
             this.fmIsLoaded = true;
             this.models = [];
             try {
-                await registerHistory(files, files[0].name.slice(0, files[0].name.indexOf("-")));
-                for (let i = 0; i < files.length; i++) {
-                    let text = await files[i].text();
-                    let featureModelMulti = FeatureModelMulti.loadXmlDataFromFile(text, files[i].name.slice(0, files[i].name.length - 4));
-                    this.models.push(featureModelMulti);
+                this.ident = await registerHistory(files, files[0].name.slice(0, files[0].name.indexOf('-')));
+                if (this.ident === undefined) {
+                    throw new Error('No connection to backend.');
                 }
-                this.xml = this.models[0].xml;
+                const data = await getFeaturesAndVersionFromHistory(this.ident);
+                this.featureModelMulti = new FeatureModelMulti(data.mapping, data.versions);
                 this.commandManager = new ConfiguratorManager();
-                this.features = this.models.map(model => model.features);
+                this.features = this.featureModelMulti.features;
                 this.updateFeatures();
-                this.allConstraints = this.models[0].constraints.map((e) => ({
-                    constraint: e,
-                    formula: e.toList(),
-                    evaluation: e.evaluate()
-                }));
-                this.filteredConstraints = this.allConstraints;
-                this.featureModelMulti = this.models[0];
+                this.models = this.featureModelMulti.versions;
+                const selectionData = await this.getSelectionDataFromAPI();
+                this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
+                this.initialResetCommand.execute();
             } catch (e) {
                 console.log(e);
                 appStore.updateSnackbar(
@@ -753,7 +771,7 @@ export default {
         },
 
         changeFeatureModel(item) {
-
+            /*
             this.xml = item.xml;
             this.allConstraints = item.constraints.map((e) => ({
                 constraint: e,
@@ -761,7 +779,7 @@ export default {
                 evaluation: e.evaluate()
             }));
             this.filteredConstraints = this.allConstraints;
-            this.featureModelMulti = item;
+            this.featureModelMulti = item;*/
         },
 
         getSelection() {
@@ -784,11 +802,12 @@ export default {
                     this.serviceIsWorking = true;
                 }
             } else {
+                /*
                 result = await pingFIDE();
                 if (result) {
                     this.serviceIsFeatureIDE = true;
                     this.serviceIsWorking = true;
-                }
+                }*/
             }
             return result;
         },
@@ -810,148 +829,73 @@ export default {
             }
 
             if (!data) {
-                if (this.serviceIsFeatureIDE) {
-                    const apiData = await decisionPropagationFIDE(this.xml);
-                    if (!apiData) {
-                        this.serviceIsWorking = false;
+                const apiData = await decisionPropagationMulti(this.ident, [], []);
+                if (!apiData) {
+                    this.serviceIsWorking = false;
+                    appStore.updateSnackbar(
+                        'Cannot use service because service is down. Retrying...',
+                        'error',
+                        5000,
+                        true
+                    );
+                    if (await this.getWorkingService()) {
+                        return await this.getSelectionDataFromAPI(data);
+                    } else {
                         appStore.updateSnackbar(
-                            'Cannot use service because service is down. Retrying...',
+                            'No service is available.',
                             'error',
                             5000,
                             true
                         );
-                        if (await this.getWorkingService()) {
-                            return await this.getSelectionDataFromAPI(data);
-                        } else {
-                            appStore.updateSnackbar(
-                                'No service is available.',
-                                'error',
-                                5000,
-                                true
-                            );
-                            return undefined;
-                        }
+                        return undefined;
                     }
-                    selectionData = {
-                        valid: apiData.valid,
-                        eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                        iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                        eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                        iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                        uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
-                        oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
-                        oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
-                        nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    };
-                } else {
-                    const apiData = await decisionPropagationFL(this.xml);
-                    if (!apiData) {
-                        this.serviceIsWorking = false;
-                        appStore.updateSnackbar(
-                            'Cannot use service because service is down. Retrying...',
-                            'error',
-                            5000,
-                            true
-                        );
-                        if (await this.getWorkingService()) {
-                            return await this.getSelectionDataFromAPI(data);
-                        } else {
-                            appStore.updateSnackbar(
-                                'No service is available.',
-                                'error',
-                                5000,
-                                true
-                            );
-                            return undefined;
-                        }
-                    }
-                    selectionData = {
-                        valid: apiData.valid,
-                        eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                        iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                        eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                        iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                        uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
-                        oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
-                        oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
-                        nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    };
                 }
+                selectionData = {
+                    valid: apiData.valid,
+                    eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
+                    iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
+                    eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
+                    iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
+                    uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
+                };
+
             } else {
-                if (this.serviceIsFeatureIDE) {
-                    const apiData = await decisionPropagationFIDE(this.xml, data.selection, data.deselection);
-                    if (!apiData) {
-                        this.serviceIsWorking = false;
+                const apiData = await decisionPropagationMulti(this.xml, data.selection, data.deselection);
+                if (!apiData) {
+                    this.serviceIsWorking = false;
+                    appStore.updateSnackbar(
+                        'Cannot use service because service is down. Retrying...',
+                        'error',
+                        5000,
+                        true
+                    );
+                    if (await this.getWorkingService()) {
+                        return await this.getSelectionDataFromAPI(data);
+                    } else {
                         appStore.updateSnackbar(
-                            'Cannot use service because service is down. Retrying...',
+                            'No service is available.',
                             'error',
                             5000,
                             true
                         );
-                        if (await this.getWorkingService()) {
-                            return await this.getSelectionDataFromAPI(data);
-                        } else {
-                            appStore.updateSnackbar(
-                                'No service is available.',
-                                'error',
-                                5000,
-                                true
-                            );
-                            return undefined;
-                        }
+                        return undefined;
                     }
-                    selectionData = {
-                        valid: apiData.valid,
-                        eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                        iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                        eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                        iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                        uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
-                        oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
-                        oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
-                        nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    };
-                } else {
-                    const apiData = await decisionPropagationFL(this.xml, data.selection, data.deselection);
-                    if (!apiData) {
-                        this.serviceIsWorking = false;
-                        appStore.updateSnackbar(
-                            'Cannot use service because service is down. Retrying...',
-                            'error',
-                            5000,
-                            true
-                        );
-                        if (await this.getWorkingService()) {
-                            return await this.getSelectionDataFromAPI(data);
-                        } else {
-                            appStore.updateSnackbar(
-                                'No service is available.',
-                                'error',
-                                5000,
-                                true
-                            );
-                            return undefined;
-                        }
-                    }
-                    selectionData = {
-                        valid: apiData.valid,
-                        eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                        iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                        eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                        iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                        uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
-                        oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
-                        oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
-                        nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    };
                 }
+                selectionData = {
+                    valid: apiData.valid,
+                    eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
+                    iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
+                    eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
+                    iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
+                    uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
+                };
             }
+
             return selectionData;
         },
 
         async setStartService() {
             let result = await pingFL();
-            console.log(result)
             if (result) {
                 this.serviceIsFeatureIDE = false;
                 this.serviceIsWorking = true;
@@ -967,12 +911,27 @@ export default {
         },
 
         changeTimeline(side) {
-            if (side){
+            if (side) {
                 this.timelineBias += 20;
             } else {
                 this.timelineBias -= 20;
             }
         },
+
+        colorVersion(item) {
+            const dark = this.$vuetify.theme.global.current.dark;
+            if (item.selectionState === SelectionState.ExplicitlySelected) {
+                return dark ? variabilityDarkTheme.colors.selected : variabilityLightTheme.colors.selected;
+            } else if (item.selectionState === SelectionState.ImplicitlyDeselected) {
+                return dark ? variabilityDarkTheme.colors['imp-deselected'] : variabilityLightTheme.colors['imp-deselected'];
+            } else if (item.selectionState === SelectionState.ExplicitlyDeselected) {
+                return dark ? variabilityDarkTheme.colors.deselected : variabilityLightTheme.colors.deselected;
+            } else if (item.selectionState === SelectionState.ImplicitlySelected) {
+                return dark ? variabilityDarkTheme.colors['imp-selected'] : variabilityLightTheme.colors['imp-selected'];
+            } else {
+                return dark ? variabilityLightTheme.colors.background : variabilityDarkTheme.colors.background;
+            }
+        }
     },
 
     computed: {

@@ -1,22 +1,9 @@
 import {SelectionState} from "@/classes/SelectionState";
 
 export class Version {
-    constructor(version, rootId) {
-        this.version = version;
-        this.rootId = rootId;
+    constructor(id, name) {
+        this.title = name.slice(0, name.indexOf('-')) + ` V${id}`;
+        this.id = id;
         this.selectionState = SelectionState.Unselected;
-        this.constraints = undefined;
-        this.features = undefined;
-        this.root = undefined;
-    }
-
-    getFeatures() {
-        return this.root.descendants().map(node => node.feature);
-    }
-
-    empty() {
-        this.constraints = [];
-        this.features = [];
-        this.root = undefined;
     }
 }

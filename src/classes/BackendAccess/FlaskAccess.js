@@ -13,7 +13,6 @@ export async function decisionPropagationFL(file, selection = [], deselection = 
             formData.append('files[]', file[x]);
         }
 
-        console.log(formData.entries()[0]);
 
         const source = CancelToken.source();
         const timeout = setTimeout(() => {
@@ -29,30 +28,6 @@ export async function decisionPropagationFL(file, selection = [], deselection = 
         clearTimeout(timeout);
     }
 }
-
-export async function registerHistory(files, historyName) {
-
-    let formData = new FormData();
-    for (let x = 0; x < files.length; x++) {
-        let file = files[x];
-        formData.append('files', file, file.name);
-    }
-
-
-
-    let data = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FLASKBACKEND}/register_history/${historyName}`, files,
-        {
-            headers: { 'Content-Type': files.type }
-        });
-
-
-    console.log(data.data)
-    let data2 = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FLASKBACKEND}/history/${data.data}`, "",
-        {
-        });
-    console.log(data2)
-}
-
 export async function pingFL() {
     try {
         const source = CancelToken.source();
@@ -65,5 +40,76 @@ export async function pingFL() {
         return true;
     } catch (e) {
         return false;
+    }
+}
+
+export async function getFeaturesAndVersionFromHistory(ident) {
+    try {
+        const source = CancelToken.source();
+        const timeout = setTimeout(() => {
+            source.cancel();
+            // Timeout Logic
+        }, 2000);
+
+        let data = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FLASKBACKEND}/history/${ident}`, '',
+            { cancelToken: source.token });
+
+        clearTimeout(timeout);
+        return data.data;
+    } catch (e) {
+        return undefined;
+    }
+}
+
+
+export async function registerHistory(files, historyName) {
+    try {
+
+        let formData = new FormData();
+        for (let x = 0; x < files.length; x++) {
+            let file = files[x];
+            formData.append('files', file, file.name);
+        }
+
+        const source = CancelToken.source();
+        const timeout = setTimeout(() => {
+            source.cancel();
+            // Timeout Logic
+        }, 5000);
+
+        let data = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FLASKBACKEND}/register_history/${historyName}`, files,
+            {
+                headers: { 'Content-Type': files.type },
+                cancelToken: source.token
+            });
+
+        clearTimeout(timeout);
+        return data.data;
+    } catch (e) {
+        return undefined;
+    }
+}
+
+
+
+
+export async function decisionPropagationMulti(ident, features, versions) {
+    try {
+        const source = CancelToken.source();
+        const timeout = setTimeout(() => {
+            source.cancel();
+            // Timeout Logic
+        }, 5000);
+
+        let data = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FLASKBACKEND}/history/${ident}/configure`, {
+            config: features,
+            versions: versions
+            },
+            { cancelToken: source.token });
+
+        clearTimeout(timeout);
+        return data.data;
+    } catch (e) {
+        return undefined;
     }
 }
