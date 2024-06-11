@@ -479,7 +479,7 @@ export default {
         },
 
         redoCommand(event, row) {
-            let command = row.item.selectable;
+            let command = row.item;
             this.commandManager.redoCommand(command);
         },
 

@@ -1,3 +1,4 @@
+import { ResetCommandMulti } from '@/classes/Commands/MultiConfigurator/ResetCommandMulti';
 
 export class ConfiguratorManager {
     constructor() {
@@ -15,8 +16,11 @@ export class ConfiguratorManager {
             this.historyCommands.at(-1).unmarkChanges();
         }
         command.markChanges();
-
-        this.historyCommands.push(command);
+        if(command instanceof ResetCommandMulti){
+            this.historyCommands = [];
+        } else {
+            this.historyCommands.push(command);
+        }
         this.commands = [...this.historyCommands].reverse();
 
         // Reset stack of future commands because a new command was already executed.

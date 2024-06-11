@@ -10,21 +10,21 @@ export class DecisionPropagationCommandMulti extends ConfigurationCommandMulti {
 
         if (newSelectionState === SelectionState.Unselected) {
             if (feature.selectionState === SelectionState.ExplicitlySelected) {
-                this.description = "Undone selection";
+                this.description = "Undone explicitly selection";
             } else if (feature.selectionState === SelectionState.ExplicitlyDeselected) {
-                this.description = "Undone deselection";
+                this.description = "Undone explicitly deselection";
             }
         } else {
             if (newSelectionState === SelectionState.ExplicitlySelected) {
-                this.description = "Selected";
+                this.description = "Explicitly Selected";
             } else if (newSelectionState === SelectionState.ExplicitlyDeselected) {
-                this.description = "Deselected";
+                this.description = "Explicitly Deselected";
             }
         }
         feature.selectionState = newSelectionState;
         this.description += " " + (feature.name);
 
-        if (data && validCheckbox) {
+        if (data && validCheckbox && data.valid !== false) {
             this.valid = data.valid;
             this.newExplicitlySelectedFeatures = data.eSF;
             this.newImplicitlySelectedFeatures = data.iSF;
@@ -49,7 +49,7 @@ export class DecisionPropagationCommandMulti extends ConfigurationCommandMulti {
             this.newImplicitlyDeselectedVersions = featureModelMulti.versions.filter(f => f.selectionState === SelectionState.ImplicitlyDeselected);
             this.newUnselectedVersions = featureModelMulti.versions.filter(f => f.selectionState === SelectionState.Unselected);
         } else {
-            this.valid = featureModelMulti.checkValidity();
+            this.valid = false;
             this.newExplicitlySelectedFeatures = featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlySelected);
             this.newImplicitlySelectedFeatures = featureModelMulti.features.filter(f => f.selectionState === SelectionState.ImplicitlySelected);
             this.newExplicitlyDeselectedFeatures = featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlyDeselected);

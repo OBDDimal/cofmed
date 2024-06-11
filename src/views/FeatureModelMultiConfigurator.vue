@@ -28,13 +28,13 @@
                     height='5vh'
                 >
                     <template v-slot:icon>
-                        <v-btn v-if='i % 5 === 0' :color='colorVersion(item)' :icon='true'
-                               height='2.2vh' @click='changeFeatureModel(item)'></v-btn>
-                        <v-btn v-else :color='colorVersion(item)' :icon='true' height='2.2vh'
-                               width='0.01vh' @click='changeFeatureModel(item)'></v-btn>
+                        <v-btn v-if='i % 5 === 0' :color='colorVersion(item)' :icon='true' :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                               height='2.2vh' @click='selectVersion(item)'></v-btn>
+                        <v-btn v-else :color='colorVersion(item)' :icon='true' height='2.2vh' :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                               width='2vh' @click='selectVersion(item)'></v-btn>
                     </template>
                     <div v-if='i % 5 === 0' class='text-center'>
-                        {{ item.title }}
+                        {{ item.name }}
                     </div>
                 </v-timeline-item>
             </v-timeline>
@@ -42,16 +42,16 @@
                 <v-timeline-item
                     v-for='(item, i) in models'
                     :key='i'
-                    :dot-color='item.hovered ? "selected" : "primary"'
+                    :dot-color='colorVersion(item)'
                     height='5vh'
                     size='small'
                 >
                     <template v-slot:icon>
-                        <v-btn :color='colorVersion(item)' :icon='true' height='2.2vh'
-                               @click='changeFeatureModel(item)'></v-btn>
+                        <v-btn :color='colorVersion(item)' :icon='true' height='2.2vh' :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                               @click='selectVersion(item)'></v-btn>
                     </template>
                     <div class='text-center'>
-                        {{ item.title }}
+                        {{ item.name }}
                     </div>
                 </v-timeline-item>
             </v-timeline>
@@ -117,20 +117,20 @@
                                     </table>
                                 </v-tooltip>
                                 <div style='width: 18rem'></div>
-                                <v-checkbox
+                                <!--<v-checkbox
                                     v-model='validCheckbox'
                                     density='compact'
                                     hide-details
                                     label='Valid'
-                                ></v-checkbox>
+                                ></v-checkbox> -->
                             </v-layout>
                         </v-card-title>
 
-                        <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints -->
+                        <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints
                         <v-tabs v-model='tabsFirstColumn'>
                             <v-tab key='dataTable'>Data Table</v-tab>
                             <v-tab key='treeView'>Tree View</v-tab>
-                        </v-tabs>
+                        </v-tabs> -->
                         <!-- Search box for features -->
                         <v-layout class='align-center justify-center' row>
                             <v-menu open-on-hover>
@@ -143,20 +143,20 @@
                                     </v-btn>
                                 </template>
                                 <v-list density='compact'>
-                                    <v-list-item title='Show Open Features'>
+                                    <v-list-item title='Show Implicit Selected Features'>
                                         <template v-slot:prepend>
                                             <v-checkbox
-                                                v-model='showOpenFeatures'
+                                                v-model='showImplicitSelectedFeatures'
                                                 density='compact'
                                                 hide-details
                                                 @input='updateFeatures'
                                             ></v-checkbox>
                                         </template>
                                     </v-list-item>
-                                    <v-list-item title='Show Abstract Features'>
+                                    <v-list-item title='Show Implicit Deselected Features'>
                                         <template v-slot:prepend>
                                             <v-checkbox
-                                                v-model='showAbstractFeatures'
+                                                v-model='showImplicitDeselectedFeatures'
                                                 density='compact'
                                                 hide-details
                                                 @input='updateFeatures'
@@ -175,16 +175,17 @@
                                 single-line
                             ></v-text-field>
                         </v-layout>
+                        <!--
                         <v-window v-model='tabsFirstColumn'>
 
-                            <!-- Feature Model Viewer -->
-                            <v-window-item key='dataTable'>
+                            Feature Model Viewer
+                            <v-window-item key='dataTable'>-->
 
 
                                 <!-- Table with all features that are currently fitlered and searched -->
                                 <v-data-table
                                     :headers='headersFeatures'
-                                    :height="pageTableSize === -1 ? '60vh' : '54.5vh'"
+                                    :height="pageTableSize === -1 ? '67.75vh' : '60.75vh'"
                                     :items='featuresTrimmed'
                                     :items-per-page='pageTableSize'
                                     :search='searchFeatures'
@@ -216,6 +217,7 @@
                                     <template v-if='pageTableSize === -1' v-slot:bottom>
                                     </template>
                                 </v-data-table>
+                        <!--
                             </v-window-item>
                             <v-window-item key='treeView'>
                                 <v-treeview
@@ -231,7 +233,7 @@
                                 </template>
                             </v-window-item>
                         </v-window>
-
+                        -->
                     </v-card>
                 </v-col>
 
@@ -250,7 +252,7 @@
 
                         <v-card-text>
                             <v-data-table
-                                :headers="[{title: 'Description', key: 'description'}, {title: '# Possible configs', key: 'newSatCount'}, {title: 'Validation', key: 'valid'}]"
+                                :headers="[{title: 'Description', key: 'description'}, {title: '# Features Free', key: 'newUnselectedFeatures'}, {title: '# Versions Free', key: 'newUnselectedVersions'}]"
                                 :item-class="command => command.marked ? 'active-command clickable' : 'clickable'"
                                 :items='commandManager.commands'
                                 class='elevation-1'
@@ -263,9 +265,12 @@
                                 single-select
                                 @click:row='redoCommand'
                             >
+                                <template v-slot:item.newUnselectedFeatures='{ item }'>
+                                    {{ item.newUnselectedFeatures.length }}
+                                </template>
 
-                                <template v-slot:item.valid='{ item }'>
-                                    {{ item.valid ? 'true' : 'false' }}
+                                <template v-slot:item.newUnselectedVersions='{ item }'>
+                                    {{ item.newUnselectedVersions.length }}
                                 </template>
                             </v-data-table>
                             <!-- Remove Feature Model Viewer until important
@@ -465,8 +470,8 @@ export default {
         featureModelName: '',
         features: undefined,
         featuresTrimmed: undefined,
-        showOpenFeatures: false,
-        showAbstractFeatures: true,
+        showImplicitSelectedFeatures: true,
+        showImplicitDeselectedFeatures: true,
         filteredConstraints: undefined,
         allConstraints: undefined,
         searchFeatures: '',
@@ -544,7 +549,7 @@ export default {
         },
 
         redoCommand(event, row) {
-            let command = row.item.selectable;
+            let command = row.item;
             this.commandManager.redoCommand(command);
         },
 
@@ -570,6 +575,7 @@ export default {
             const selectionData = await this.getSelectionDataFromAPI(data);
             let command = new DecisionPropagationCommandMulti(this.featureModelMulti, selectionData, item, selectionState, this.validCheckbox);
             this.commandManager.execute(command);
+            this.updateFeatures();
         },
 
         resetCommand() {
@@ -635,7 +641,7 @@ export default {
                 this.featureModelSolo = featureModelSolo;
                 const selectionData = await this.getSelectionDataFromAPI();
                 this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
-                this.initialResetCommand.execute();
+                this.commandManager.execute(this.initialResetCommand);
             } catch (e) {
                 console.log(e);
                 appStore.updateSnackbar(
@@ -661,7 +667,8 @@ export default {
             this.fmIsLoaded = true;
             this.models = [];
             try {
-                this.ident = await registerHistory(files, files[0].name.slice(0, files[0].name.indexOf('-')));
+                this.featureModelName = files[0].name.slice(0, files[0].name.indexOf('-'));
+                this.ident = await registerHistory(files, this.featureModelName);
                 if (this.ident === undefined) {
                     throw new Error('No connection to backend.');
                 }
@@ -669,11 +676,11 @@ export default {
                 this.featureModelMulti = new FeatureModelMulti(data.mapping, data.versions);
                 this.commandManager = new ConfiguratorManager();
                 this.features = this.featureModelMulti.features;
-                this.updateFeatures();
                 this.models = this.featureModelMulti.versions;
                 const selectionData = await this.getSelectionDataFromAPI();
                 this.initialResetCommand = new ResetCommandMulti(this.featureModelMulti, selectionData, 0);
                 this.initialResetCommand.execute();
+                this.updateFeatures();
             } catch (e) {
                 console.log(e);
                 appStore.updateSnackbar(
@@ -730,16 +737,16 @@ export default {
         },
 
         updateFeatures() {
-            let returnFeatures = new Set(this.features.flat());
+            let returnFeatures = this.features;
 
-            /*if (!this.showAbstractFeatures) {
-                returnFeatures = returnFeatures.filter((f) => !f.isAbstract);
+            if (this.showImplicitSelectedFeatures) {
+                returnFeatures = returnFeatures.filter((f) => (f.selectionState !== SelectionState.ImplicitlySelected));
             }
-            if (this.showOpenFeatures) {
-                returnFeatures = returnFeatures.filter((f) => f.open != null);
-            }*/
+            if (this.showImplicitDeselectedFeatures) {
+                returnFeatures = returnFeatures.filter((f) => (f.selectionState !== SelectionState.ImplicitlyDeselected));
+            }
 
-            this.featuresTrimmed = Array.from(returnFeatures);
+            this.featuresTrimmed = returnFeatures;
         },
 
         async changeService(boolean) {
@@ -788,12 +795,14 @@ export default {
 
             const selection = this.featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlySelected);
             const deselection = this.featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlyDeselected);
+            const selectionVersion = this.featureModelMulti.versions.filter(f => f.selectionState === SelectionState.ExplicitlySelected);
+            const deselectionVersion = this.featureModelMulti.versions.filter(f => f.selectionState === SelectionState.ExplicitlyDeselected);
 
             return {
                 selection: selection,
                 deselection: deselection,
-                selectionVersion: [],
-                deselectionVersion: []
+                selectionVersion: selectionVersion,
+                deselectionVersion: deselectionVersion
             };
         },
 
@@ -854,6 +863,9 @@ export default {
                         return undefined;
                     }
                 }
+                if (apiData.valid === false){
+                    return apiData
+                }
                 selectionData = {
                     valid: apiData.valid,
                     eSF: [],
@@ -893,6 +905,9 @@ export default {
                         return undefined;
                     }
                 }
+                if (apiData.valid === false){
+                    return apiData
+                }
                 selectionData = {
                     valid: apiData.valid,
                     eSF: data.selection,
@@ -901,10 +916,10 @@ export default {
                     iDF: this.featureModelMulti.features.filter(f => !data.deselection.includes(f) && apiData.config.includes(f.id * (-1))),
                     uF: this.featureModelMulti.features.filter(f => apiData.features_free.includes(f.id)),
                     eSV: data.selectionVersion,
-                    iSV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && apiData.versions.includes(f.name)),
+                    iSV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && apiData.versions.includes(f.id)),
                     eDV: data.deselectionVersion,
-                    iDV: this.featureModelMulti.versions.filter(f => !data.deselectionVersion.includes(f) && apiData.versions_disabled.includes(f.name)),
-                    uV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && !apiData.versions.includes(f.name) && !data.deselectionVersion.includes(f) && apiData.versions_disabled.includes(f.name)),
+                    iDV: this.featureModelMulti.versions.filter(f => !data.deselectionVersion.includes(f) && apiData.versions_disabled.includes(f.id)),
+                    uV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && !apiData.versions.includes(f.id) && !data.deselectionVersion.includes(f) && !apiData.versions_disabled.includes(f.id)),
                 };
             }
 
@@ -948,6 +963,23 @@ export default {
             } else {
                 return dark ? variabilityLightTheme.colors.background : variabilityDarkTheme.colors.background;
             }
+        },
+
+        async selectVersion(item){
+            const data = this.getSelection();
+            let selectionState;
+            if (item.selectionState === SelectionState.ExplicitlySelected) {
+                selectionState = SelectionState.Unselected;
+                data.selectionVersion.pop(item);
+            } else if (item.selectionState === SelectionState.Unselected) {
+                selectionState = SelectionState.ExplicitlySelected;
+                data.selectionVersion.push(item);
+            }
+
+            const selectionData = await this.getSelectionDataFromAPI(data);
+            let command = new DecisionPropagationCommandMulti(this.featureModelMulti, selectionData, item, selectionState, this.validCheckbox);
+            this.commandManager.execute(command);
+            this.updateFeatures();
         }
     },
 

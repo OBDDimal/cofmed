@@ -8,9 +8,8 @@ export class ResetCommandMulti extends ConfigurationCommandMulti {
         this.newSatCount = satCount;
         this.description = "Reset";
 
-        this.valid = true;
-
         if (data) {
+            this.valid = true;
             this.newExplicitlySelectedFeatures = data.eSF;
             this.newImplicitlySelectedFeatures = data.iSF;
             this.newExplicitlyDeselectedFeatures = data.eDF;
@@ -22,6 +21,7 @@ export class ResetCommandMulti extends ConfigurationCommandMulti {
             this.newImplicitlyDeselectedVersions = data.iDV;
             this.newUnselectedVersions = data.uV;
         } else {
+            this.valid = false;
             this.newExplicitlySelectedFeatures = featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlySelected);
             this.newImplicitlySelectedFeatures = featureModelMulti.features.filter(f => f.selectionState === SelectionState.ImplicitlySelected);
             this.newExplicitlyDeselectedFeatures = featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlyDeselected);
@@ -48,9 +48,11 @@ export class ResetCommandMulti extends ConfigurationCommandMulti {
         command.newExplicitlyDeselectedFeatures = this.newExplicitlyDeselectedFeatures;
         command.newImplicitlyDeselectedFeatures = this.newImplicitlyDeselectedFeatures;
         command.newUnselectedFeatures = this.newUnselectedFeatures;
-        command.newOpenParentFeatures = this.newOpenParentFeatures;
-        command.newOpenChildrenFeatures = this.newOpenChildrenFeatures;
-        command.newNotOpenFeatures = this.newNotOpenFeatures;
+        command.newExplicitlySelectedVersions = this.newExplicitlySelectedVersions;
+        command.newImplicitlySelectedVersions = this.newImplicitlySelectedVersions;
+        command.newExplicitlyDeselectedVersions = this.newExplicitlyDeselectedVersions;
+        command.newImplicitlyDeselectedVersions = this.newImplicitlyDeselectedVersions;
+        command.newUnselectedVersions = this.newUnselectedVersions;
         return command;
     }
 }

@@ -47,7 +47,6 @@ export class ConfigurationCommandMulti extends Command {
         this.newExplicitlyDeselectedVersions.forEach(f => f.selectionState = SelectionState.ExplicitlyDeselected);
         this.newImplicitlyDeselectedVersions.forEach(f => f.selectionState = SelectionState.ImplicitlyDeselected);
         this.newUnselectedVersions.forEach(f => f.selectionState = SelectionState.Unselected);
-
         this.featureModel.satCount = this.newSatCount;
     }
 
