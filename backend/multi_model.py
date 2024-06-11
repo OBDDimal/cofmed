@@ -35,6 +35,13 @@ class MultiConfiguration():
         self.versions_available = set(self.id2versions.keys())
         self.versions_disabled = set()
 
+        cores = set.intersection(*self.history.it2cores.values())
+        deads = set.intersection(*self.history.it2deads.values())
+
+        self.config.update(cores)
+        self.config.update({-x for x in deads})
+        self.features_free = self.features_free.difference(cores).difference(deads)
+
 
     def configure(self, config = None, versions = None):
 
@@ -80,7 +87,7 @@ class MultiConfiguration():
 
     def select_version(self, version):        
         if version not in self.versions_available:
-            print(f"Version {version} cannot be selected")
+            # print(f"Version {version} cannot be selected")
             return False
 
         self.versions.add(version)
@@ -97,7 +104,7 @@ class MultiConfiguration():
 
             return self.feature_dp(feature)
         else:
-            print(f"Feature {feature} cannot be selected")
+            # print(f"Feature {feature} cannot be selected")
             return False
 
 
@@ -138,7 +145,6 @@ class MultiConfiguration():
 
         self.versions_disabled = versions_disabled
         self.versions_available = self.versions_available.difference({abs(x) for x in self.versions}).difference(self.versions_disabled)
-
 
         cnf_temp = CNF(from_clauses = bootstrap_clauses)
         self.formula, cores, deads = preprocessing.simplify_yield_unit_clauses(cnf_temp)
@@ -194,7 +200,7 @@ class MultiConfiguration():
 
         self.config.update(decided)
 
-        print("Decided", decided)
+        # print("Decided", decided)
         self.features_free = self.features_free.difference({abs(x) for x in decided})
 
         clauses = [clause for clause in clauses if clause]
@@ -254,6 +260,9 @@ class History():
         self.it2original = dict()
         self.it2unified = dict()
 
+        self.it2cores = dict()
+        self.it2deads = dict()
+
         self.add(files)
 
 
@@ -274,7 +283,7 @@ class History():
         files_set = set(self.files)
         files_set.update(files)
 
-        print(self.files)
+        # print(self.files)
 
         new_variable = False
 
@@ -304,9 +313,14 @@ class History():
 
             cnf2 = preprocessing.simplify_unit_clauses(cnf)
             cnf2 = self.unify(cnf2)
-            cnf2 = preprocessing.simplify_unit_clauses(cnf2)
+            cnf2, cores, deads = preprocessing.simplify_yield_unit_clauses(cnf2)
 
             self.it2unified[file] = cnf2
+
+            # print(cores)
+            # print(deads)
+            self.it2cores[file] = cores
+            self.it2deads[file] = deads
 
 
     def collect(self, cnf):

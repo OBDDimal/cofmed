@@ -206,19 +206,26 @@ def test_history_configure(client):
 
     ident = get_verify_ident_history(client)
 
-    response = client.post(f"/history/{ident}/configure", json = dict(config = [2], versions = []))
+    response = client.post(f"/history/{ident}/configure", json = dict(config = [], versions = []))
+    assert response.status_code == 200
+    data = response.json
 
+    assert data.get("valid") is True
+    assert data.get("config") == [-18, 36, -42, 48, 58, -59, -61, 80, -85, 141, 156, -210, 227]
+    assert data.get("versions_disabled") == []
+    assert data.get("versions") == []
+
+    response = client.post(f"/history/{ident}/configure", json = dict(config = [2], versions = []))
     assert response.status_code == 200
 
     data = response.json
 
     assert data.get("valid") is True
+    assert data.get("config") == [2, -18, 36, -42, 48, 58, -59, -61, 80, -85, 141, 156, -210, 227]
     assert data.get("versions_disabled") == [13, 14, 15, 16, 17]
 
 
     response = client.post(f"/history/{ident}/configure", json = dict(config = [2], versions = [15]))
-
-
     assert response.status_code == 200
 
     data = response.json
@@ -227,8 +234,6 @@ def test_history_configure(client):
 
 
     response = client.post(f"/history/{ident}/configure", json = dict(config = [-2, 20], versions = [15]))
-
-
     assert response.status_code == 200
 
     data = response.json
