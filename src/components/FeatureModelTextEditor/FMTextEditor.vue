@@ -1,34 +1,45 @@
 <script>
-import MonacoEditor from 'monaco-editor-vue3';
+import { defineComponent, ref, shallowRef } from 'vue';
+import { Codemirror } from 'vue-codemirror'
+import { xml } from '@codemirror/lang-xml'
+import { oneDark } from '@codemirror/theme-one-dark'
+import {getLanguageServer} from '@/services/LSP.service'
 
-export default {
+export default defineComponent({
     components: {
-        MonacoEditor,
+        Codemirror
     },
-    props: {
-        code: undefined,
-    },
+    setup() {
+        const code = ref(`console.log('Hello, world!')`)
+        const ls = getLanguageServer();
+        const extensions = [xml(), ls, oneDark]
 
-    created() {
-        this.textCode = this.code
-    },
+        // Codemirror EditorView instance ref
+        const view = shallowRef()
+        const handleReady = (payload) => {
+            view.value = payload.view
+        }
 
-    data() {
+        // Status is available at all times via Codemirror EditorView
+        const getCodemirrorStates = () => {
+            const state = view.value.state
+            const ranges = state.selection.ranges
+            const selected = ranges.reduce((r, range) => r + range.to - range.from, 0)
+            const cursor = ranges[0].anchor
+            const length = state.doc.length
+            const lines = state.doc.lines
+            // more state info ...
+            // return ...
+        }
+
         return {
-            options: {
-                colorDecorators: true,
-                lineHeight: 24,
-                tabSize: 4,
-            },
-            textCode: '',
-        };
-    },
-    watch: {
-        code() {
-            this.textCode = this.code
-        },
-    },
-};
+            code,
+            extensions,
+            handleReady,
+            log: console.log
+        }
+    }
+})
 </script>
 
 <template>
@@ -53,7 +64,7 @@ export default {
             class='ma-2'
             color='primary'
             elevation='2'
-            @click='$emit("convertTextToModel", textCode)'
+            @click='$emit("convertTextToModel", code)'
         >
             <v-icon>mdi-code-greater-than</v-icon>
             <v-tooltip
@@ -62,12 +73,19 @@ export default {
             >Convert Text to Model</v-tooltip>
         </v-btn>
     </v-col>
-    <MonacoEditor
-        theme="vs-dark"
-        :options="options"
-        language="xml"
-        v-model:value="textCode"
-    ></MonacoEditor>
+    <codemirror
+        v-model="code"
+        placeholder="Code goes here..."
+        :style="{ height: '400px' }"
+        :autofocus="true"
+        :indent-with-tab="true"
+        :tab-size="2"
+        :extensions="extensions"
+        @ready="handleReady"
+        @change="log('change', $event)"
+        @focus="log('focus', $event)"
+        @blur="log('blur', $event)"
+    />
 </template>
 
 <style scoped></style>
