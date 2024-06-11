@@ -354,6 +354,7 @@
                     </v-card>
                 </v-col>
             </v-row>
+            <FeatureModelTreeLoadingDialog :show='isLoading' :text='"Waiting for backend"'/>
         </template>
         <template v-else>
             <v-card :class="{ 'grey lighten-2': dragover }"
@@ -430,11 +431,12 @@ import { FeatureModelMulti } from '@/classes/Configurator/FeatureModelMulti';
 import { variabilityDarkTheme, variabilityLightTheme } from '@/plugins/vuetify';
 import { ResetCommandMulti } from '@/classes/Commands/MultiConfigurator/ResetCommandMulti';
 import { DecisionPropagationCommandMulti } from '@/classes/Commands/MultiConfigurator/DecisionPropagationCommandMulti';
+import FeatureModelTreeLoadingDialog from '@/components/FeatureModel/FeatureModelTreeLoadingDialog.vue';
 
 const appStore = useAppStore();
 export default {
     name: 'FeatureModelSoloConfigurator',
-    components: { ConfNavbar, FeatureModelViewerSolo, DoubleCheckbox },
+    components: { FeatureModelTreeLoadingDialog, ConfNavbar, FeatureModelViewerSolo, DoubleCheckbox },
 
     data: () => ({
         headersFeatures: [
@@ -486,7 +488,8 @@ export default {
         validCheckbox: true,
         xml: undefined,
         timelineBias: 0,
-        ident: undefined
+        ident: undefined,
+        isLoading: false
     }),
 
     props: {
@@ -560,6 +563,7 @@ export default {
         },
 
         async decisionPropagation(item, selectionState) {
+            this.isLoading = true;
             const data = this.getSelection();
             if (selectionState === SelectionState.ExplicitlySelected) {
                 data.selection.push(item);
@@ -576,6 +580,7 @@ export default {
             let command = new DecisionPropagationCommandMulti(this.featureModelMulti, selectionData, item, selectionState, this.validCheckbox);
             this.commandManager.execute(command);
             this.updateFeatures();
+            this.isLoading = false;
         },
 
         resetCommand() {
@@ -665,6 +670,7 @@ export default {
 
         async openFile(files) {
             this.fmIsLoaded = true;
+            this.isLoading = true;
             this.models = [];
             try {
                 this.featureModelName = files[0].name.slice(0, files[0].name.indexOf('-'));
@@ -692,6 +698,7 @@ export default {
                 this.fmIsLoaded = false;
             }
             this.showOpenDialog = false;
+            this.isLoading = false;
         },
 
         async openConfig(e) {
@@ -966,6 +973,7 @@ export default {
         },
 
         async selectVersion(item){
+            this.isLoading = true;
             const data = this.getSelection();
             let selectionState;
             if (item.selectionState === SelectionState.ExplicitlySelected) {
@@ -980,6 +988,7 @@ export default {
             let command = new DecisionPropagationCommandMulti(this.featureModelMulti, selectionData, item, selectionState, this.validCheckbox);
             this.commandManager.execute(command);
             this.updateFeatures();
+            this.isLoading = false;
         }
     },
 
