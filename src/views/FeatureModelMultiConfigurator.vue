@@ -645,15 +645,17 @@ export default {
         async openFromLocalStorage() {
             this.fmIsLoaded = true;
             this.isLoading = true;
+            /*
             const dir = await fs.readdir('./backend/testdata');
-            let files = [];
+            let files = []; */
             try {
+                /*
                 for (const f of dir) {
                     if (f.includes('fiasco')) {
                         let response = await axios.get('/backend/testdata/' + f, {responseType: 'blob'});
                         files.push(new File([response.data], f));
                     }
-                }
+                }*/
                 this.ident = await getExample();
                 if (this.ident === undefined) {
                     throw new Error('No connection to backend.');
