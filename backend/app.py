@@ -1,3 +1,4 @@
+import glob
 import os
 from os import path
 from flask import Flask, flash, request, Response, jsonify
@@ -315,7 +316,6 @@ def register_history(history_name):
     files = []
 
     for file in request.files.getlist("files[]"):
-
         filename = path.basename(file.filename)
         filename = secure_filename(filename)
         
@@ -367,3 +367,20 @@ def configure(ident):
         return jsonify(dict(valid = False))
 
     return jsonify(configuration.answer())
+
+
+@app.route('/example', methods=["GET"])
+@cross_origin()
+def get_example():
+
+    files = sorted(glob.glob("testdata/fiasco*.dimacs"))
+
+    history_name = "example-fiasco"
+
+    history = History(history_name, *sorted(files))
+
+    ident = f'{history_name}-{"".join([str(random.randint(0, 9)) for _ in range(16)])}'
+
+    histories[ident] = history
+
+    return Response(ident, status=200)

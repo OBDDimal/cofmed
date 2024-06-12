@@ -23,6 +23,7 @@
     "qrcode.vue": "^3.4.0",
     "roboto-fontface": "*",
     "unique-names-generator": "^4.7.1",
+    "vite-plugin-fs": "^1.1.0",
     "vue": "^3.2.13",
     "vue-chartjs": "^5.2.0",
     "vue-router": "^4.0.0",

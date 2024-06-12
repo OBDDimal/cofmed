@@ -34,10 +34,10 @@
                                height='2.2vh' @click='selectVersion(item)'></v-btn>
                         <v-tooltip :text='item.name' location='top'>
                             <template v-slot:activator='{ props }'>
-                                <v-btn v-if='i % 5 !==0' :color='colorVersion(item)' v-bind="props"
-                                       :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                                <v-btn v-if='i % 5 !==0' :color='colorVersion(item)' :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
                                        :icon='true'
                                        height='2.2vh'
+                                       v-bind='props'
                                        width='2vh' @click='selectVersion(item)'></v-btn>
                             </template>
                         </v-tooltip>
@@ -389,7 +389,7 @@
                         </p>
                         <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text'
                                @click.stop='openFromLocalStorage'>
-                            Or click here to load it from your local storage.
+                            Or click here to load an example.
                         </v-btn>
                     </v-row>
                 </v-card-text>
@@ -431,12 +431,12 @@ import { useAppStore } from '@/store/app';
 import { ResetCommand } from '@/classes/Commands/Configurator/ResetCommand';
 import { LoadConfigCommand } from '@/classes/Commands/Configurator/LoadConfigCommand';
 import {
-    decisionPropagationFL, decisionPropagationMulti,
+    decisionPropagationFL, decisionPropagationMulti, getExample,
     getFeaturesAndVersionFromHistory,
     pingFL,
     registerHistory
 } from '@/classes/BackendAccess/FlaskAccess';
-import { changeFileFormat, decisionPropagationFIDE, pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
+import { pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
 import beautify from 'xml-beautifier';
 import ConfNavbar from '@/components/Configurator/ConfNavbar.vue';
 import { FeatureModelMulti } from '@/classes/Configurator/FeatureModelMulti';
@@ -444,8 +444,12 @@ import { variabilityDarkTheme, variabilityLightTheme } from '@/plugins/vuetify';
 import { ResetCommandMulti } from '@/classes/Commands/MultiConfigurator/ResetCommandMulti';
 import { DecisionPropagationCommandMulti } from '@/classes/Commands/MultiConfigurator/DecisionPropagationCommandMulti';
 import FeatureModelTreeLoadingDialog from '@/components/FeatureModel/FeatureModelTreeLoadingDialog.vue';
+import axios from 'axios';
+import fs from 'vite-plugin-fs/browser';
 
 const appStore = useAppStore();
+
+
 export default {
     name: 'FeatureModelSoloConfigurator',
     components: { FeatureModelTreeLoadingDialog, ConfNavbar, FeatureModelViewerSolo, DoubleCheckbox },
@@ -475,7 +479,7 @@ export default {
             }
         },
         sortByCTC: [{ key: 'evaluation', order: 'desc' }],
-        models: undefined,
+        models: [],
         commandManager: new ConfiguratorManager(),
         initialResetCommand: undefined,
         featureModelMulti: FeatureModelMulti,
@@ -640,25 +644,29 @@ export default {
 
         async openFromLocalStorage() {
             this.fmIsLoaded = true;
-            const data = localStorage.featureModelData;
+            this.isLoading = true;
+            const dir = await fs.readdir('./backend/testdata');
+            let files = [];
             try {
-                this.xml = data;
-                const featureModelSolo = FeatureModelSolo.loadXmlDataFromFile(this.xml);
+                for (const f of dir) {
+                    if (f.includes('fiasco')) {
+                        let response = await axios.get('/backend/testdata/' + f, {responseType: 'blob'});
+                        files.push(new File([response.data], f));
+                    }
+                }
+                this.ident = await getExample();
+                if (this.ident === undefined) {
+                    throw new Error('No connection to backend.');
+                }
+                const data = await getFeaturesAndVersionFromHistory(this.ident);
+                this.featureModelMulti = new FeatureModelMulti(data.mapping, data.versions);
                 this.commandManager = new ConfiguratorManager();
-                this.features = featureModelSolo.features;
-                this.updateFeatures();
-                this.featureModelName = 'LocalStorageFile';
-                featureModelSolo.name = this.featureModelName;
-                this.allConstraints = featureModelSolo.constraints.map((e) => ({
-                    constraint: e,
-                    formula: e.toList(),
-                    evaluation: e.evaluate()
-                }));
-                this.filteredConstraints = this.allConstraints;
-                this.featureModelSolo = featureModelSolo;
+                this.features = this.featureModelMulti.features;
+                this.models = this.featureModelMulti.versions;
                 const selectionData = await this.getSelectionDataFromAPI();
-                this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
-                this.commandManager.execute(this.initialResetCommand);
+                this.initialResetCommand = new ResetCommandMulti(this.featureModelMulti, selectionData, 0);
+                this.initialResetCommand.execute();
+                this.updateFeatures();
             } catch (e) {
                 console.log(e);
                 appStore.updateSnackbar(
@@ -669,6 +677,7 @@ export default {
                 );
                 this.fmIsLoaded = false;
             }
+            this.isLoading = false;
         },
 
         getVersions(item) {
@@ -686,6 +695,7 @@ export default {
             this.models = [];
             try {
                 this.featureModelName = files[0].name.slice(0, files[0].name.indexOf('-'));
+                console.log(files)
                 this.ident = await registerHistory(files, this.featureModelName);
                 if (this.ident === undefined) {
                     throw new Error('No connection to backend.');

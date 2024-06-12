@@ -28,6 +28,7 @@ export async function decisionPropagationFL(file, selection = [], deselection = 
         clearTimeout(timeout);
     }
 }
+
 export async function pingFL() {
     try {
         const source = CancelToken.source();
@@ -71,6 +72,10 @@ export async function registerHistory(files, historyName) {
             formData.append('files', file, file.name);
         }
 
+        for (const value of formData.entries()) {
+            console.log(value);
+        }
+
         const source = CancelToken.source();
         const timeout = setTimeout(() => {
             source.cancel();
@@ -90,7 +95,25 @@ export async function registerHistory(files, historyName) {
     }
 }
 
+export async function getExample() {
+    try {
+                const source = CancelToken.source();
+        const timeout = setTimeout(() => {
+            source.cancel();
+            // Timeout Logic
+        }, 5000);
 
+        let data = await axios.get(`${import.meta.env.VITE_APP_DOMAIN_FLASKBACKEND}/example`,
+            {
+                cancelToken: source.token
+            });
+
+        clearTimeout(timeout);
+        return data.data;
+    } catch (e) {
+        return undefined;
+    }
+}
 
 
 export async function decisionPropagationMulti(ident, features, versions) {
@@ -102,8 +125,8 @@ export async function decisionPropagationMulti(ident, features, versions) {
         }, 5000);
 
         let data = await axios.post(`${import.meta.env.VITE_APP_DOMAIN_FLASKBACKEND}/history/${ident}/configure`, {
-            config: features,
-            versions: versions
+                config: features,
+                versions: versions
             },
             { cancelToken: source.token });
 

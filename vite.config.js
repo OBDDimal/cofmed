@@ -1,6 +1,7 @@
 // Plugins
 import vue from '@vitejs/plugin-vue';
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify';
+import fs from "vite-plugin-fs";
 
 // Utilities
 import { defineConfig } from 'vite';
@@ -19,6 +20,7 @@ export default defineConfig({
                 configFile: 'src/styles/settings.scss',
             },
         }),
+        fs(),
     ],
     define: { 'process.env': {} },
     resolve: {
