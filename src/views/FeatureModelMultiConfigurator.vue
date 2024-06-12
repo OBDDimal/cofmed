@@ -25,13 +25,22 @@
                     :key='i'
                     :dot-color='colorVersion(item)'
                     :size='i % 5 !== 0  ? "" : "small"'
-                    height='5vh'
+                    height='4vh'
                 >
                     <template v-slot:icon>
-                        <v-btn v-if='i % 5 === 0' :color='colorVersion(item)' :icon='true' :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                        <v-btn v-if='i % 5 === 0' :color='colorVersion(item)'
+                               :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                               :icon='true'
                                height='2.2vh' @click='selectVersion(item)'></v-btn>
-                        <v-btn v-else :color='colorVersion(item)' :icon='true' height='2.2vh' :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
-                               width='2vh' @click='selectVersion(item)'></v-btn>
+                        <v-tooltip :text='item.name' location='top'>
+                            <template v-slot:activator='{ props }'>
+                                <v-btn v-if='i % 5 !==0' :color='colorVersion(item)' v-bind="props"
+                                       :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                                       :icon='true'
+                                       height='2.2vh'
+                                       width='2vh' @click='selectVersion(item)'></v-btn>
+                            </template>
+                        </v-tooltip>
                     </template>
                     <div v-if='i % 5 === 0' class='text-center'>
                         {{ item.name }}
@@ -47,7 +56,10 @@
                     size='small'
                 >
                     <template v-slot:icon>
-                        <v-btn :color='colorVersion(item)' :icon='true' height='2.2vh' :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                        <v-btn :color='colorVersion(item)'
+                               :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                               :icon='true'
+                               height='2.2vh'
                                @click='selectVersion(item)'></v-btn>
                     </template>
                     <div class='text-center'>
@@ -57,7 +69,7 @@
             </v-timeline>
             <v-row>
                 <v-col cols='4'>
-                    <v-card height='77.5vh'>
+                    <v-card height='79.5vh'>
                         <v-card-title>
                             <v-layout class='align-center' row>
                                 <!-- Heading features -->
@@ -182,41 +194,41 @@
                             <v-window-item key='dataTable'>-->
 
 
-                                <!-- Table with all features that are currently fitlered and searched -->
-                                <v-data-table
-                                    :headers='headersFeatures'
-                                    :height="pageTableSize === -1 ? '67.75vh' : '60.75vh'"
-                                    :items='featuresTrimmed'
-                                    :items-per-page='pageTableSize'
-                                    :search='searchFeatures'
-                                    fixed-header
-                                    item-key='name'
-                                    show-group-by
-                                    single-select
-                                >
-                                    <!-- Customization of the column SELECTIONSTATE -->
-                                    <template v-slot:item.selectionState='{ item }'>
-                                        <DoubleCheckbox v-bind:selection-item='item'
-                                                        @select='(selection) => decisionPropagation(item, selection)'></DoubleCheckbox>
-                                    </template>
+                        <!-- Table with all features that are currently fitlered and searched -->
+                        <v-data-table
+                            :headers='headersFeatures'
+                            :height="pageTableSize === -1 ? '68.75vh' : '62.75vh'"
+                            :items='featuresTrimmed'
+                            :items-per-page='pageTableSize'
+                            :search='searchFeatures'
+                            fixed-header
+                            item-key='name'
+                            show-group-by
+                            single-select
+                        >
+                            <!-- Customization of the column SELECTIONSTATE -->
+                            <template v-slot:item.selectionState='{ item }'>
+                                <DoubleCheckbox v-bind:selection-item='item'
+                                                @select='(selection) => decisionPropagation(item, selection)'></DoubleCheckbox>
+                            </template>
 
-                                    <!-- Customization of the column NAME -->
-                                    <template v-slot:item.name='{ item }'>
-                                        <div @mouseleave='removeVersionsHover' @mouseover='getVersions(item)'>
-                                            <v-tooltip location='bottom'>
-                                                <template v-slot:activator='{ props }'>
-                                                    <span v-bind='props'>{{ item.name }}</span>
-                                                    <template v-if='item.isAbstract'>
-                                                        <i> Abstract</i>
-                                                    </template>
-                                                </template>
-                                            </v-tooltip>
-                                        </div>
-                                    </template>
+                            <!-- Customization of the column NAME -->
+                            <template v-slot:item.name='{ item }'>
+                                <div @mouseleave='removeVersionsHover' @mouseover='getVersions(item)'>
+                                    <v-tooltip location='bottom'>
+                                        <template v-slot:activator='{ props }'>
+                                            <span v-bind='props'>{{ item.name }}</span>
+                                            <template v-if='item.isAbstract'>
+                                                <i> Abstract</i>
+                                            </template>
+                                        </template>
+                                    </v-tooltip>
+                                </div>
+                            </template>
 
-                                    <template v-if='pageTableSize === -1' v-slot:bottom>
-                                    </template>
-                                </v-data-table>
+                            <template v-if='pageTableSize === -1' v-slot:bottom>
+                            </template>
+                        </v-data-table>
                         <!--
                             </v-window-item>
                             <v-window-item key='treeView'>
@@ -240,7 +252,7 @@
                 <v-col cols='8'>
 
                     <!-- Details of the selected version -->
-                    <v-card height='77.5vh'>
+                    <v-card height='79.5vh'>
                         <v-card-title>Details for {{ featureModelName }}:</v-card-title>
 
                         <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints
@@ -260,7 +272,7 @@
                                 disable-pagination
                                 disable-sort
                                 fixed-header
-                                height='66.75vh'
+                                height='68.75vh'
                                 hide-default-footer
                                 single-select
                                 @click:row='redoCommand'
@@ -354,7 +366,7 @@
                     </v-card>
                 </v-col>
             </v-row>
-            <FeatureModelTreeLoadingDialog :show='isLoading' :text='"Waiting for backend"'/>
+            <FeatureModelTreeLoadingDialog :show='isLoading' :text='"Waiting for backend"' />
         </template>
         <template v-else>
             <v-card :class="{ 'grey lighten-2': dragover }"
@@ -870,8 +882,8 @@ export default {
                         return undefined;
                     }
                 }
-                if (apiData.valid === false){
-                    return apiData
+                if (apiData.valid === false) {
+                    return apiData;
                 }
                 selectionData = {
                     valid: apiData.valid,
@@ -884,14 +896,14 @@ export default {
                     iSV: this.featureModelMulti.versions.filter(f => apiData.versions.includes(f.id)),
                     eDV: [],
                     iDV: this.featureModelMulti.versions.filter(f => apiData.versions_disabled.includes(f.id)),
-                    uV: this.featureModelMulti.versions.filter(f => !apiData.versions.includes(f.id) && !apiData.versions_disabled.includes(f.id)),
+                    uV: this.featureModelMulti.versions.filter(f => !apiData.versions.includes(f.id) && !apiData.versions_disabled.includes(f.id))
                 };
 
             } else {
-                const mappedFeatures = data.selection.map(f => f.id).concat(data.deselection.map(f => f.id*(-1)));
-                const mappedVersions = data.selectionVersion.map(f => f.id).concat(data.deselectionVersion.map(f => f.id*(-1)));
+                const mappedFeatures = data.selection.map(f => f.id).concat(data.deselection.map(f => f.id * (-1)));
+                const mappedVersions = data.selectionVersion.map(f => f.id).concat(data.deselectionVersion.map(f => f.id * (-1)));
                 const apiData = await decisionPropagationMulti(this.ident, mappedFeatures, mappedVersions);
-                console.log(apiData)
+                console.log(apiData);
                 if (!apiData) {
                     this.serviceIsWorking = false;
                     appStore.updateSnackbar(
@@ -912,8 +924,8 @@ export default {
                         return undefined;
                     }
                 }
-                if (apiData.valid === false){
-                    return apiData
+                if (apiData.valid === false) {
+                    return apiData;
                 }
                 selectionData = {
                     valid: apiData.valid,
@@ -926,7 +938,7 @@ export default {
                     iSV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && apiData.versions.includes(f.id)),
                     eDV: data.deselectionVersion,
                     iDV: this.featureModelMulti.versions.filter(f => !data.deselectionVersion.includes(f) && apiData.versions_disabled.includes(f.id)),
-                    uV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && !apiData.versions.includes(f.id) && !data.deselectionVersion.includes(f) && !apiData.versions_disabled.includes(f.id)),
+                    uV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && !apiData.versions.includes(f.id) && !data.deselectionVersion.includes(f) && !apiData.versions_disabled.includes(f.id))
                 };
             }
 
@@ -972,7 +984,7 @@ export default {
             }
         },
 
-        async selectVersion(item){
+        async selectVersion(item) {
             this.isLoading = true;
             const data = this.getSelection();
             let selectionState;
