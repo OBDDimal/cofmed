@@ -90,39 +90,14 @@
             >
                 Timeline Right
             </v-btn>
-            <v-menu v-if='!properties.models'
-                    open-on-hover
+            <v-btn
+                :prepend-icon="properties.serviceIsWorking ? 'mdi-wifi' : 'mdi-wifi-off'"
+                class='mx-1'
+                style='pointer-events: none'
+                v-if='!properties.models'
             >
-                <template v-slot:activator='{ props }'>
-                    <v-btn
-                        :prepend-icon="properties.serviceIsWorking ? 'mdi-wifi' : 'mdi-wifi-off'"
-                        class='mx-1'
-                        v-bind='props'
-                    >
-                        Service
-                    </v-btn>
-                </template>
-                <v-list density='compact'>
-                    <v-list-item title='Use Flask Backend'>
-                        <template v-slot:prepend>
-                            <v-radio
-                                v-model='properties.serviceIsFlask'
-                                density='compact'
-                                @input='$emit("changeService", false)'
-                            ></v-radio>
-                        </template>
-                    </v-list-item>
-                    <v-list-item title='Use FeatureIDE Service'>
-                        <template v-slot:prepend>
-                            <v-radio
-                                v-model='properties.serviceIsFeatureIDE'
-                                density='compact'
-                                @input='$emit("changeService", true)'
-                            ></v-radio>
-                        </template>
-                    </v-list-item>
-                </v-list>
-            </v-menu>
+                Service
+            </v-btn>
             <v-btn
                 :prepend-icon="properties.serviceIsWorking ? 'mdi-wifi' : 'mdi-wifi-off'"
                 class='mx-1'

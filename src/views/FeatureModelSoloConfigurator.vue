@@ -923,14 +923,7 @@ export default {
         },
 
         async setStartService() {
-            let result = await pingFL();
-            if (result) {
-                this.serviceIsFeatureIDE = false;
-                this.serviceIsWorking = true;
-                return result;
-            }
-
-            result = await pingFIDE();
+            let result = await pingFIDE();
             if (result) {
                 this.serviceIsFeatureIDE = true;
                 this.serviceIsWorking = true;

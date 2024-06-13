@@ -1,7 +1,4 @@
 <template>
-    <div>
-        {{featureModel.name}}
-    </div>
     <view-menu
         :direction='d3Data.direction'
         :is-file-loaded='fmIsLoaded'

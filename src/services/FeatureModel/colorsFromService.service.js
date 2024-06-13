@@ -3,7 +3,7 @@ import axios, { CancelToken } from 'axios';
 import { useAppStore } from '@/store/app';
 import { getFeatureStats } from '@/classes/BackendAccess/FeatureIDEAccess';
 
-export async function getColorsFromService(featureModel, d3Data) {
+export async function getColorsFromService(featureModel) {
     let xml = jsonToXML(featureModel);
     let data = await getFeatureStats(xml);
     if (data === undefined){
@@ -14,16 +14,16 @@ export async function getColorsFromService(featureModel, d3Data) {
     let coreFeatures = data.coreFeatures;
 
     if (coreFeatures.length > 0) {
-        d3Data.root.descendants().filter(node => coreFeatures.includes(node.data.name)).forEach(node => node.data.core = true);
-        d3Data.root.descendants().filter(node => !coreFeatures.includes(node.data.name)).forEach(node => node.data.core = false);
+        featureModel.rootNode.descendants().filter(node => coreFeatures.includes(node.name)).forEach(node => node.core = true);
+        featureModel.rootNode.descendants().filter(node => !coreFeatures.includes(node.name)).forEach(node => node.core = false);
     }
     if (falseOptionalFeatures.length > 0) {
-        d3Data.root.descendants().filter(node => falseOptionalFeatures.includes(node.data.name)).forEach(node => node.data.falseOptional = true);
-        d3Data.root.descendants().filter(node => !falseOptionalFeatures.includes(node.data.name)).forEach(node => node.data.falseOptional = false);
+        featureModel.rootNode.descendants().filter(node => falseOptionalFeatures.includes(node.name)).forEach(node => node.falseOptional = true);
+        featureModel.rootNode.descendants().filter(node => !falseOptionalFeatures.includes(node.name)).forEach(node => node.falseOptional = false);
     }
     if (deadFeatures.length > 0) {
-        d3Data.root.descendants().filter(node => deadFeatures.includes(node.data.name)).forEach(node => node.data.dead = true);
-        d3Data.root.descendants().filter(node => !deadFeatures.includes(node.data.name)).forEach(node => node.data.dead = false);
+        featureModel.rootNode.descendants().filter(node => deadFeatures.includes(node.name)).forEach(node => node.dead = true);
+        featureModel.rootNode.descendants().filter(node => !deadFeatures.includes(node.name)).forEach(node => node.dead = false);
     }
     return true;
 }

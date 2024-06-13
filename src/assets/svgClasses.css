@@ -1,0 +1,149 @@
+.ghost-circle {
+	 fill: red;
+	 fill-opacity: 0.2;
+}
+ .ghost-circle-highlighted {
+	 fill-opacity: 0.8;
+}
+ #svg-container {
+	 width: 100%;
+	 height: calc(100vh - 64px);
+}
+ .node {
+	 cursor: pointer;
+	 vertical-align: middle;
+}
+ .node .is-searched-feature {
+	 fill: lightcoral;
+}
+ .node rect {
+	 transition: all 0.75s;
+	 stroke: #888;
+	 stroke-width: 1px;
+}
+ .node text {
+	/* fill: black;
+	 */
+	 font-family: monospace;
+	 text-anchor: middle;
+	 user-select: none;
+}
+ .and-group-circle {
+	 stroke: #888;
+	 stroke-width: 1.5px;
+	 opacity: 0;
+}
+ .optional-and-group-circle {
+	 fill: white;
+	 opacity: 1;
+}
+ .mandatory-and-group-circle {
+	 fill: #888;
+	 opacity: 1;
+}
+ .alt-group {
+	 fill: white;
+	 stroke: #888;
+	 stroke-width: 1.5px;
+}
+ .or-group {
+	 fill: #888;
+	 stroke: #888;
+	 stroke-width: 1.5px;
+}
+ .link {
+	 fill: none;
+	 stroke: #888;
+	 stroke-width: 1.5px;
+}
+ .is-searched-link {
+	 fill: none;
+	 stroke: lightcoral;
+	 stroke-width: 1.5px;
+}
+ .children-count > circle {
+	 fill: white;
+	 stroke: #888;
+	 stroke-width: 1.5px;
+}
+ .pseudo-node {
+	 cursor: pointer;
+	 vertical-align: middle;
+}
+ .pseudo-node > circle {
+	 fill: white;
+	 stroke: #888;
+	 stroke-width: 1.5px;
+}
+ .feature-model-constraints {
+	 position: absolute;
+	 background-color: white;
+	 bottom: 0;
+	 width: 100%;
+	 box-shadow: 0 10px 10px #888, 0px -10px 10px #888;
+	 padding: 2rem;
+	 min-height: 10%;
+	 max-height: 20%;
+	 overflow: scroll;
+}
+ polygon {
+	 stroke: #888;
+}
+ .children-count-text {
+	 fill: black !important;
+}
+ .blackText {
+	 fill: black !important;
+}
+ .whiteText {
+	 fill: white !important;
+}
+ .v-input.expanding-search {
+	 width: 250px;
+	 transition: width 1.5s;
+	 float: right;
+}
+ .v-input.expanding-search .v-icon {
+	 cursor: pointer;
+}
+ .v-input.expanding-search.closed {
+	 max-width: 90px;
+}
+ .v-input.expanding-search.closed .v-input__slot::before {
+	 border: 0px;
+}
+ .feature {
+	 font-family: sans-serif;
+	 display: inline-block;
+	 fill: #ebebff;
+	 border: 2px solid #999;
+	 padding: 0.5rem;
+}
+ .abstract {
+	 font-style: italic;
+}
+ .dead {
+	 text-decoration: line-through;
+}
+ .core {
+	 text-decoration: underline;
+}
+ .false-optional {
+	 stroke: #ff4500;
+	 stroke-width: 1.5px;
+}
+ .selected-expl {
+	 border: 4px solid #31a354;
+}
+ .selected-impl {
+	 border: 4px solid #a1d99b;
+}
+ .deselected-expl {
+	 border: 4px dashed #d01c8b;
+}
+ .deselected-impl {
+	 border: 4px dashed #f1b6da;
+}
+ .choice {
+	 border: 4px dotted #0058b3;
+}

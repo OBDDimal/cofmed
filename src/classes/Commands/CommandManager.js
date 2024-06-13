@@ -121,7 +121,7 @@ export class CommandManager {
         if (this.type === "constraint"){
             d3Data = this.collaborationManager.featureModelCommandManager.d3Data;
         }
-        let done = await getColorsFromService(this.collaborationManager.featureModel.data, d3Data);
+        let done = await getColorsFromService(this.collaborationManager.featureModel.data);
         if (done) {
             await new Promise(r => setTimeout(r, 500));
         } else {

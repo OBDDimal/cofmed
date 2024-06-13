@@ -109,7 +109,7 @@
                 position='fixed' variant='text'>
             <v-btn
                 id='feature-model-legend'
-                class='mr-2'
+                class='ma-1'
                 color='primary'
                 elevation='2'
                 icon
@@ -119,20 +119,9 @@
                 <v-icon>mdi-map-legend</v-icon>
             </v-btn>
             <v-btn
-                id='feature-model-information'
-                :x-large='$vuetify.display.mdAndUp'
-                class='mr-2'
-                color='primary'
-                elevation='2'
-                icon
-                @click='openInformation = !openInformation'
-            >
-                <v-icon>mdi-information</v-icon>
-            </v-btn>
-            <v-btn
                 id='feature-model-constraints'
                 :x-large='$vuetify.display.mdAndUp'
-                class='mr-2'
+                class='ma-1'
                 color='primary'
                 data-cy='feature-model-constraints-button'
                 elevation='2'
@@ -142,13 +131,7 @@
                 <v-icon>mdi-format-list-checks</v-icon>
             </v-btn>
         </v-card>
-        <feature-model-fact-label-bar
-            :analysis='facts.analysis'
-            :isOpen='openInformation'
-            :metadata='facts.metadata'
-            :metrics='facts.metrics'
-            @close='openInformation = false'>
-        </feature-model-fact-label-bar>
+
         <constraints
             v-if='data.constraints'
             ref='constraints'
@@ -240,6 +223,8 @@ import axios from 'axios';
 import FMNavbar from '@/components/FMNavbar.vue';
 import * as view from '@/services/FeatureModel/view.service';
 import { changeFileFormat, sliceFeatureModel } from '@/classes/BackendAccess/FeatureIDEAccess';
+import svgClasses from '@/assets/svgClasses.css';
+import * as d3 from 'd3';
 
 const appStore = useAppStore();
 
@@ -440,6 +425,46 @@ export default {
             this.$router.push({ path: '/configurator/local' });
         },
 
+        async downloadSVG() {
+            try {
+                let isFileSaverSupported = !!new Blob();
+            } catch (e) {
+                alert('blob not supported');
+            }
+
+            let html = d3.select('svg')
+                .attr('version', 1.1)
+                .attr('xmlns', 'http://www.w3.org/2000/svg')
+                .node().parentNode.innerHTML;
+
+            const styleString = '<style>' + svgClasses + '</style>';
+            let split = html.split('>');
+            split[1] = styleString + split[1];
+            html = split.join('>');
+
+            html = '<?xml version="1.0" standalone="no"?>\r\n' + html;
+
+            html = html.replace('/\0/g', '');
+
+            //convert svg source to URI data scheme.
+            let url = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(html);
+
+            /*let blob = new Blob([html], { type: 'image/svg+xml' });
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) // IE10+
+                window.navigator.msSaveOrOpenBlob(blob, 'model.svg');
+            else {*/
+            let a = document.createElement('a');
+            document.body.appendChild(a);
+            a.style = 'display: none';
+            //let url = URL.createObjectURL(blob);
+            a.href = url;
+            a.download = 'model.svg';
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            //}
+        },
+
         async openFile(files) {
             this.xml = undefined;
             let data = await files[0].text();
@@ -600,9 +625,9 @@ export default {
             let fileData = jsonToXML(this.data);
             let bb;
 
-            if(filetype !== "xml"){
-                fileData = await changeFileFormat(fileData, "xml", filetype);
-                console.log(fileData)
+            if (filetype !== 'xml') {
+                fileData = await changeFileFormat(fileData, 'xml', filetype);
+                console.log(fileData);
                 bb = new Blob([fileData]);
             } else {
                 bb = new Blob([fileData], { type: 'application/xml' });
@@ -672,10 +697,6 @@ export default {
         redo() {
             this.featureModelCommandManager.redo();
             update.updateSvg(this.d3Data);
-        },
-
-        downloadSVG() {
-            // TODO: Implement download
         },
 
         toggleDirection() {
