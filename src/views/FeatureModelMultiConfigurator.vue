@@ -2,9 +2,11 @@
     <conf-navbar
         :command-manager='commandManager'
         :file-is-loaded='fmIsLoaded'
+        :models='models'
         :service-is-feature-i-d-e='serviceIsFeatureIDE'
         :service-is-flask='!serviceIsFeatureIDE'
         :service-is-working='serviceIsWorking'
+        :timelineBias='timelineBias'
         @download='downloadXML'
         @localStorage='save'
         @openConf='openFilePickerConf'
@@ -12,20 +14,67 @@
         @openFile='openFilePicker'
         @reset='resetCommand'
         @theme='dark = !dark'
+        @timeline='(side) => changeTimeline(side)'
         @change-service='(boolean) => changeService(boolean)'
     ></conf-navbar>
     <v-container :fluid='true'>
         <template v-if='fmIsLoaded'>
-
-            <!-- First row with the three columns: Versions, Features, Third Column (#SAT, Explanations, Configuration history) -->
+            <v-timeline v-if='models.length > 15' density='comfortable' direction='horizontal' side='start'>
+                <v-timeline-item
+                    v-for='(item, i) in TrimmedModels'
+                    :key='i'
+                    :dot-color='colorVersion(item)'
+                    :size='i % 5 !== 0  ? "" : "small"'
+                    height='4vh'
+                >
+                    <template v-slot:icon>
+                        <v-btn v-if='i % 5 === 0' :color='colorVersion(item)'
+                               :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                               :icon='true'
+                               height='2.2vh' @click='selectVersion(item)'></v-btn>
+                        <v-tooltip :text='item.name' location='top'>
+                            <template v-slot:activator='{ props }'>
+                                <v-btn v-if='i % 5 !==0' :color='colorVersion(item)' :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                                       :icon='true'
+                                       height='2.2vh'
+                                       v-bind='props'
+                                       width='2vh' @click='selectVersion(item)'></v-btn>
+                            </template>
+                        </v-tooltip>
+                    </template>
+                    <div v-if='i % 5 === 0' class='text-center'>
+                        {{ item.name }}
+                    </div>
+                </v-timeline-item>
+            </v-timeline>
+            <v-timeline v-else density='comfortable' direction='horizontal' side='start'>
+                <v-timeline-item
+                    v-for='(item, i) in models'
+                    :key='i'
+                    :dot-color='colorVersion(item)'
+                    height='5vh'
+                    size='small'
+                >
+                    <template v-slot:icon>
+                        <v-btn :color='colorVersion(item)'
+                               :disabled='item.selectionState !== SelectionState.Unselected && item.selectionState !== SelectionState.ExplicitlySelected'
+                               :icon='true'
+                               height='2.2vh'
+                               @click='selectVersion(item)'></v-btn>
+                    </template>
+                    <div class='text-center'>
+                        {{ item.name }}
+                    </div>
+                </v-timeline-item>
+            </v-timeline>
             <v-row>
                 <v-col cols='4'>
-                    <v-card height='89.5vh'>
+                    <v-card height='79.5vh'>
                         <v-card-title>
                             <v-layout class='align-center' row>
                                 <!-- Heading features -->
                                 <div class='mr-2'>
-                                    <span>Features ({{ featureModelSolo.features?.length }}) </span>
+                                    <span>Features ({{ featuresTrimmed?.length }}) </span>
                                 </div>
 
                                 <!-- Statistics about the features as tooltip-->
@@ -40,60 +89,60 @@
                                         </tr>
                                         <tr>
                                             <td>All</td>
-                                            <td>{{ featureModelSolo.features?.length }}</td>
+                                            <td>{{ featureModelMulti.features?.length }}</td>
                                         </tr>
                                         <tr>
                                             <td>Unselected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.Unselected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.Unselected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Explicitly selected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ExplicitlySelected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.ExplicitlySelected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Explicitly deselected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ExplicitlyDeselected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.ExplicitlyDeselected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Implicitly selected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ImplicitlySelected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.ImplicitlySelected)
                                                 }}
                                             </td>
                                         </tr>
                                         <tr>
                                             <td>Implicitly deselected</td>
                                             <td>{{
-                                                    countSelectionStateInList(featureModelSolo.features, SelectionState.ImplicitlyDeselected)
+                                                    countSelectionStateInList(featureModelMulti.features, SelectionState.ImplicitlyDeselected)
                                                 }}
                                             </td>
                                         </tr>
                                     </table>
                                 </v-tooltip>
-                                <div style='width: 20rem'></div>
-                                <v-checkbox
+                                <div style='width: 18rem'></div>
+                                <!--<v-checkbox
                                     v-model='validCheckbox'
                                     density='compact'
                                     hide-details
                                     label='Valid'
-                                ></v-checkbox>
+                                ></v-checkbox> -->
                             </v-layout>
                         </v-card-title>
 
-                        <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints -->
+                        <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints
                         <v-tabs v-model='tabsFirstColumn'>
                             <v-tab key='dataTable'>Data Table</v-tab>
                             <v-tab key='treeView'>Tree View</v-tab>
-                        </v-tabs>
+                        </v-tabs> -->
                         <!-- Search box for features -->
                         <v-layout class='align-center justify-center' row>
                             <v-menu open-on-hover>
@@ -106,20 +155,20 @@
                                     </v-btn>
                                 </template>
                                 <v-list density='compact'>
-                                    <v-list-item title='Show Open Features'>
+                                    <v-list-item title='Show Implicit Selected Features'>
                                         <template v-slot:prepend>
                                             <v-checkbox
-                                                v-model='showOpenFeatures'
+                                                v-model='showImplicitSelectedFeatures'
                                                 density='compact'
                                                 hide-details
                                                 @input='updateFeatures'
                                             ></v-checkbox>
                                         </template>
                                     </v-list-item>
-                                    <v-list-item title='Show Abstract Features'>
+                                    <v-list-item title='Show Implicit Deselected Features'>
                                         <template v-slot:prepend>
                                             <v-checkbox
-                                                v-model='showAbstractFeatures'
+                                                v-model='showImplicitDeselectedFeatures'
                                                 density='compact'
                                                 hide-details
                                                 @input='updateFeatures'
@@ -138,52 +187,53 @@
                                 single-line
                             ></v-text-field>
                         </v-layout>
+                        <!--
                         <v-window v-model='tabsFirstColumn'>
 
-                            <!-- Feature Model Viewer -->
-                            <v-window-item key='dataTable'>
+                            Feature Model Viewer
+                            <v-window-item key='dataTable'>-->
 
 
-                                <!-- Table with all features that are currently fitlered and searched -->
-                                <v-data-table
-                                    :headers='headersFeatures'
-                                    :items='featuresTrimmed'
-                                    :search='searchFeatures'
-                                    :items-per-page='pageTableSize'
-                                    fixed-header
-                                    :height="pageTableSize === -1 ? '72vh' : '66vh'"
-                                    item-key='name'
-                                    show-group-by
-                                    single-select
-                                >
-                                    <!-- Customization of the column SELECTIONSTATE -->
-                                    <template v-slot:item.selectionState='{ item }'>
-                                        <DoubleCheckbox v-bind:selection-item='item'
-                                                        @select='(selection) => decisionPropagation(item, selection)'></DoubleCheckbox>
-                                    </template>
+                        <!-- Table with all features that are currently fitlered and searched -->
+                        <v-data-table
+                            :headers='headersFeatures'
+                            :height="pageTableSize === -1 ? '68.75vh' : '62.75vh'"
+                            :items='featuresTrimmed'
+                            :items-per-page='pageTableSize'
+                            :search='searchFeatures'
+                            fixed-header
+                            item-key='name'
+                            show-group-by
+                            single-select
+                        >
+                            <!-- Customization of the column SELECTIONSTATE -->
+                            <template v-slot:item.selectionState='{ item }'>
+                                <DoubleCheckbox v-bind:selection-item='item'
+                                                @select='(selection) => decisionPropagation(item, selection)'></DoubleCheckbox>
+                            </template>
 
-                                    <!-- Customization of the column NAME -->
-                                    <template v-slot:item.name='{ item }'>
-                                        <v-tooltip location='bottom'>
-                                            <template v-slot:activator='{ props }'>
-                                                <span v-bind='props'>{{ item.name }}</span>
-                                                <template v-if='item.isAbstract'>
-                                                    <i> Abstract</i>
-                                                </template>
+                            <!-- Customization of the column NAME -->
+                            <template v-slot:item.name='{ item }'>
+                                <div @mouseleave='removeVersionsHover' @mouseover='getVersions(item)'>
+                                    <v-tooltip location='bottom'>
+                                        <template v-slot:activator='{ props }'>
+                                            <span v-bind='props'>{{ item.name }}</span>
+                                            <template v-if='item.isAbstract'>
+                                                <i> Abstract</i>
                                             </template>
-                                            <span>Var ID: {{ item.id }}</span>
-                                        </v-tooltip>
-                                    </template>
+                                        </template>
+                                    </v-tooltip>
+                                </div>
+                            </template>
 
-                                    <template v-if='pageTableSize === -1' v-slot:bottom>
-                                    </template>
-
-
-                                </v-data-table>
+                            <template v-if='pageTableSize === -1' v-slot:bottom>
+                            </template>
+                        </v-data-table>
+                        <!--
                             </v-window-item>
                             <v-window-item key='treeView'>
                                 <v-treeview
-                                    :items='[featureModelSolo.root]'
+                                    :items='[featureModelMulti.root]'
                                     height='72vh'
                                 >
                                 </v-treeview>
@@ -195,48 +245,67 @@
                                 </template>
                             </v-window-item>
                         </v-window>
-
+                        -->
                     </v-card>
                 </v-col>
 
                 <v-col cols='8'>
 
                     <!-- Details of the selected version -->
-                    <v-card height='89.5vh'>
+                    <v-card height='79.5vh'>
                         <v-card-title>Details for {{ featureModelName }}:</v-card-title>
 
-                        <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints -->
+                        <!-- Tabs to select (Feature Model Viewer, List Tree, Cross-Tree Constraints
                         <v-tabs v-model='tabsSecondColumn'>
                             <v-tab key='featureModelViewer'>Feature Model Viewer</v-tab>
                             <v-tab key='ctc'>Cross Tree Constraints</v-tab>
                             <v-tab key='conf'>Configuration History</v-tab>
-                        </v-tabs>
+                        </v-tabs> -->
 
-                        <v-card-text v-if='featureModelSolo?.root'>
+                        <v-card-text>
+                            <v-data-table
+                                :headers="[{title: 'Description', key: 'description'}, {title: '# Features Free', key: 'newUnselectedFeatures'}, {title: '# Versions Free', key: 'newUnselectedVersions'}]"
+                                :item-class="command => command.marked ? 'active-command clickable' : 'clickable'"
+                                :items='commandManager.commands'
+                                class='elevation-1'
+                                disable-filtering
+                                disable-pagination
+                                disable-sort
+                                fixed-header
+                                height='68.75vh'
+                                hide-default-footer
+                                single-select
+                                @click:row='redoCommand'
+                            >
+                                <template v-slot:item.newUnselectedFeatures='{ item }'>
+                                    {{ item.newUnselectedFeatures.length }}
+                                </template>
+
+                                <template v-slot:item.newUnselectedVersions='{ item }'>
+                                    {{ item.newUnselectedVersions.length }}
+                                </template>
+                            </v-data-table>
+                            <!-- Remove Feature Model Viewer until important
                             <v-window v-model='tabsSecondColumn'>
 
-                                <!-- Feature Model Viewer -->
                                 <v-window-item key='featureModelViewer'>
 
                                     <feature-model-viewer-solo ref='featureModelViewerSolo'
                                                                :dark='dark'
-                                                               :feature-model='featureModelSolo'
+                                                               :feature-model='featureModelMulti'
                                                                :fm-is-loaded='fmIsLoaded'
                                                                @select='(name) => searchFeatures = name'
                                     ></feature-model-viewer-solo>
                                 </v-window-item>
 
-                                <!-- Cross-Tree Constraint Viewer -->
                                 <v-window-item key='ctc'>
 
-                                    <!-- Filter only the invalid ctcs and reset them to default -->
-                                    <!--                <v-btn class='mx-2' outlined
+                                    <v-btn class='mx-2' outlined
                                                            rounded @click='filteredConstraints = allConstraints.filter(c => c.evaluation === false)'>
                                                       Only invalid
                                                     </v-btn>
-                                                    <v-btn outlined rounded @click='filteredConstraints = allConstraints'>Reset</v-btn>-->
+                                                    <v-btn outlined rounded @click='filteredConstraints = allConstraints'>Reset</v-btn>
 
-                                    <!-- Table with all ctcs -->
                                     <v-data-table
                                         v-model:sort-by='sortByCTC'
                                         :custom-key-sort='sortByCTCEval'
@@ -244,11 +313,10 @@
                                         :headers='headersCTC'
                                         :items='filteredConstraints'
                                         fixed-header
-                                        height='72vh'
+                                        height='59.5vh'
                                         show-group-by
                                     >
 
-                                        <!-- Customization of the column FORMULA -->
                                         <template v-slot:item.formula='{ item }'>
                                             <div v-for='(f, i) in item.formula' :key='i'
                                                  style='display: inline;'>
@@ -264,7 +332,6 @@
                                             </div>
                                         </template>
 
-                                        <!-- Customization of the column EVALUATION -->
                                         <template v-slot:item.evaluation='{ item }'>
                                             <v-avatar :color='evaluateCTC(item)'
                                                       size='30'></v-avatar>
@@ -282,7 +349,7 @@
                                         disable-pagination
                                         disable-sort
                                         fixed-header
-                                        height='72vh'
+                                        height='59.75vh'
                                         hide-default-footer
                                         single-select
                                         @click:row='redoCommand'
@@ -293,11 +360,13 @@
                                         </template>
                                     </v-data-table>
                                 </v-window-item>
-                            </v-window>
+                            </v-window> -->
+
                         </v-card-text>
                     </v-card>
                 </v-col>
             </v-row>
+            <FeatureModelTreeLoadingDialog :show='isLoading' :text='"Waiting for backend"' />
         </template>
         <template v-else>
             <v-card :class="{ 'grey lighten-2': dragover }"
@@ -320,7 +389,7 @@
                         </p>
                         <v-btn class='mt-6 text-h4 ' color='primary' rounded='xl' variant='text'
                                @click.stop='openFromLocalStorage'>
-                            Or click here to load it from your local storage.
+                            Or click here to load an example.
                         </v-btn>
                     </v-row>
                 </v-card-text>
@@ -332,6 +401,7 @@
         id='filePicker'
         accept='.xml, .uvl, .dimacs'
         class='d-none'
+        multiple
         type='file'
         @change='onFileInputChanged'
     >
@@ -339,6 +409,7 @@
         id='filePickerConf'
         accept='.xml'
         class='d-none'
+        multiple
         type='file'
         @change='openConfig'
     >
@@ -350,7 +421,7 @@
 import DoubleCheckbox from '@/components/Configurator/DoubleCheckbox.vue';
 import { ConfiguratorManager } from '@/classes/Configurator/ConfiguratorManager';
 import { DecisionPropagationCommand } from '@/classes/Commands/Configurator/DecisionPropagationCommand';
-import { tr } from 'vuetify/locale';
+import { it, tr } from 'vuetify/locale';
 import api from '@/services/api.service';
 import { FeatureNodeConstraintItem } from '@/classes/Constraint/FeatureNodeConstraintItem';
 import { SelectionState } from '@/classes/SelectionState';
@@ -359,15 +430,29 @@ import { FeatureModelSolo } from '@/classes/Configurator/FeatureModelSolo';
 import { useAppStore } from '@/store/app';
 import { ResetCommand } from '@/classes/Commands/Configurator/ResetCommand';
 import { LoadConfigCommand } from '@/classes/Commands/Configurator/LoadConfigCommand';
-import { decisionPropagationFL, pingFL } from '@/classes/BackendAccess/FlaskAccess';
-import { changeFileFormat, decisionPropagationFIDE, pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
+import {
+    decisionPropagationFL, decisionPropagationMulti, getExample,
+    getFeaturesAndVersionFromHistory,
+    pingFL,
+    registerHistory
+} from '@/classes/BackendAccess/FlaskAccess';
+import { pingFIDE } from '@/classes/BackendAccess/FeatureIDEAccess';
 import beautify from 'xml-beautifier';
 import ConfNavbar from '@/components/Configurator/ConfNavbar.vue';
+import { FeatureModelMulti } from '@/classes/Configurator/FeatureModelMulti';
+import { variabilityDarkTheme, variabilityLightTheme } from '@/plugins/vuetify';
+import { ResetCommandMulti } from '@/classes/Commands/MultiConfigurator/ResetCommandMulti';
+import { DecisionPropagationCommandMulti } from '@/classes/Commands/MultiConfigurator/DecisionPropagationCommandMulti';
+import FeatureModelTreeLoadingDialog from '@/components/FeatureModel/FeatureModelTreeLoadingDialog.vue';
+import axios from 'axios';
+import fs from 'vite-plugin-fs/browser';
 
 const appStore = useAppStore();
+
+
 export default {
     name: 'FeatureModelSoloConfigurator',
-    components: { ConfNavbar, FeatureModelViewerSolo, DoubleCheckbox },
+    components: { FeatureModelTreeLoadingDialog, ConfNavbar, FeatureModelViewerSolo, DoubleCheckbox },
 
     data: () => ({
         headersFeatures: [
@@ -394,16 +479,17 @@ export default {
             }
         },
         sortByCTC: [{ key: 'evaluation', order: 'desc' }],
+        models: [],
         commandManager: new ConfiguratorManager(),
         initialResetCommand: undefined,
-        featureModelSolo: FeatureModelSolo,
+        featureModelMulti: FeatureModelMulti,
         fmIsLoaded: false,
         dragover: false,
         featureModelName: '',
         features: undefined,
         featuresTrimmed: undefined,
-        showOpenFeatures: false,
-        showAbstractFeatures: true,
+        showImplicitSelectedFeatures: true,
+        showImplicitDeselectedFeatures: true,
         filteredConstraints: undefined,
         allConstraints: undefined,
         searchFeatures: '',
@@ -416,7 +502,10 @@ export default {
         serviceIsWorking: false,
         serviceIsFeatureIDE: false,
         validCheckbox: true,
-        xml: undefined
+        xml: undefined,
+        timelineBias: 0,
+        ident: undefined,
+        isLoading: false
     }),
 
     props: {
@@ -490,21 +579,24 @@ export default {
         },
 
         async decisionPropagation(item, selectionState) {
+            this.isLoading = true;
             const data = this.getSelection();
             if (selectionState === SelectionState.ExplicitlySelected) {
-                data.selection.push(item.name);
+                data.selection.push(item);
             } else if (selectionState === SelectionState.ExplicitlyDeselected) {
-                data.deselection.push(item.name);
+                data.deselection.push(item);
             } else if (selectionState === SelectionState.Unselected) {
                 if (item.selectionState === SelectionState.ExplicitlySelected) {
-                    data.selection.pop(item.name);
+                    data.selection.pop(item);
                 } else if (item.selectionState === SelectionState.ExplicitlyDeselected) {
-                    data.deselection.pop(item.name);
+                    data.deselection.pop(item);
                 }
             }
             const selectionData = await this.getSelectionDataFromAPI(data);
-            let command = new DecisionPropagationCommand(this.featureModelSolo, selectionData, item, selectionState, this.validCheckbox);
+            let command = new DecisionPropagationCommandMulti(this.featureModelMulti, selectionData, item, selectionState, this.validCheckbox);
             this.commandManager.execute(command);
+            this.updateFeatures();
+            this.isLoading = false;
         },
 
         resetCommand() {
@@ -547,39 +639,36 @@ export default {
         },
 
         onFileInputChanged(e) {
-            if (e.target.files.length > 1) {
-                appStore.updateSnackbar(
-                    'Cannot load more than one feature model.',
-                    'error',
-                    5000,
-                    true
-                );
-            } else {
-                this.openFile(e.target.files);
-            }
+            this.openFile(e.target.files);
         },
 
         async openFromLocalStorage() {
             this.fmIsLoaded = true;
-            const data = localStorage.featureModelData;
+            this.isLoading = true;
+            /*
+            const dir = await fs.readdir('./backend/testdata');
+            let files = []; */
             try {
-                this.xml = data;
-                const featureModelSolo = FeatureModelSolo.loadXmlDataFromFile(this.xml);
+                /*
+                for (const f of dir) {
+                    if (f.includes('fiasco')) {
+                        let response = await axios.get('/backend/testdata/' + f, {responseType: 'blob'});
+                        files.push(new File([response.data], f));
+                    }
+                }*/
+                this.ident = await getExample();
+                if (this.ident === undefined) {
+                    throw new Error('No connection to backend.');
+                }
+                const data = await getFeaturesAndVersionFromHistory(this.ident);
+                this.featureModelMulti = new FeatureModelMulti(data.mapping, data.versions);
                 this.commandManager = new ConfiguratorManager();
-                this.features = featureModelSolo.features;
-                this.updateFeatures();
-                this.featureModelName = 'LocalStorageFile';
-                featureModelSolo.name = this.featureModelName;
-                this.allConstraints = featureModelSolo.constraints.map((e) => ({
-                    constraint: e,
-                    formula: e.toList(),
-                    evaluation: e.evaluate()
-                }));
-                this.filteredConstraints = this.allConstraints;
-                this.featureModelSolo = featureModelSolo;
+                this.features = this.featureModelMulti.features;
+                this.models = this.featureModelMulti.versions;
                 const selectionData = await this.getSelectionDataFromAPI();
-                this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
+                this.initialResetCommand = new ResetCommandMulti(this.featureModelMulti, selectionData, 0);
                 this.initialResetCommand.execute();
+                this.updateFeatures();
             } catch (e) {
                 console.log(e);
                 appStore.updateSnackbar(
@@ -590,68 +679,50 @@ export default {
                 );
                 this.fmIsLoaded = false;
             }
+            this.isLoading = false;
+        },
+
+        getVersions(item) {
+            /*this.removeVersionsHover();
+            this.models.filter(model => model.features.map(feature => feature.name).includes(item.name)).forEach(model => model.hovered = true);*/
+        },
+
+        removeVersionsHover() {
+            /*this.models.forEach(model => model.hovered = false);*/
         },
 
         async openFile(files) {
             this.fmIsLoaded = true;
-            let data = await files[0].text();
-            const fileExtension = files[0].name.split('.').pop();
-            if (fileExtension === 'uvl' || fileExtension === 'dimacs') {
-                data = await changeFileFormat(data, fileExtension, 'featureIde');
-            } else if (fileExtension !== 'xml') {
-                appStore.updateSnackbar(
-                    'Could not load the feature model, because filetype is not supported.',
-                    'error',
-                    3000,
-                    true
-                );
-                return;
-            }
-            if (data === 'bad') {
-                appStore.updateSnackbar(
-                    'Could not convert the feature model, because feature model is not supported by FeatureIDE.',
-                    'error',
-                    3000,
-                    true
-                );
-            } else if (data === '') {
-                appStore.updateSnackbar(
-                    'Cannot open non-XML feature model as the FeatureIDE Service is down.',
-                    'error',
-                    3000,
-                    true
-                );
-            } else {
-                try {
-                    this.xml = data;
-                    const featureModelSolo = FeatureModelSolo.loadXmlDataFromFile(this.xml);
-                    this.commandManager = new ConfiguratorManager();
-                    this.features = featureModelSolo.features;
-                    this.updateFeatures();
-                    this.featureModelName = files[0].name.slice(0, files[0].name.length - 4);
-                    featureModelSolo.name = this.featureModelName;
-                    this.allConstraints = featureModelSolo.constraints.map((e) => ({
-                        constraint: e,
-                        formula: e.toList(),
-                        evaluation: e.evaluate()
-                    }));
-                    this.filteredConstraints = this.allConstraints;
-                    this.featureModelSolo = featureModelSolo;
-                    const selectionData = await this.getSelectionDataFromAPI();
-                    this.initialResetCommand = new ResetCommand(this.featureModelSolo, selectionData);
-                    this.initialResetCommand.execute();
-                } catch (e) {
-                    console.log(e);
-                    appStore.updateSnackbar(
-                        'Could not load the feature model.',
-                        'error',
-                        5000,
-                        true
-                    );
-                    this.fmIsLoaded = false;
+            this.isLoading = true;
+            this.models = [];
+            try {
+                this.featureModelName = files[0].name.slice(0, files[0].name.indexOf('-'));
+                console.log(files)
+                this.ident = await registerHistory(files, this.featureModelName);
+                if (this.ident === undefined) {
+                    throw new Error('No connection to backend.');
                 }
-                this.showOpenDialog = false;
+                const data = await getFeaturesAndVersionFromHistory(this.ident);
+                this.featureModelMulti = new FeatureModelMulti(data.mapping, data.versions);
+                this.commandManager = new ConfiguratorManager();
+                this.features = this.featureModelMulti.features;
+                this.models = this.featureModelMulti.versions;
+                const selectionData = await this.getSelectionDataFromAPI();
+                this.initialResetCommand = new ResetCommandMulti(this.featureModelMulti, selectionData, 0);
+                this.initialResetCommand.execute();
+                this.updateFeatures();
+            } catch (e) {
+                console.log(e);
+                appStore.updateSnackbar(
+                    'Could not load the feature model.',
+                    'error',
+                    5000,
+                    true
+                );
+                this.fmIsLoaded = false;
             }
+            this.showOpenDialog = false;
+            this.isLoading = false;
         },
 
         async openConfig(e) {
@@ -698,12 +769,14 @@ export default {
 
         updateFeatures() {
             let returnFeatures = this.features;
-            if (!this.showAbstractFeatures) {
-                returnFeatures = returnFeatures.filter((f) => !f.isAbstract);
+
+            if (this.showImplicitSelectedFeatures) {
+                returnFeatures = returnFeatures.filter((f) => (f.selectionState !== SelectionState.ImplicitlySelected));
             }
-            if (this.showOpenFeatures) {
-                returnFeatures = returnFeatures.filter((f) => f.open != null);
+            if (this.showImplicitDeselectedFeatures) {
+                returnFeatures = returnFeatures.filter((f) => (f.selectionState !== SelectionState.ImplicitlyDeselected));
             }
+
             this.featuresTrimmed = returnFeatures;
         },
 
@@ -737,14 +810,30 @@ export default {
             }
         },
 
+        changeFeatureModel(item) {
+            /*
+            this.xml = item.xml;
+            this.allConstraints = item.constraints.map((e) => ({
+                constraint: e,
+                formula: e.toList(),
+                evaluation: e.evaluate()
+            }));
+            this.filteredConstraints = this.allConstraints;
+            this.featureModelMulti = item;*/
+        },
+
         getSelection() {
 
-            const selection = this.featureModelSolo.features.filter(f => f.selectionState === SelectionState.ExplicitlySelected).map(f => f.name);
-            const deselection = this.featureModelSolo.features.filter(f => f.selectionState === SelectionState.ExplicitlyDeselected).map(f => f.name);
+            const selection = this.featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlySelected);
+            const deselection = this.featureModelMulti.features.filter(f => f.selectionState === SelectionState.ExplicitlyDeselected);
+            const selectionVersion = this.featureModelMulti.versions.filter(f => f.selectionState === SelectionState.ExplicitlySelected);
+            const deselectionVersion = this.featureModelMulti.versions.filter(f => f.selectionState === SelectionState.ExplicitlyDeselected);
 
             return {
                 selection: selection,
-                deselection: deselection
+                deselection: deselection,
+                selectionVersion: selectionVersion,
+                deselectionVersion: deselectionVersion
             };
         },
 
@@ -757,11 +846,12 @@ export default {
                     this.serviceIsWorking = true;
                 }
             } else {
+                /*
                 result = await pingFIDE();
                 if (result) {
                     this.serviceIsFeatureIDE = true;
                     this.serviceIsWorking = true;
-                }
+                }*/
             }
             return result;
         },
@@ -783,142 +873,87 @@ export default {
             }
 
             if (!data) {
-                if (this.serviceIsFeatureIDE) {
-                    const apiData = await decisionPropagationFIDE(this.xml);
-                    if (!apiData) {
-                        this.serviceIsWorking = false;
+                const apiData = await decisionPropagationMulti(this.ident, [], []);
+                if (!apiData) {
+                    this.serviceIsWorking = false;
+                    appStore.updateSnackbar(
+                        'Cannot use service because service is down. Retrying...',
+                        'error',
+                        5000,
+                        true
+                    );
+                    if (await this.getWorkingService()) {
+                        return await this.getSelectionDataFromAPI(data);
+                    } else {
                         appStore.updateSnackbar(
-                            'Cannot use service because service is down. Retrying...',
+                            'No service is available.',
                             'error',
                             5000,
                             true
                         );
-                        if (await this.getWorkingService()) {
-                            return await this.getSelectionDataFromAPI(data);
-                        } else {
-                            appStore.updateSnackbar(
-                                'No service is available.',
-                                'error',
-                                5000,
-                                true
-                            );
-                            return undefined;
-                        }
+                        return undefined;
                     }
-                    selectionData = {
-                        valid: apiData.valid,
-                        eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                        iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                        eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                        iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                        uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
-                        oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
-                        oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
-                        nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    };
-                } else {
-                    const apiData = await decisionPropagationFL(this.xml);
-                    if (!apiData) {
-                        this.serviceIsWorking = false;
-                        appStore.updateSnackbar(
-                            'Cannot use service because service is down. Retrying...',
-                            'error',
-                            5000,
-                            true
-                        );
-                        if (await this.getWorkingService()) {
-                            return await this.getSelectionDataFromAPI(data);
-                        } else {
-                            appStore.updateSnackbar(
-                                'No service is available.',
-                                'error',
-                                5000,
-                                true
-                            );
-                            return undefined;
-                        }
-                    }
-                    selectionData = {
-                        valid: apiData.valid,
-                        eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                        iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                        eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                        iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                        uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
-                        oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
-                        oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
-                        nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    };
                 }
+                if (apiData.valid === false) {
+                    return apiData;
+                }
+                selectionData = {
+                    valid: apiData.valid,
+                    eSF: [],
+                    iSF: this.featureModelMulti.features.filter(f => apiData.config.includes(f.id)),
+                    eDF: [],
+                    iDF: this.featureModelMulti.features.filter(f => apiData.config.includes(f.id * -1)),
+                    uF: this.featureModelMulti.features.filter(f => apiData.features_free.includes(f.id)),
+                    eSV: [],
+                    iSV: this.featureModelMulti.versions.filter(f => apiData.versions.includes(f.id)),
+                    eDV: [],
+                    iDV: this.featureModelMulti.versions.filter(f => apiData.versions_disabled.includes(f.id)),
+                    uV: this.featureModelMulti.versions.filter(f => !apiData.versions.includes(f.id) && !apiData.versions_disabled.includes(f.id))
+                };
+
             } else {
-                if (this.serviceIsFeatureIDE) {
-                    const apiData = await decisionPropagationFIDE(this.xml, data.selection, data.deselection);
-                    if (!apiData) {
-                        this.serviceIsWorking = false;
+                const mappedFeatures = data.selection.map(f => f.id).concat(data.deselection.map(f => f.id * (-1)));
+                const mappedVersions = data.selectionVersion.map(f => f.id).concat(data.deselectionVersion.map(f => f.id * (-1)));
+                const apiData = await decisionPropagationMulti(this.ident, mappedFeatures, mappedVersions);
+                console.log(apiData);
+                if (!apiData) {
+                    this.serviceIsWorking = false;
+                    appStore.updateSnackbar(
+                        'Cannot use service because service is down. Retrying...',
+                        'error',
+                        5000,
+                        true
+                    );
+                    if (await this.getWorkingService()) {
+                        return await this.getSelectionDataFromAPI(data);
+                    } else {
                         appStore.updateSnackbar(
-                            'Cannot use service because service is down. Retrying...',
+                            'No service is available.',
                             'error',
                             5000,
                             true
                         );
-                        if (await this.getWorkingService()) {
-                            return await this.getSelectionDataFromAPI(data);
-                        } else {
-                            appStore.updateSnackbar(
-                                'No service is available.',
-                                'error',
-                                5000,
-                                true
-                            );
-                            return undefined;
-                        }
+                        return undefined;
                     }
-                    selectionData = {
-                        valid: apiData.valid,
-                        eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                        iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                        eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                        iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                        uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
-                        oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
-                        oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
-                        nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    };
-                } else {
-                    const apiData = await decisionPropagationFL(this.xml, data.selection, data.deselection);
-                    if (!apiData) {
-                        this.serviceIsWorking = false;
-                        appStore.updateSnackbar(
-                            'Cannot use service because service is down. Retrying...',
-                            'error',
-                            5000,
-                            true
-                        );
-                        if (await this.getWorkingService()) {
-                            return await this.getSelectionDataFromAPI(data);
-                        } else {
-                            appStore.updateSnackbar(
-                                'No service is available.',
-                                'error',
-                                5000,
-                                true
-                            );
-                            return undefined;
-                        }
-                    }
-                    selectionData = {
-                        valid: apiData.valid,
-                        eSF: this.featureModelSolo.features.filter(f => apiData.selection.includes(f.name)),
-                        iSF: this.featureModelSolo.features.filter(f => apiData.impliedSelection.includes(f.name)),
-                        eDF: this.featureModelSolo.features.filter(f => apiData.deselection.includes(f.name)),
-                        iDF: this.featureModelSolo.features.filter(f => apiData.impliedDeselection.includes(f.name)),
-                        uF: this.featureModelSolo.features.filter(f => !(apiData.selection.includes(f.name) || apiData.impliedSelection.includes(f.name) || apiData.deselection.includes(f.name) || apiData.impliedDeselection.includes(f.name))),
-                        oPF: this.featureModelSolo.features.filter(f => apiData.openParents.includes(f.name)),
-                        oCF: this.featureModelSolo.features.filter(f => apiData.openChildren.includes(f.name)),
-                        nOF: this.featureModelSolo.features.filter(f => !apiData.openChildren.includes(f.name) || !apiData.openParents.includes(f.name))
-                    };
                 }
+                if (apiData.valid === false) {
+                    return apiData;
+                }
+                selectionData = {
+                    valid: apiData.valid,
+                    eSF: data.selection,
+                    iSF: this.featureModelMulti.features.filter(f => !data.selection.includes(f) && apiData.config.includes(f.id)),
+                    eDF: data.deselection,
+                    iDF: this.featureModelMulti.features.filter(f => !data.deselection.includes(f) && apiData.config.includes(f.id * (-1))),
+                    uF: this.featureModelMulti.features.filter(f => apiData.features_free.includes(f.id)),
+                    eSV: data.selectionVersion,
+                    iSV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && apiData.versions.includes(f.id)),
+                    eDV: data.deselectionVersion,
+                    iDV: this.featureModelMulti.versions.filter(f => !data.deselectionVersion.includes(f) && apiData.versions_disabled.includes(f.id)),
+                    uV: this.featureModelMulti.versions.filter(f => !data.selectionVersion.includes(f) && !apiData.versions.includes(f.id) && !data.deselectionVersion.includes(f) && !apiData.versions_disabled.includes(f.id))
+                };
             }
+
             return selectionData;
         },
 
@@ -936,10 +971,55 @@ export default {
                 this.serviceIsWorking = true;
             }
             return result;
+        },
+
+        changeTimeline(side) {
+            if (side) {
+                this.timelineBias += 20;
+            } else {
+                this.timelineBias -= 20;
+            }
+        },
+
+        colorVersion(item) {
+            const dark = this.$vuetify.theme.global.current.dark;
+            if (item.selectionState === SelectionState.ExplicitlySelected) {
+                return dark ? variabilityDarkTheme.colors.selected : variabilityLightTheme.colors.selected;
+            } else if (item.selectionState === SelectionState.ImplicitlyDeselected) {
+                return dark ? variabilityDarkTheme.colors['imp-deselected'] : variabilityLightTheme.colors['imp-deselected'];
+            } else if (item.selectionState === SelectionState.ExplicitlyDeselected) {
+                return dark ? variabilityDarkTheme.colors.deselected : variabilityLightTheme.colors.deselected;
+            } else if (item.selectionState === SelectionState.ImplicitlySelected) {
+                return dark ? variabilityDarkTheme.colors['imp-selected'] : variabilityLightTheme.colors['imp-selected'];
+            } else {
+                return dark ? variabilityLightTheme.colors.background : variabilityDarkTheme.colors.background;
+            }
+        },
+
+        async selectVersion(item) {
+            this.isLoading = true;
+            const data = this.getSelection();
+            let selectionState;
+            if (item.selectionState === SelectionState.ExplicitlySelected) {
+                selectionState = SelectionState.Unselected;
+                data.selectionVersion.pop(item);
+            } else if (item.selectionState === SelectionState.Unselected) {
+                selectionState = SelectionState.ExplicitlySelected;
+                data.selectionVersion.push(item);
+            }
+
+            const selectionData = await this.getSelectionDataFromAPI(data);
+            let command = new DecisionPropagationCommandMulti(this.featureModelMulti, selectionData, item, selectionState, this.validCheckbox);
+            this.commandManager.execute(command);
+            this.updateFeatures();
+            this.isLoading = false;
         }
     },
 
     computed: {
+        it() {
+            return it;
+        },
         tr() {
             return tr;
         },
@@ -948,12 +1028,20 @@ export default {
             return FeatureNodeConstraintItem;
         },
 
+        TrimmedModels() {
+            let trimmed = this.models.slice(this.timelineBias);
+            return trimmed;
+        },
+
         SelectionState() {
             return SelectionState;
         },
 
-        pageTableSize(){
-            return this.featuresTrimmed.length < 20 ? -1 : 15
+        pageTableSize() {
+            if (this.featuresTrimmed === undefined) {
+                return 15;
+            }
+            return this.featuresTrimmed.length < 20 ? -1 : 15;
         },
 
         missingFeaturesOfSelectedVersion() {

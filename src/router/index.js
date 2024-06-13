@@ -29,6 +29,15 @@ const routes = [
             title: 'Configurator',
         },
     },
+    {
+        path: '/configuratorMulti/:id?',
+        name: 'ConfiguratorMulti',
+        props: true,
+        component: () => import('@/views/FeatureModelMultiConfigurator.vue'),
+        meta: {
+            title: 'ConfiguratorMulti',
+        },
+    },
 ];
 
 const router = createRouter({
