@@ -3,42 +3,65 @@ import { defineComponent, ref, shallowRef } from 'vue';
 import { Codemirror } from 'vue-codemirror'
 import { xml } from '@codemirror/lang-xml'
 import { oneDark } from '@codemirror/theme-one-dark'
-import {getLanguageServer} from '@/services/LSP.service'
+import {getLanguageClient} from '@/services/UVLLanguageClient.service'
 
 export default defineComponent({
     components: {
         Codemirror
     },
+
+    props: {
+        code: String
+    },
+
+    watch: {
+        code() {
+            this.textCode = this.code;
+        },
+    },
+
+    data() {
+        return{
+
+        }
+    },
+
     setup() {
-        const code = ref(`console.log('Hello, world!')`)
-        const ls = getLanguageServer();
-        const extensions = [xml(), ls, oneDark]
+        const textCode = ref(`console.log('Hello, world!')`);
+        // this.textCode = this.code;
+        const languageClient = getLanguageClient();
+        const extensions = [xml(), /*languageClient,*/ oneDark];
 
         // Codemirror EditorView instance ref
-        const view = shallowRef()
+        const view = shallowRef();
         const handleReady = (payload) => {
-            view.value = payload.view
+            view.value = payload.view;
         }
 
         // Status is available at all times via Codemirror EditorView
         const getCodemirrorStates = () => {
-            const state = view.value.state
-            const ranges = state.selection.ranges
-            const selected = ranges.reduce((r, range) => r + range.to - range.from, 0)
-            const cursor = ranges[0].anchor
-            const length = state.doc.length
-            const lines = state.doc.lines
+            const state = view.value.state;
+            const ranges = state.selection.ranges;
+            const selected = ranges.reduce((r, range) => r + range.to - range.from, 0);
+            const cursor = ranges[0].anchor;
+            const length = state.doc.length;
+            const lines = state.doc.lines;
             // more state info ...
             // return ...
         }
 
         return {
-            code,
+            textCode: textCode,
             extensions,
             handleReady,
             log: console.log
         }
+    },
+
+    mounted() {
+        this.textCode = this.code;
     }
+
 })
 </script>
 
@@ -64,7 +87,7 @@ export default defineComponent({
             class='ma-2'
             color='primary'
             elevation='2'
-            @click='$emit("convertTextToModel", code)'
+            @click='$emit("convertTextToModel", textCode)'
         >
             <v-icon>mdi-code-greater-than</v-icon>
             <v-tooltip
@@ -74,9 +97,9 @@ export default defineComponent({
         </v-btn>
     </v-col>
     <codemirror
-        v-model="code"
+        v-model="textCode"
         placeholder="Code goes here..."
-        :style="{ height: '400px' }"
+        :style="{ height: '900px' }"
         :autofocus="true"
         :indent-with-tab="true"
         :tab-size="2"

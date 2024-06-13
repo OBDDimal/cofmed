@@ -275,18 +275,12 @@ import * as view from '@/services/FeatureModel/view.service';
 import { changeFileFormat, sliceFeatureModel } from '@/classes/BackendAccess/FeatureIDEAccess';
 import FMTextEditor from '@/components/FeatureModelTextEditor/FMTextEditor.vue';
 import { ClipLoader } from 'vue3-spinner';
-import { indigo } from 'vuetify/util/colors';
 import { UpdateModelFromTextCommand } from '@/classes/Commands/TextEditor/UpdateModelFromTextCommand';
 
 const appStore = useAppStore();
 
 export default {
     name: 'FeatureModel',
-    computed: {
-        indigo() {
-            return indigo;
-        }
-    },
 
     components: {
         FMNavbar,

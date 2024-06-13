@@ -13,6 +13,7 @@
     "@codemirror/theme-one-dark": "^6.1.2",
     "@mdi/font": "7.0.96",
     "@open-rpc/client-js": "^1.8.1",
+    "@shopify/codemirror-language-client": "^0.5.1",
     "axios": "^1.6.8",
     "chart.js": "^4.4.0",
     "codemirror-languageserver": "^1.11.0",
