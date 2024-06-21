@@ -4,7 +4,7 @@ export async function getLanguageClient() {
     // This doesn't have to be liquid-language-server, it
     // theoretically could be tsserver.
     const worker = new Worker(
-        new URL('./language-server-worker.ts', import.meta.url)
+        new URL('./language-server-worker.ts', import.meta.url) //TODO get languageserverworker
     );
 
     // This is how you instantiate it
@@ -12,7 +12,7 @@ export async function getLanguageClient() {
     await client.start();
 
     // Demo junk to be replaced
-    const filePath = 'ws://localhost:30000/uvl'; //TODO find out correct path
+    const filePath = `file:///featureModel.uvl`;
 
     // Here we add the client.extension for the file path.
     return client.extension(filePath);

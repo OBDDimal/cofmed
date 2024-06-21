@@ -4,6 +4,7 @@ import { Codemirror } from 'vue-codemirror'
 import { xml } from '@codemirror/lang-xml'
 import { oneDark } from '@codemirror/theme-one-dark'
 import {getLanguageClient} from '@/services/UVLLanguageClient.service'
+import {getLanguageServer} from '@/services/LSP.service';
 
 export default defineComponent({
     components: {
@@ -29,7 +30,7 @@ export default defineComponent({
     setup() {
         const textCode = ref(`console.log('Hello, world!')`);
         // this.textCode = this.code;
-        const languageClient = getLanguageClient();
+        const languageClient = getLanguageServer();
         const extensions = [xml(), /*languageClient,*/ oneDark];
 
         // Codemirror EditorView instance ref
