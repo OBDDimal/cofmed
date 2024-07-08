@@ -103,10 +103,11 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
     rectAndTextUpdate
         .select('rect')
         .classed('is-searched-feature', (d3Node) => d3Node.data.isSearched)
-        .classed('feature', true)
+        .classed('feature', false)
         .attr('x', (d3Node) => d3Data.direction === 'v' ? -d3Node.width / 2 : 0)
         .attr('y', d3Data.direction === 'v' ? 0 : -CONSTANTS.RECT_HEIGHT / 2)
-        .attr('width', (d3Node) => d3Node.width);
+        .attr('width', (d3Node) => d3Node.width)
+        .attr('style', (d3Node) => d3Node.data.colorValue);
     rectAndTextUpdate
         .select('text')
         .attr('dy', d3Data.direction === 'v' ? CONSTANTS.RECT_HEIGHT / 2 + 5.5 : 5.5)
@@ -115,7 +116,7 @@ function updateFeatureNodes(d3Data, visibleD3Nodes) {
         .classed('dead', (d3Node) => d3Node.data.dead)
         .attr('x', d3Data.direction === 'v' ? 0 : (d3Node) => d3Node.width / 2)
         .classed('whiteText', (d3Node) => {
-            let color = d3Node.data.color();
+            let color = "rgb(204, 204, 255)";
             const rgb = color.replace(/[^\d,]/g, '').split(',');
             return rgb[0] * 0.299 + rgb[1] * 0.587 + rgb[2] * 0.114 <= 186;
         })

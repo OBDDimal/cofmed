@@ -3,6 +3,7 @@ import * as update from '@/services/FeatureModel/update.service.js';
 import { getColorsFromService } from '@/services/FeatureModel/colorsFromService.service';
 import { ReloadCommand } from '@/classes/Commands/ReloadCommand';
 import { useAppStore } from '@/store/app';
+import { getVariancDrivers } from '@/services/FeatureModel/varianceDriver.service';
 
 export class CommandManager {
     constructor() {
@@ -122,6 +123,7 @@ export class CommandManager {
             d3Data = this.collaborationManager.featureModelCommandManager.d3Data;
         }
         let done = await getColorsFromService(this.collaborationManager.featureModel.data);
+        await getVariancDrivers(this.collaborationManager.featureModel.data)
         if (done) {
             await new Promise(r => setTimeout(r, 500));
         } else {
