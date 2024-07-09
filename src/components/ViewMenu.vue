@@ -154,7 +154,21 @@
                     </v-list-item-title>
                 </template>
             </v-list-item>
+            <v-list-item v-if='editing'>
+                <template v-slot:prepend='{ active }'>
+                    <v-list-item-action start>
+                        <v-checkbox-btn
+                            v-model='vDColors'
+                            :input-value='active'
+                            color='primary'
+                        ></v-checkbox-btn>
+                    </v-list-item-action>
 
+                    <v-list-item-title>
+                        VD Colors
+                    </v-list-item-title>
+                </template>
+            </v-list-item>
 
         </v-list>
     </v-menu>
@@ -180,6 +194,7 @@ export default {
         nonSemanticEditing: false,
         semanticEditing: false,
         quickEdit: false,
+        vDColors: false,
     }),
 
     watch: {
@@ -200,6 +215,9 @@ export default {
         },
         quickEdit: function(newValue) {
             this.$emit('quickEdit', newValue);
+        },
+        vDColors: function(newValue) {
+            this.$emit('vDColors', newValue);
         }
     },
 };

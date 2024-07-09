@@ -35,6 +35,7 @@
         @show-tutorial='showTutorial = true'
         @new-empty-model='(value) => newEmptyModel(value)'
         @download-svg='downloadSVG'
+        @vDColors='(value) => changeVDColors(value)'
 
 
     ></f-m-navbar>
@@ -318,7 +319,8 @@ export default {
                 quickEdit: false,
                 direction: 'v', // h = horizontally, v = vertically
                 maxHorizontallyLevelWidth: [],
-                featureModelTree: undefined
+                featureModelTree: undefined,
+                vDColors: false
             }
         };
     },
@@ -738,6 +740,11 @@ export default {
         changeSpaceBetweenSiblings(spacing) {
             this.d3Data.spaceBetweenSiblings = spacing;
             update.updateSvg(this.d3Data);
+        },
+
+        changeVDColors(value) {
+            this.d3Data.vDColors = value;
+            update.updateSvg(this.d3Data)
         }
     }
 };

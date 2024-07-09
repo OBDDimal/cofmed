@@ -78,6 +78,7 @@
                 @quickEdit='(value) => $emit("quickEdit", value)'
                 @resetView='(levels, maxChildren) => $emit("resetView", levels, maxChildren)'
                 @semanticEditing='(value) => $emit("semanticEditing", value)'
+                @vDColors='(value) => $emit("vDColors", value)'
                 @shortName='(value) => $emit("shortName", value)'
                 @spaceBetweenParentChild='(value) => $emit("spaceBetweenParentChild", value)'
                 @spaceBetweenSiblings='(value) => $emit("spaceBetweenSiblings", value)'
