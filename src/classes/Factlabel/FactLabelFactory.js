@@ -100,6 +100,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
+        /*
         {
             "name": "Abstract leaf features",
             "description": "Abstract and leaf features.",
@@ -118,6 +119,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
+        */
         {
             "name": "Concrete features",
             "description": "Features that are mapped to at least one implementation artifact.",
@@ -127,6 +129,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
+        /*
         {
             "name": "Concrete leaf features",
             "description": "Concrete and leaf features.",
@@ -145,7 +148,8 @@ const facts = {
             "size": null,
             "ratio": null
         },
-        {
+        */
+       {
             "name": "Compound features",
             "description": "Features that have subfeatures.",
             "parent": "Features",
@@ -172,6 +176,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
+        /*
         {
             "name": "Top features",
             "description": "Features that are first descendants of the root.",
@@ -181,6 +186,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
+        */
         {
             "name": "Solitary features",
             "description": "Features that are not grouped in a feature group.",
@@ -226,6 +232,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
+        /*
         {
             "name": "Feature groups",
             "description": "Features that express a choice over the grouped features in a group.",
@@ -235,11 +242,12 @@ const facts = {
             "size": null,
             "ratio": null
         },
+        */
         {
             "name": "Alternative groups",
             "description": "Feature groups that require the selection of just one child (i.e., [1..1] cardinality).",
             "parent": "Feature groups",
-            "level": 2,
+            "level": 1, //2
             "value": null,
             "size": null,
             "ratio": null
@@ -248,7 +256,7 @@ const facts = {
             "name": "Or groups",
             "description": "Feature groups that require the selection of at least one child (i.e., [1..*] cardinality).",
             "parent": "Feature groups",
-            "level": 2,
+            "level": 1, //2
             "value": null,
             "size": null,
             "ratio": null
@@ -257,7 +265,7 @@ const facts = {
             "name": "Mutex groups",
             "description": "Feature groups that require the selection of zero or just one child (i.e., [0..1] cardinality).",
             "parent": "Feature groups",
-            "level": 2,
+            "level": 1, //2
             "value": null,
             "size": null,
             "ratio": null
@@ -266,7 +274,7 @@ const facts = {
             "name": "Cardinality groups",
             "description": "Feature groups with arbitraty cardinality [a..b] that require the selection of an minimum and a maximum number of children.",
             "parent": "Feature groups",
-            "level": 2,
+            "level": 1, //2
             "value": null,
             "size": null,
             "ratio": null
@@ -352,6 +360,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
+        /*
         {
             "name": "Simple constraints",
             "description": "Requires and Excludes constraints.",
@@ -406,6 +415,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
+        */
         {
             "name": "Features in constraints",
             "description": "Features involved in cross-tree constraints. The ratio to the total number of features is called 'Extra constraint representativeness (ECR)'.",
@@ -441,10 +451,56 @@ const facts = {
             "value": null,
             "size": null,
             "ratio": null
-        }
+        },
+        //NEW:
+        {
+            "name": "Constraint Types",
+            "description": "Different Types of contraints.",
+            "parent": null,
+            "level": 0,
+            "value": null,
+            "size": null,
+            "ratio": null
+        },
+        {
+            "name": "Requires constraints",
+            "description": "Constraints modeling that the activation of a feature f1 implies the activation of a feature f2.",
+            "parent": "Constraint Types",
+            "level": 1,
+            "value": null,
+            "size": null,
+            "ratio": null
+        },
+        {
+            "name": "Excludes constraints",
+            "description": "Constraints modeling that two features are mutually exclusive and cannot be activated together.",
+            "parent": "Constraint Types",
+            "level": 1,
+            "value": null,
+            "size": null,
+            "ratio": null
+        },
+        {
+            "name": "Pseudo-complex constraints",
+            "description": "Constraints that are convertible to a set of simple constraints.",
+            "parent": "Constraint Types",
+            "level": 1,
+            "value": null,
+            "size": null,
+            "ratio": null
+        },
+        {
+            "name": "Strict-complex constraints",
+            "description": "Constraints that cannot be converted to a set of simple constraints.",
+            "parent": "Constraint Types",
+            "level": 1,
+            "value": null,
+            "size": null,
+            "ratio": null
+        },
     ],
     "analysis": [
-        {
+        /*{
             "name": "Valid (not void)",
             "description": "A feature model is valid if it represents at least one configuration.",
             "parent": null,
@@ -452,7 +508,7 @@ const facts = {
             "value": null,
             "size": null,
             "ratio": null
-        },
+        },*/
         {
             "name": "Core features",
             "description": "Features that are part of all the configurations (aka 'common features').",
@@ -471,7 +527,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
-        {
+        /*{
             "name": "Variant features",
             "description": "Features that do not appear in all the configurations.",
             "parent": null,
@@ -479,7 +535,7 @@ const facts = {
             "value": null,
             "size": null,
             "ratio": null
-        },
+        },*/
         {
             "name": "False-optional features",
             "description": "Features defined as optionals the selection of their parents make the feature itself selected as well.",
@@ -489,7 +545,7 @@ const facts = {
             "size": null,
             "ratio": null
         },
-        {
+        /*{
             "name": "Configurations",
             "description": "Number of configurations represented by the feature model. If <= is shown, the number represents an upper estimation bound.",
             "parent": null,
@@ -497,7 +553,7 @@ const facts = {
             "value": null,
             "size": null,
             "ratio": null
-        }
+        }*/
     ]
 }
 

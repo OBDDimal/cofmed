@@ -750,8 +750,4 @@ export default {
     border: 4px dotted #0058B3;
 }
 
-/*
-.redText{
-    color: #FF4500;
-}*/
 </style>

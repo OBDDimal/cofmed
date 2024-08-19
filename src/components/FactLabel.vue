@@ -3,8 +3,13 @@
     <div v-show="boxPlotBool" style="position: fixed; border-radius: 5%; padding: 1%; border-style: ridge; border-width: thick; border-color: black; background-color: white; right: 110%; width: 110%; z-index: 1000;" :style="{top: divTop +'px'}">
         <canvas ref="chartCanvas"></canvas>
     </div>
+
+    <div v-show="pieChart" style="position: fixed; border-radius: 5%; padding: 1%; border-style: ridge; border-width: thick; border-color: black; background-color: white; right: 110%; width: 110%; z-index: 1000;" :style="{top: divTop +'px'}">
+        <!--<Pie :data="dataPieChart" :options="options" />-->
+        <canvas ref="pieChartCanvas"></canvas>
+    </div>
     
-    <v-card variant="outlined">
+    <v-card variant="elevated">
 
         <v-divider class="border-opacity-100"></v-divider>
         <!--  Data Table for MetaData: -->
@@ -33,7 +38,7 @@
         <!--  Data Table for Metrics: -->
 
         
-        <v-data-table v-model:expanded="expandedRoot" :headers="expandableHeaders" :items="showMetrics" item-value="name"  @mouseover="hoverFeature" @mouseleave="boxPlotBool=false;" @click="clickItem(showMetrics)">
+        <v-data-table v-model:expanded="expandedRoot" :headers="expandableHeaders" :items="showMetrics" item-value="name"  @mouseover="hoverFeature" @mouseleave="() => {boxPlotBool=false; pieChart=false;}">
             <!--<box-plot v-if="boxPlotBool" :data="widget.data"
               class="my-chart"></box-plot>-->
             <!--<box-plot v-if="boxPlotBool" :data="showMetrics[0].value"
@@ -48,15 +53,56 @@
                 <tr>
                     <td :colspan="columns.length" >
                         <v-data-table v-model:expanded="expandedSubs" :headers="expandableHeaders" :items="item.raw.childs" 
-                            item-value="name" :expand-on-click="true" @mouseover="boxPlotBool=false">
+                            item-value="name" :expand-on-click="true" @mouseover="boxPlotBool=false; pieChart=false;" > <!--:expand-on-click="true"-->
                             <template v-slot:headers>
                             </template>
+                            
+                            
                             <template v-slot:item.data-table-expand="{ item }">
                                 <template v-if="item.raw.childs && item.raw.childs.length > 0" >
-                                    <v-icon icon="mdi-chevron-down"></v-icon>
+                                    <!--<v-icon icon="mdi-chevron-down"></v-icon>-->
+                                    <!--<v-btn icon="mdi-chevron-down" variant="text"> </v-btn>-->  
+                                   <!--<v-btn
+                                        icon="mdi-chevron-down"
+                                        variant="text">
+                                    </v-btn>-->
+                                    
+                                    <!--<v-btn
+                                        icon='mdi-chevron-down'
+                                        variant="text"
+                                        @click="toggleItem"
+                                        ></v-btn>-->
+
+                                        
+                                        <!--<v-icon
+                                        @click="handleExpansion(item, isExpanded)"
+                                        >{{ isExpanded ? 'mdi-close' : 'mdi-pencil' }}</v-icon>-->
+                                        <!--<v-icon >{{icon}}</v-icon>-->
+
+                                        <!--<v-icon icon="mdi-chevron-down" @click="toggleItem"></v-icon>-->
+                                    
+                                        
+                                        
+                                        
+                                        <v-btn v-if="toggleButton(item)"
+                                        icon='mdi-chevron-up'
+                                        variant="text"
+                                        @click="clickToggle(item)"
+                                        ></v-btn>
+
+                                        <v-btn v-else
+                                        icon='mdi-chevron-down'
+                                        variant="text"
+                                        @click="clickToggle(item);"
+                                        ></v-btn>
+                                    
+
+                                        <!--@click="clickToggle(item)"-->
+
+
                                 </template>
                             </template>
-                            <template v-slot:expanded-row="{ item, columns }" >
+                            <template v-slot:expanded-row="{ item, columns }">
                                 <template v-if="item.raw.childs && item.raw.childs.length > 0">
                                     <!-- only print when subitems exist-->
                 
@@ -91,7 +137,7 @@
 
         <v-divider class="border-opacity-100" thickness="10"></v-divider>
         <!--  Data Table for Analysis: -->
-        <v-data-table :headers="factHeaders" :items="showAnalysis" item-value="name" @mouseover="hoverFeature" @mouseleave="resetColorD3"> <!--@mouseleave="boxPlotBool=false"-->
+        <v-data-table :headers="factHeaders" :items="showAnalysis" item-value="name" @mouseover="hoverFeature" @mouseleave="() => { boxPlotBool = false; pieChart = false; resetColorD3(); }"> <!--@mouseleave="boxPlotBool=false"-->
             <template v-slot:headers>
             </template>
             <template v-slot:no-data>
@@ -119,12 +165,18 @@ const EMPTY_VALUE="";
 
 
 
+
+
 import {onMounted, ref, watch} from "vue";
 import { BoxPlotChart } from "@sgratzl/chartjs-chart-boxplot";
 import { Chart, registerables } from "chart.js";
 Chart.register(...registerables);
 //import { jsonToXML } from '@/services/xmlTranspiler.service';
 import * as update from '@/services/FeatureModel/update.service.js';
+
+
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
+import { Pie } from 'vue-chartjs'
 
 
 export default {
@@ -160,6 +212,7 @@ export default {
         },
     },
 
+    
     data: () => ({
         name: "",
         fmHref: "",
@@ -174,8 +227,47 @@ export default {
         //chartCanvas: ref(null),//
         chartCanvas: ref(null),//
         divTop:0,//
+
+        pieChart: false,
+        //dataPieChart: [],
+        pieChartCanvas: ref(null),//
+
+        expandedItems:[],
+
+        
     }),
+
+    /*data() {
+    
+
+        return {
+        name: "",
+        fmHref: "",
+        desc: "",
+        expandedRoot: [],
+        expandedSubs: [],
+        expandedSubSubs: [],
+        factHeaders: [{ key: "name", sortable: false }, { key: "value", sortable: false }],
+        expandableHeaders: [{ key: 'data-table-expand' }, { key: "name", sortable: false }, { key: "value", sortable: false }],
+        hideMissing: false,
+        boxPlotBool: false,
+        chartCanvas: ref(null),
+        divTop: 0,
+
+        // Setzen Sie die geänderten Metriken in die Daten Ihrer Komponente
+        metrics: emptyMetrics
+        };
+    },*/
     watch: {},
+    updated(){
+        this.initializeAnalysis();
+    },
+    mounted(){
+        this.initializeMetaData();
+        this.initializeMetrics();
+        
+        
+    },
 
     computed: {
         showMetadata() {
@@ -207,35 +299,559 @@ export default {
             }
         }
     },
-    created() {
-
-    },
+    
     methods: {
-        clickItem2(items){
-            console.log("KLCIKEN");
+        /*toggleItem(event) {
+            const targetElement = event.target;
+            //const targetText = targetElement.innerText;
+            //const positionElement = targetElement.getBoundingClientRect();
+            console.log(targetElement.classList.value);
+            console.log(targetElement.classList[0]);
+
+            if(targetElement.classList[0] == 'mdi-chevron-down'){
+                targetElement.classList.value = "mdi-chevron-up mdi v-icon notranslate v-theme--variabilityLightTheme v-icon--size-default v-icon--clickable";
+            }
+
+            else{
+                targetElement.classList.value = "mdi-chevron-down mdi v-icon notranslate v-theme--variabilityLightTheme v-icon--size-default v-icon--clickable";
+            }
+
+            
+            
+
+            //targetElement.icon = ""
+            
+            //this.$set(item, 'isExpanded', true);
+            
+            //this.isExpanded = !this.isExpanded;
+            
+        },*/
+        toggleButton(item){
+            //console.log(item.value);
+            
+
+            if(this.expandedItems.includes(item.value)){
+                return true;
+            }
+            else{
+                //this.expandedItems.push(item.value);
+                return false;
+            }
+
+            
+
         },
+        clickToggle(item){
+            console.log(item);
+
+            console.log(item.columns["data-table-expand"]);
+            
+            //item.columns["data-table-expand"] = item.raw.childs;
+            item["data-table-expand"] = item.raw.childs;
+
+            if(!this.expandedItems.includes(item.value)){
+                this.expandedItems.push(item.value);
+            }
+            else{
+                for(let i=0; i<this.expandedItems.length; i++){
+                    if(this.expandedItems[i] == item.value){
+                        this.expandedItems.splice(i,1);
+                        break;
+                    }
+                }
+                
+            }
+
+        },
+        initializeMetaData(){
+            let emptyMetaData = this.metadata;
+
+            let data = this.data.rootNode.descendants();
+
+            //console.log(this.data);
+
+            emptyMetaData[0].value = data[0].name;
+
+
+        },
+        initializeMetrics(){
+            let emptyMetrics = this.metrics;
+
+            let data = this.data.rootNode.descendants();
+
+            console.log(data);
+
+            emptyMetrics[0].value = data.length;
+
+
+            emptyMetrics[1].value = this.abstractFeature(data);
+            emptyMetrics[2].value = this.concreteFeature(data);
+
+
+            emptyMetrics[9].value = this.mandatoryCount(data);
+            emptyMetrics[10].value = this.optionalCount(data); //Stimmt noch nicht
+
+
+            emptyMetrics[16].value = this.maxDepth(data);
+            emptyMetrics[17].value = this.meanDepth(data);
+            emptyMetrics[18].value = this.medianDepth(data);
+
+
+            emptyMetrics[20].value = this.avgChildren(data);
+            emptyMetrics[21].value = this.minChildren(data);
+            emptyMetrics[22].value = this.maxChildren(data);
+
+            emptyMetrics[25].value = this.avgContraints(data);
+            emptyMetrics[26].value = this.minContraints(data);
+            emptyMetrics[27].value = this.maxContraints(data);
+
+            emptyMetrics[29].value = this.requireConstraints(data);
+
+        },
+        initializeAnalysis(){
+            let emptyAnalysis = this.analysis;
+
+            let data = this.data.rootNode.descendants();
+
+            
+
+            emptyAnalysis[0].value = this.countCore(data);
+            emptyAnalysis[1].value = this.countDead(data);
+            emptyAnalysis[2].value = this.countFalseOptional(data);
+
+
+        },
+        requireConstraints(data){
+            let c=0;
+            for(let i=0; i<data.length; i++){
+                if (data[i].isMandatory == true && data[i].isAbstract == true){
+                    c+=1
+                }
+            }
+            return c;
+        },
+        concreteFeature(data){
+            let c=0;
+            for(let i=0; i<data.length; i++){
+                if (data[i].isAbstract ==false && data[i].isMandatory == false){
+                    c+=1
+                }
+            }
+            return c;
+        },
+        countCore(data){
+            let core=0;
+            for(let i=0; i<data.length; i++){
+                if(data[i].core == true){
+                    core +=1;
+                }
+            }
+            return core;
+
+        },
+        countDead(data){
+            let dead=0;
+            for(let i=0; i<data.length; i++){
+                if(data[i].dead == true){
+                    dead +=1;
+                }
+            }
+            return dead;
+        },
+        countFalseOptional(data){
+            let falseOptional=0;
+            for(let i=0; i<data.length; i++){
+                if(data[i].falseOptional == true){
+                    falseOptional +=1;
+                }
+            }
+            return falseOptional;
+
+        },
+        maxDepth(data){
+            let depth=0;
+            for(let i=0; i<data.length; i++){
+                if(depth<data[i].d3Node.depth){
+                    depth = data[i].d3Node.depth;
+                }
+            }
+            return depth;
+        },
+        medianDepth(data){
+            let lst = [];
+            for(let i=0; i<data.length; i++){
+                lst.push(data[i].d3Node.depth);
+            }
+
+            lst = lst.sort();
+            
+            return lst[Math.round(lst.length / 2)];
+
+        },
+        meanDepth(data){
+            let c = 0
+            for(let i=0; i<data.length; i++){
+                c += data[i].d3Node.depth;
+            }
+            return (c/data.length).toFixed(2);
+        },
+        avgChildren(data){
+            let c = 0
+            let f=0;
+            for(let i=0; i<data.length; i++){
+                if(data[i].children.length!=0){
+                    c+=data[i].children.length;
+                    f+=1;
+                }
+                
+            }
+
+            return (c/f).toFixed(2);
+        },
+        maxChildren(data){
+            let max=0
+            for(let i=0; i<data.length; i++){
+                if (data[i].children.length > max){
+                    max = data[i].children.length;
+                }
+            }
+            return max
+        },
+        minChildren(data){
+            let min=1000;
+            for(let i=0; i<data.length; i++){
+                if ((data[i].children.length < min) && (data[i].children.length != 0)){
+                    min = data[i].children.length;
+                }
+            }
+            return min
+        },
+        avgContraints(data){
+            let c = 0
+            for(let i=0; i<data.length; i++){
+                c+=data[i].constraints.length;
+            }
+
+            return (c/data.length).toFixed(2);
+        },
+        maxContraints(data){
+            let max=0
+            for(let i=0; i<data.length; i++){
+                if (data[i].constraints.length > max){
+                    max = data[i].constraints.length;
+                }
+            }
+            return max
+        },
+        minContraints(data){
+            let min=1000;
+            for(let i=0; i<data.length; i++){
+                if (data[i].constraints.length < min){
+                    min = data[i].constraints.length;
+                }
+            }
+            return min
+        },
+        mandatoryCount(data){
+            let c=0;
+            for(let i=0; i<data.length; i++){
+                if (data[i].isMandatory == true){
+                    c+=1
+                }
+            }
+            return c;
+        },
+        optionalCount(data){
+            let c = 0
+            for (let i=0; i<data.length; i++){
+                if (data[i].isMandatory == false && data[i].groupType !== "or" && data[i].falseOptional == false){
+                    c+=1
+                }
+            }
+            return c;
+        },
+        abstractFeature(data){
+            let c=0;
+            for(let i=0; i<data.length; i++){
+                if (data[i].isAbstract == true){
+                    c+=1
+                }
+            }
+            return c;
+        },/*
         clickItem(items){
             console.log("CLICK");
-            //console.log(item);
-
-            //const targetElement = event.target;
-            //const targetText = targetElement.innerText;
-
-            //console.log(targetElement);
-
             console.log(items);
+            //items[3].childs[0].value = avgChildren;
 
-            //console.log(items[2].name);
+            let data = this.data.rootNode.descendants();
+            console.log(data);
 
-            //items[2].value = "3";
+            //features
+            items[0].childs[0].value = this.abstractFeature(data); 
 
-            //items[2].name = "3";
 
-            //console.log(items[2].childs[0].name);
+            //Tree relationships
+            items[1].childs[0].value = this.mandatoryCount(data); 
+            items[1].childs[1].value = this.optionalCount(data); 
+            
 
-            //items[2].childs[0].name = "HALLO";
+            //depth of tree
+            let maxdepth = this.maxDepth(data);
+            let mediandepth = this.medianDepth(data);
+            let meandepth = this.meanDepth(data);
+            
+            items[2].childs[0].value = maxdepth; 
+            items[2].childs[1].value = meandepth;
+            items[2].childs[2].value = mediandepth;
 
-            //items[2].childs[1].value = "MOGEN";
+
+            //branching factor
+            let avgchildren = this.avgChildren(data);
+            let maxchildren = this.maxChildren(data);
+            let minchildren = this.minChildren(data);
+            items[3].childs[0].value = avgchildren;
+            items[3].childs[1].value = minchildren;
+            items[3].childs[2].value = maxchildren;
+
+
+            //Cross-tree-constraints
+            let avgcontraints = this.avgContraints(data);
+            let mincontraints = this.minContraints(data);
+            let maxcontraints = this.maxContraints(data);
+            items[4].childs[3].value = avgcontraints;
+            items[4].childs[4].value = mincontraints;
+            items[4].childs[5].value = maxcontraints;
+
+        },*/
+
+        positionDiv(event){
+
+            const targetElement = event.target;
+            const targetText = targetElement.innerText;
+
+            const positionElement = targetElement.getBoundingClientRect();
+            //this.divTop = positionElement.top - 110;
+
+            //const boxChart = this.$refs.chartCanvas.getContext("2d");
+
+            if (this.pieChart){
+
+                //console.log("PIE");
+
+                const pieChart = this.$refs.pieChartCanvas.getContext("2d");
+
+
+                let height = pieChart.canvas.style.height;
+
+                let zahl = height.slice(0,-2);
+
+                let zahl1 = parseInt(zahl);
+
+                let mouse = event.pageY + zahl1;
+
+
+
+                    if (mouse + 100 >= window.screen.height) {
+                        // Element droht unten rauszugehen, Position anpassen
+                        //this.divTop = window.innerHeight - positionElement.height;
+                        
+                        //console.log("IF");
+
+                        //console.log(zahl1);
+
+                        //console.log(window.screen.height);
+
+                        
+                        
+                        //console.log(h1);
+
+                        //console.log(positionElement.top - 110);
+
+                        //this.divTop = window.screen.height - zahl1/2;
+
+                        console.log("IF");
+
+                        console.log(window.screen.height);
+
+                        console.log(zahl1);
+
+                        this.divTop = window.screen.height - 550;
+
+                        
+                    }
+
+                    else{
+                        //this.divTop = positionElement.top - 110;
+                        this.divTop = positionElement.top - 190;
+                    }
+                }
+
+                else if(this.boxPlotBool){
+                    const boxPlotChart = this.$refs.chartCanvas.getContext("2d");
+
+
+                    let height = boxPlotChart.canvas.style.height;
+
+                    let zahl = height.slice(0,-2);
+
+                    let zahl1 = parseInt(zahl);
+
+                    let mouse = event.pageY + zahl1;
+
+
+
+                    if (mouse + 100 >= window.screen.height) {
+                        // Element droht unten rauszugehen, Position anpassen
+                        //this.divTop = window.innerHeight - positionElement.height;
+                        
+                        //console.log("IF");
+
+                        //console.log(zahl1);
+
+                        //console.log(window.screen.height);
+
+                        
+                        
+                        //console.log(h1);
+
+                        //console.log(positionElement.top - 110);
+
+                        //this.divTop = window.screen.height - zahl1/2;
+
+                        console.log("IF");
+
+                        console.log(window.screen.height);
+
+                        console.log(zahl1);
+
+                        this.divTop = window.screen.height - 390;
+
+                        
+                    }
+                    else{
+                        this.divTop = positionElement.top - 110;
+                    }
+                    
+                }
+
+
+
+                /*
+                //console.log(this.$refs.chartCanvas.getContext("2d"));
+                //console.log(positionElement);
+                //console.log(window.innerHeight);
+
+                //if(positionElement.top + divhöhe > window.innerHeight){
+
+                //const ctx = this.$refs.chartCanvas.getContext("2d");
+                //console.log(ctx.canvas);
+                //console.log(ctx);
+                //console.log(ctx.canvas.parentElement);
+                //console.log(ctx.canvas.parentElement.offsetHeight);
+
+
+                //let divheight = ctx.canvas.parentElement.offsetHeight/2;
+
+
+
+                //this.divTop = positionElement.top - divheight;
+
+
+
+                //console.log(ctx.canvas.style.height);
+
+
+
+                //console.log(targetText);
+                //this.divTop = positionElement.top - 110;
+
+
+                const boxChart = this.$refs.chartCanvas.getContext("2d");
+
+                const pieChart = this.$refs.pieChartCanvas.getContext("2d");
+                //const ctx = this.$refs.chartCanvas.getContext("2d");
+
+
+                console.log(boxChart.canvas);
+
+                //console.log(pieChart.canvas.style.height);
+
+                console.log(pieChart.canvas.hidden);
+
+
+                //console.log(pieChart.canvas.style);
+
+                //console.log(positionElement);
+
+
+
+                //console.log(window.screen.height);
+                //console.log(positionElement.bottom);
+                //console.log(positionElement.top);
+                //console.log(window.innerHeight);
+
+
+
+                //console.log(event.pageY);
+
+                let height = pieChart.canvas.style.height;
+
+                let zahl = height.slice(0,-2);
+
+                let zahl1 = parseInt(zahl);
+
+                let mouse = event.pageY + zahl1;
+
+                //console.log("HALLO");
+                //console.log(mouse);
+
+
+
+
+
+
+                //console.log(window.innerHeight);
+
+
+
+
+
+                if (mouse + 100 >= window.screen.height) {
+                // Element droht unten rauszugehen, Position anpassen
+                //this.divTop = window.innerHeight - positionElement.height;
+
+                //console.log("IF");
+
+                //console.log(zahl1);
+
+                //console.log(window.screen.height);
+
+                let h1 = window.screen.height - zahl1;
+
+                //console.log(h1);
+
+                //console.log(positionElement.top - 110);
+
+                this.divTop = window.screen.height - zahl1 - 230;
+
+
+                }
+
+                else{
+                //this.divTop = positionElement.top - 110;
+                this.divTop = positionElement.top - 110;
+                }*/
+
+
+
+                //Position
+                /*
+                const target = event.target; 
+                const bounds = target.getBoundingClientRect();
+                this.divTop = event.clientY - bounds.y;
+                this.divTop = event.clientY;
+                */
 
 
 
@@ -244,15 +860,13 @@ export default {
         async hoverFeature(event){
             const targetElement = event.target;
             const targetText = targetElement.innerText;
+
             const positionElement = targetElement.getBoundingClientRect();
-            this.divTop = positionElement.top - 110;
-            //Position
-            /*
-            const target = event.target; 
-            const bounds = target.getBoundingClientRect();
-            this.divTop = event.clientY - bounds.y;
-            this.divTop = event.clientY;
-            */
+
+
+            
+            
+           
 
             //console.log(targetText);
 
@@ -265,58 +879,91 @@ export default {
             //console.log(d3.root.descendants());
             switch(targetText){
                 case "Depth of tree":
-                    this.depthFeature()
+                    this.pieChart = false;
                     this.boxPlotBool=true;///////////////77
+                    this.positionDiv(event);
+                    this.depthFeature()
+                    
                     break
                 case "Features":                    
-                    this.NumberFeatures();
-                    this.boxPlotBool=true;
+                    this.boxPlotBool=false;
+                    //this.NumberFeatures();
+                    this.pieChart = true;
+                    this.positionDiv(event);
+                    this.absractConcreteFeatures();
+                    
                     //console.log("Features");
                     break
                 case "Tree relationships":
                     this.boxPlotBool=false;
+                    this.pieChart = true;
+                    this.positionDiv(event);
+                    this.treeRelation();
+                    
                     //console.log("Tree relationships");
                     break
                 case "Branching factor":
-                    this.boxPlotBool=false;
+                    this.pieChart = false;
+                    this.boxPlotBool=true;
+                    this.positionDiv(event);
+                    this.branchingFactor();
+                    
                     //console.log("Branching factor");
                     break
                 case "Cross-tree constraints":
-                    this.boxPlotBool=false;
+                    this.pieChart = false;
+                    this.boxPlotBool=true;
+                    this.positionDiv(event);
+                    this.crossTreeConstraints();
+                    
                     //console.log("Cross-tree constraints");
                     break
                 
                 //Untere Hälfte
                 case "Core features":
                     //console.log("Core features");
+                    this.boxPlotBool=false;
+                    this.pieChart = true;
+                    this.positionDiv(event);
+                    this.coreDeadFalseop();
+                    
+
                     this.coreFeatures(d3);
                     break
                 case "Dead features":
                     //console.log("Dead features");
+                    this.boxPlotBool=false;
+                    this.pieChart = true;
+                    this.positionDiv(event);
+                    this.coreDeadFalseop();
+                    
+
                     this.deadFeatures(d3);
-                    break
-                case "Variant features":
-                    //console.log("Variant features");
-                    this.resetColorD3(d3);
                     break
                 case "False-optional features":
                     //console.log("False-optional features");
+                    this.boxPlotBool=false;
+                    this.pieChart = true;
+                    this.positionDiv(event);
+                    this.coreDeadFalseop();
+                    
+
                     this.falseOptionalFeatures(d3);
-                    break
-                case "Configurations":
-                    //console.log("Configurations");
-                    this.resetColorD3(d3);
                     break
             }
 
-            
 
 
+        
             
 
         },
         resetColorD3(){
             let d3 = this.d3Data;
+
+            console.log("RESET");
+
+            console.log(d3);
             
             if (d3!=undefined){
                 let data = d3.root.descendants();
@@ -326,8 +973,11 @@ export default {
 
                 update.updateSvg(d3);
             }
+
+            //this.boxPlotBool = false;
+            //this.pieChart = false;
             
-            this.boxPlotBool=false;
+            //this.boxPlotBool=false;
 
         },
         coreFeatures(d3){
@@ -364,6 +1014,141 @@ export default {
             }
 
             update.updateSvg(d3);
+        },
+
+        async coreDeadFalseop(){
+            /*let data = this.data.rootNode.descendants();
+            let core = 0;
+            let dead = 0;
+            let optionalFalse = 0;
+            for(let i=0; i<data.length; i++){
+                console.log(data[i]);
+                if(data[i].core == true){
+                    core+=1;
+                }
+                if(data[i].dead == true){
+                    dead += 1
+                }
+                if (data[i].falseOptional == true){
+                    optionalFalse += 1;
+                }
+                
+            }*/
+
+            let data = this.data.rootNode.descendants();
+
+            let core = this.countCore(data);
+            let dead = this.countDead(data);
+            let optionalFalse = this.countFalseOptional(data);
+
+            let features = data.length - dead - core - optionalFalse;
+
+            const data1 = {
+                labels: ['Core Features', 'Dead Features', 'False-optional Features', 'Other Features'],
+                datasets: [
+                    {
+                            
+                        //backgroundColor: ['#41B883', '#E46651', '#00D8FF', '#DD1B16'],
+                        //data: [40, 20, 80, 10]
+                        backgroundColor: ['#00D8FF', '#E46651', '#FFA500', '#bababa'],
+                        data: [core, dead, optionalFalse, features],
+                    }
+                ]
+            }
+
+
+
+            const ctx = this.$refs.pieChartCanvas.getContext("2d");
+
+            Chart.getChart(this.$refs.pieChartCanvas)?.destroy();
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: data1,
+            });
+        },
+
+        async absractConcreteFeatures(){
+            let data = this.data.rootNode.descendants();
+
+            let abstractfeatures = this.abstractFeature(data);
+            let concretefeatures = this.concreteFeature(data);
+
+            let other = data.length - abstractfeatures - concretefeatures;
+
+            const data1 = {
+                labels: ['Abstract Features', 'Concrete Features', 'Other Features'],
+                datasets: [
+                    {
+                            
+                        //backgroundColor: ['#41B883', '#E46651', '#00D8FF', '#DD1B16'],
+                        //data: [40, 20, 80, 10]
+                        backgroundColor: ['#41B883', '#E46651', '#bababa'],
+                        data: [abstractfeatures, concretefeatures, other]
+                    }
+                ]
+            }
+
+
+
+            const ctx = this.$refs.pieChartCanvas.getContext("2d");
+
+            Chart.getChart(this.$refs.pieChartCanvas)?.destroy();
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: data1,
+            });
+        },
+
+        async treeRelation(){
+            
+
+            
+
+            let data = this.data.rootNode.descendants();
+
+            let optionalcount = this.optionalCount(data);
+            let mandatorycount = this.mandatoryCount(data);
+
+            let other = data.length - optionalcount - mandatorycount;
+
+            const data1 = {
+                labels: ['Optional Features', 'Mandatory Features', 'Other Features'],
+                datasets: [
+                    {
+                            
+                        //backgroundColor: ['#41B883', '#E46651', '#00D8FF', '#DD1B16'],
+                        //data: [40, 20, 80, 10]
+                        backgroundColor: ['#41B883', '#E46651', '#bababa'],
+                        data: [optionalcount, mandatorycount, other]
+                    }
+                ]
+            }
+
+
+
+            const ctx = this.$refs.pieChartCanvas.getContext("2d");
+
+            Chart.getChart(this.$refs.pieChartCanvas)?.destroy();
+
+            new Chart(ctx, {
+                type: 'pie',
+                data: data1,
+            });
+
+            
+
+
+
+
+            //this.dataPieChart = data1;
+
+            
+
+
+
+
         },
 
         async depthFeature(){   // Auf welcher Ebene befinden sich viele Features --> Auf Ebene 7 befinden sich nur zwei --> die meisten Features sind auf Ebene 4 oder 5
@@ -424,8 +1209,35 @@ export default {
                     l = [];
                 }
             }
+            
             this.drawBoxPlot(Object.values(lst), ["Number of Features"], 'Depth of Tree');
             
+        },
+        branchingFactor(){
+            let data = this.data.rootNode.descendants();
+            let childsLenght=[]
+            for(let i=0; i<data.length; i++){
+                if(data[i].children.length != 0){
+                    childsLenght.push(data[i].children.length);
+                }
+                
+            }
+            //childsLenght = childsLenght.sort((a, b) => a - b);
+            this.drawBoxPlot(childsLenght, ["Branching Factor"], 'Children per Feature');
+        },
+        crossTreeConstraints(){
+            let data = this.data.rootNode.descendants();
+            let constraintsLenght=[]
+            for(let i=0; i<data.length; i++){
+                /*if(data[i].constraints.length != 0){
+                    constraintsLenght.push(data[i].constraints.length);
+                }*/
+                constraintsLenght.push(data[i].constraints.length);
+                
+            }
+            //childsLenght = childsLenght.sort((a, b) => a - b);
+            //console.log(constraintsLenght);
+            this.drawBoxPlot(constraintsLenght, ["Cross-Tree-Contraints"], 'Constraints per Feature');
         },
         drawBoxPlot(data, headLine, label){
             const ctx = this.$refs.chartCanvas.getContext("2d");

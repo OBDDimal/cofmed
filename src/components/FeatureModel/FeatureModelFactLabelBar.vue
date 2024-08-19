@@ -10,6 +10,7 @@
             permanent       
             location="end"
             :width="290"
+            floating
         >
         <v-list-item
           nav
@@ -79,4 +80,6 @@ export default {
         width: 100%;
     }
 }
+
+
 </style>
