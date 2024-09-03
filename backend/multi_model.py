@@ -44,181 +44,135 @@ class MultiConfiguration():
 
 
     def configure(self, config = None, versions = None):
-
         if versions is not None:
+            ok = self.verify_set_versions(versions)
 
-            config_old = copy(self.config)
-            versions = set(versions).difference(self.versions)
+            if not ok:
+                return False
 
-            for version in versions:
-                ret = self.select_version(version)
+            self.version_dp()
+            ok = self.feature_dp()
 
-                if ret is False:
-                    return False
+            if not ok:
+                return False
+
+            return self.version_dp()
+
 
         if config is not None:
+            ok = self.verify_config(config)
 
-            config = set(config).difference(self.config)
+            if not ok:
+                return False
 
-            for lit in config:
-                ret = self.configure_features(lit)
+            self.config.update(config)
+            self.features_free = self.features_free.difference({abs(x) for x in config})
 
-                if ret is False:
-                    return False
-
-
-        # history = self.history
-        # for i, version in enumerate(history.versions()):
-        #     cnf = history.it2unified[version]
-
-        #     with Solver(bootstrap_with = cnf) as solver:
-
-        #         if i in self.versions or i in self.versions_available:
-        #             if not solver.solve(assumptions = self.config):
-        #                 print(f"Failed {i}")
-        #                 return False
-        #         else:
-        #             if solver.solve(assumptions = self.config):
-        #                 print(f"Success {i}")
-        #                 return False
+            self.version_dp()
+            ok = self.feature_dp()
+            
+            if not ok:
+                return False
+                
+            return self.version_dp()
 
         return True
 
 
-    def select_version(self, version):        
-        if version not in self.versions_available:
-            # print(f"Version {version} cannot be selected")
-            return False
+    def verify_set_versions(self, versions):
 
-        self.versions.add(version)
-        ret = self.version_dp(version)
+        clauses = []
 
-        if ret is False:
-            return False
-
-        return self.feature_dp()
-
-
-    def configure_features(self, feature):
-        if abs(feature) in self.features_free:
-            self.config.add(feature)
-            ret = self.version_dp()
-
-            if ret is False:
-                return False
-
-            return self.feature_dp()
-        else:
-            # print(f"Feature {feature} cannot be selected")
-            return False
-
-
-    def version_dp(self, version = None):
-
-        bootstrap_clauses = []
-
-        if version is not None:
-            version_cnf = self.history.get_cnf(self.id2versions[version])
-            
-            bootstrap_clauses.extend(version_cnf.clauses)
-        
-        if self.formula is None:
-            for version in self.versions:
-                cnf = self.get_cnf(version)
-                bootstrap_clauses.extend(cnf.clauses)
-        else:
-            bootstrap_clauses.extend(self.formula.clauses)
-
-        versions_disabled = copy(self.versions_disabled)
-
-        # Deselect dead configurations
-        for version in self.versions_available:
-
+        for version in versions:
             cnf = self.get_cnf(version)
 
+            clauses.extend(cnf.clauses)
+
+        with Solver(bootstrap_with = clauses) as solver:
+            if not solver.solve():
+                return False
+
+        self.versions.update(versions)
+        self.versions_available = self.versions_available.difference(self.versions)
+
+        cnf = CNF(from_clauses = clauses)
+        # cnf, cores, deads = preprocessing.simplify_yield_unit_clauses(cnf2)
+
+        self.formula = cnf
+
+        # config = cores.union({-x for x in deads})
+        # ok = self.verify_config(config)
+
+        # if not ok:
+        #     print("INVALID")
+        #     return False
+
+        # self.config.update(config)
+        return True
+
+
+    def verify_config(self, config):
+
+        # test if config is feasible
+        if len(config) > len({abs(x) for x in config}):
+            return False
+
+        for lit in config:
+            if -lit in self.config:
+                print("HI")
+                return False
+
+        # # test if compatible
+        # if len(self.features_free.union({abs(x) for x in self.config}).difference({abs(x) for x in config})) > 0:
+        #     print("HERE")
+        #     return False
+
+        return True
+
+
+    def version_dp(self):
+
+        for version in self.versions_available:
             clauses = []
-            clauses.extend(bootstrap_clauses)
+            clauses.extend(self.formula.clauses)
+
+            cnf = self.get_cnf(version)
             clauses.extend(cnf.clauses)
 
             with Solver(bootstrap_with = clauses) as solver:
-                if not solver.solve(assumptions = self.config):
-                    versions_disabled.add(version)
+                if not solver.solve(self.config):
+                    self.versions_disabled.add(version)
 
-
-        if len(self.versions) == 0 and len(versions_disabled) == len(self.versions_available):
-            return False
-
-        self.versions_disabled = versions_disabled
-        self.versions_available = self.versions_available.difference({abs(x) for x in self.versions}).difference(self.versions_disabled)
-
-        cnf_temp = CNF(from_clauses = bootstrap_clauses)
-        self.formula, cores, deads = preprocessing.simplify_yield_unit_clauses(cnf_temp)
-
-        decided = cores.union({-x for x in deads}).difference(self.config)
-        self.config.update(decided)
-
-        self.features_free = self.features_free.difference({abs(x) for x in self.config})
-        return True
+        self.versions_available = self.versions_available.difference(self.versions).difference(self.versions_disabled)
 
 
     def feature_dp(self):
+        
+        decisions = set()
 
-        clauses = []
-        clauses.extend(self.formula.clauses)
-        clauses.append(self.config)
-
-        decided = set()
-
-        with Solver(bootstrap_with = clauses) as solver:
+        with Solver(bootstrap_with = self.formula.clauses) as solver:
             for feature in self.features_free:
-                if not solver.solve(assumptions = [-feature]):
-                    decided.add(-feature)
-                elif not solver.solve(assumptions = [feature]):
-                    decided.add(feature)
 
-        # stack = [feature]
-        # decided = {feature}
+                if feature == 43:
+                    print("vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv")
 
-        # while stack:
-        #     dec = stack.pop()
-
-        #     for i, clause in enumerate(clauses):
-
-        #         if clause is None:
-        #             continue
-
-        #         if dec in clause:
-        #             clauses[i] = None
-        #             continue
-        #         elif -dec in clause:
-        #             clause = [x for x in clause if x != - dec]
-
-        #             if len(clause) == 0:
-        #                 return False
-        #             elif len(clause) == 1:
-        #                 var = clause[0]
-
-        #                 if var not in decided:
-        #                     decided.add(var)
-        #                     stack.append(var)
-                            
-        #                 clauses[i] = None
-        #             else:
-        #                 clauses[i] = clause
+                if not solver.solve(self.config.union([-feature])):
+                    decisions.add(feature)
+                
+                if not solver.solve(self.config.union([feature])):
+                    decisions.add(-feature)
 
 
+                if feature == 43:
+                    print(decisions)
+                    print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
 
-        if len(decided) != len({abs(x) for x in decided}):
+
+        if len(decisions) != len({abs(x) for x in decisions}):
             return False
 
-        self.config.update(decided)
-
-        # print("Decided", decided)
-        self.features_free = self.features_free.difference({abs(x) for x in decided})
-
-        clauses = [clause for clause in clauses if clause]
-
-        self.formula = preprocessing.simplify_unit_clauses(CNF(from_clauses = clauses))
+        self.config.update(decisions)
+        self.features_free = self.features_free.difference({abs(x) for x in decisions})
 
         return True
 

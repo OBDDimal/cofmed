@@ -3,6 +3,8 @@ import pytest
 from pysat.formula import CNF
 from pysat.solvers import Solver
 
+import preprocessing
+
 from app import app
 
 from os import path
@@ -232,11 +234,39 @@ def test_history_configure(client):
 
     assert data.get("valid") is False
 
+    print("#" * 20)
 
-    response = client.post(f"/history/{ident}/configure", json = dict(config = [-2, 20], versions = [15]))
+    response = client.post(f"/history/{ident}/configure", json = dict(config = [-2, 20], versions = []))
     assert response.status_code == 200
 
     data = response.json
 
     assert data.get("valid") is True
     # assert len(data.get("features_free")) == 117
+
+    files = sorted(glob.glob("testdata/fiasco*.dimacs"))
+    cnfs = [CNF(from_file = file) for file in files]
+
+    print(data)
+
+    versions = set(range(len(files))).difference(data.get("versions_disabled"))
+    print("Versions", versions)
+    for version in versions:
+        cnf2 = cnfs[version]
+
+        cnf, cores, deads = preprocessing.simplify_yield_unit_clauses(cnf2)
+
+        print("Cores", cores)
+        print("Deads", deads)
+
+        print(data.get("config"))
+        with Solver(bootstrap_with = cnf.clauses) as solver:
+
+            ret = solver.solve(assumptions = data.get("config"))
+
+            if not ret:
+                print("-" * 16)
+                print(version)
+                print(solver.get_core())
+
+            assert ret
