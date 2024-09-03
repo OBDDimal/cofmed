@@ -91,7 +91,12 @@ class MultiConfiguration():
             return False
 
         self.versions.add(version)
-        return self.version_dp(version)
+        ret = self.version_dp(version)
+
+        if ret is False:
+            return False
+
+        return self.feature_dp()
 
 
     def configure_features(self, feature):
@@ -102,7 +107,7 @@ class MultiConfiguration():
             if ret is False:
                 return False
 
-            return self.feature_dp(feature)
+            return self.feature_dp()
         else:
             # print(f"Feature {feature} cannot be selected")
             return False
@@ -152,46 +157,54 @@ class MultiConfiguration():
         decided = cores.union({-x for x in deads}).difference(self.config)
         self.config.update(decided)
 
-        for feature in decided:
-            self.feature_dp(feature)
-
         self.features_free = self.features_free.difference({abs(x) for x in self.config})
         return True
 
 
-    def feature_dp(self, feature):
+    def feature_dp(self):
 
-        clauses = copy(self.formula.clauses)
+        clauses = []
+        clauses.extend(self.formula.clauses)
+        clauses.append(self.config)
 
-        stack = [feature]
-        decided = {feature}
+        decided = set()
 
-        while stack:
-            dec = stack.pop()
+        with Solver(bootstrap_with = clauses) as solver:
+            for feature in self.features_free:
+                if not solver.solve(assumptions = [-feature]):
+                    decided.add(-feature)
+                elif not solver.solve(assumptions = [feature]):
+                    decided.add(feature)
 
-            for i, clause in enumerate(clauses):
+        # stack = [feature]
+        # decided = {feature}
 
-                if clause is None:
-                    continue
+        # while stack:
+        #     dec = stack.pop()
 
-                if dec in clause:
-                    clauses[i] = None
-                    continue
-                elif -dec in clause:
-                    clause = [x for x in clause if x != - dec]
+        #     for i, clause in enumerate(clauses):
 
-                    if len(clause) == 0:
-                        return False
-                    elif len(clause) == 1:
-                        var = clause[0]
+        #         if clause is None:
+        #             continue
 
-                        if var not in decided:
-                            decided.add(var)
-                            stack.append(var)
+        #         if dec in clause:
+        #             clauses[i] = None
+        #             continue
+        #         elif -dec in clause:
+        #             clause = [x for x in clause if x != - dec]
+
+        #             if len(clause) == 0:
+        #                 return False
+        #             elif len(clause) == 1:
+        #                 var = clause[0]
+
+        #                 if var not in decided:
+        #                     decided.add(var)
+        #                     stack.append(var)
                             
-                        clauses[i] = None
-                    else:
-                        clauses[i] = clause
+        #                 clauses[i] = None
+        #             else:
+        #                 clauses[i] = clause
 
 
 
