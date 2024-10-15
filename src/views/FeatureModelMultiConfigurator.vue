@@ -697,11 +697,10 @@ export default {
             this.models = [];
             try {
                 this.featureModelName = files[0].name.slice(0, files[0].name.indexOf('-'));
-                console.log(files)
                 this.ident = await registerHistory(files, this.featureModelName);
                 if (this.ident === undefined) {
                     throw new Error('No connection to backend.');
-                }
+                } 
                 const data = await getFeaturesAndVersionFromHistory(this.ident);
                 this.featureModelMulti = new FeatureModelMulti(data.mapping, data.versions);
                 this.commandManager = new ConfiguratorManager();
